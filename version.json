@@ -1,12 +1,12 @@
 {
-  "version": "v260216.04 3:46a",
-  "release": 4,
-  "sha": "fa5cde13",
-  "fullSha": "fa5cde13943648635b2bd1cc469ebda3684f9061",
+  "version": "v260216.05 4:28a",
+  "release": 5,
+  "sha": "56660849",
+  "fullSha": "566608493e4dedbb18c4cbdeb7437b45d907d0f5",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000002",
-  "pushedAt": "2026-02-16T09:46:52+00",
-  "commits": [{"sha": "fa5cde13943648635b2bd1cc469ebda3684f9061", "short_sha": "fa5cde13", "author": "rahulio", "message": "Add financial data schema: accounts, snapshots, transactions, market prices"}]
+  "machine": "GitHub Actions 1000000003",
+  "pushedAt": "2026-02-16T10:28:21+00",
+  "commits": [{"sha": "566608493e4dedbb18c4cbdeb7437b45d907d0f5", "short_sha": "56660849", "author": "rahulio", "message": "Migrate UI to shadcn/ui with brand palette and auth pages"}, {"sha": "5201c264209897b4745672d07094b3429123d8d1", "short_sha": "5201c264", "author": "rahulio", "message": "Add Next.js 16 + shadcn/ui stack with auth and Schwab setup pages"}]
 }
