@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { SiteVersion } from "@/components/site-version";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,6 +29,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <footer className="fixed bottom-2 right-3">
+          <SiteVersion />
+        </footer>
       </body>
     </html>
   );

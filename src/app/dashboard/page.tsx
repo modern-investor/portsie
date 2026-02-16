@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/logout-button";
+import { SiteVersion } from "@/components/site-version";
 import { hasSchwabConnection } from "@/lib/schwab/tokens";
 import { hasSchwabCredentials } from "@/lib/schwab/credentials";
 import { SchwabConnect } from "./components/schwab-connect";
@@ -18,7 +19,10 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-4xl p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <SiteVersion className="text-gray-400" />
+        </div>
         <LogoutButton />
       </div>
       <p className="text-sm text-gray-600">

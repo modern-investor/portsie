@@ -1,0 +1,69 @@
+name: Bump Version
+
+on:
+  push:
+    branches: [main]
+
+# Ensure strict ordering — no concurrent version bumps
+concurrency:
+  group: version-main-sequence
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    # Skip CI's own commits to prevent infinite loops
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Bump version
+        id: bump
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          PUSH_COMPARE_FROM: ${{ github.event.before }}
+          PUSH_COMPARE_TO: ${{ github.event.after }}
+          RUNNER_NAME: ${{ runner.name }}
+        run: |
+          chmod +x scripts/bump-version.sh
+          OUTPUT=$(scripts/bump-version.sh --model ci)
+          echo "$OUTPUT"
+          # Extract version for summary
+          VERSION=$(echo "$OUTPUT" | grep "^  Portsie" | sed 's/^  Portsie //' | sed 's/  \[.*$//')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add version.json public/version.json 'src/**/*.tsx' 'src/**/*.ts'
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore: bump version [skip ci]"
+          git push
+
+      - name: Job summary
+        run: |
+          echo "## Version Bumped" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**${{ steps.bump.outputs.version }}**" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SHA: \`${GITHUB_SHA:0:8}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Actor: ${{ github.actor }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Source: github-main-push" >> "$GITHUB_STEP_SUMMARY"
