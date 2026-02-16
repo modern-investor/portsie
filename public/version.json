@@ -1,12 +1,12 @@
 {
-  "version": "v260216.10 5:40a",
-  "release": 10,
-  "sha": "21f52e21",
-  "fullSha": "21f52e217c126e76b45e64c2ac0aa3a7dbc0425c",
+  "version": "v260216.11 5:44a",
+  "release": 11,
+  "sha": "af5bd57a",
+  "fullSha": "af5bd57ab790cd23fd60801f4e847fea02d2e549",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000008",
-  "pushedAt": "2026-02-16T11:40:35+00",
-  "commits": [{"sha": "21f52e217c126e76b45e64c2ac0aa3a7dbc0425c", "short_sha": "21f52e21", "author": "rahulio", "message": "Merge branch 'claude/friendly-gauss'"}, {"sha": "4b17a2ed282c39c0de34040982f1ff61db6a1e9f", "short_sha": "4b17a2ed", "author": "rahulio", "message": "Add missing UI dependencies to package.json"}]
+  "machine": "GitHub Actions 1000000009",
+  "pushedAt": "2026-02-16T11:44:39+00",
+  "commits": [{"sha": "af5bd57ab790cd23fd60801f4e847fea02d2e549", "short_sha": "af5bd57a", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/claude/serene-napier'"}, {"sha": "51c9dd92faffedb688d80ab6cf7563983851d40a", "short_sha": "51c9dd92", "author": "rahulio", "message": "Add header with logo and navigation to all pages"}]
 }
