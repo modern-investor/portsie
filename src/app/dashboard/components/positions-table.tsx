@@ -60,21 +60,21 @@ export function PositionsTable({ hideValues }: { hideValues: boolean }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-gray-50 text-left text-gray-500">
-              <th className="px-4 py-3 font-medium">Symbol</th>
+              <th className="px-2 py-2 font-medium sm:px-4 sm:py-3">Symbol</th>
               {!hideValues && (
-                <th className="px-4 py-3 font-medium">Quantity</th>
+                <th className="px-2 py-2 font-medium sm:px-4 sm:py-3">Quantity</th>
               )}
-              <th className="px-4 py-3 font-medium text-right">Avg Price</th>
+              <th className="px-2 py-2 font-medium sm:px-4 sm:py-3 text-right">Avg Price</th>
               {!hideValues && (
-                <th className="px-4 py-3 font-medium text-right">
+                <th className="px-2 py-2 font-medium sm:px-4 sm:py-3 text-right">
                   Market Value
                 </th>
               )}
-              <th className="px-4 py-3 font-medium text-right">Alloc %</th>
+              <th className="px-2 py-2 font-medium sm:px-4 sm:py-3 text-right">Alloc %</th>
               {!hideValues && (
-                <th className="px-4 py-3 font-medium text-right">Day P&L</th>
+                <th className="px-2 py-2 font-medium sm:px-4 sm:py-3 text-right">Day P&L</th>
               )}
-              <th className="px-4 py-3 font-medium text-right">Day P&L %</th>
+              <th className="px-2 py-2 font-medium sm:px-4 sm:py-3 text-right">Day P&L %</th>
             </tr>
           </thead>
           <tbody>
@@ -92,22 +92,22 @@ export function PositionsTable({ hideValues }: { hideValues: boolean }) {
                   key={pos.instrument.symbol}
                   className="border-b last:border-b-0"
                 >
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-2 sm:px-4 sm:py-3">
                     <div className="font-medium">{pos.instrument.symbol}</div>
                     {pos.instrument.description && (
-                      <div className="text-xs text-gray-400 truncate max-w-[200px]">
+                      <div className="text-xs text-gray-400 truncate max-w-[120px] sm:max-w-[200px]">
                         {pos.instrument.description}
                       </div>
                     )}
                   </td>
                   {!hideValues && (
-                    <td className="px-4 py-3">{pos.longQuantity}</td>
+                    <td className="px-2 py-2 sm:px-4 sm:py-3">{pos.longQuantity}</td>
                   )}
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-2 py-2 text-right sm:px-4 sm:py-3">
                     ${pos.averagePrice.toFixed(2)}
                   </td>
                   {!hideValues && (
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-2 py-2 text-right sm:px-4 sm:py-3">
                       $
                       {pos.marketValue.toLocaleString("en-US", {
                         minimumFractionDigits: 2,
@@ -115,11 +115,11 @@ export function PositionsTable({ hideValues }: { hideValues: boolean }) {
                       })}
                     </td>
                   )}
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-2 py-2 text-right sm:px-4 sm:py-3">
                     {allocationPct.toFixed(1)}%
                   </td>
                   {!hideValues && (
-                    <td className={`px-4 py-3 text-right ${plColor}`}>
+                    <td className={`px-2 py-2 text-right sm:px-4 sm:py-3 ${plColor}`}>
                       {pos.currentDayProfitLoss >= 0 ? "+" : ""}$
                       {pos.currentDayProfitLoss.toLocaleString("en-US", {
                         minimumFractionDigits: 2,
@@ -127,7 +127,7 @@ export function PositionsTable({ hideValues }: { hideValues: boolean }) {
                       })}
                     </td>
                   )}
-                  <td className={`px-4 py-3 text-right ${plColor}`}>
+                  <td className={`px-2 py-2 text-right sm:px-4 sm:py-3 ${plColor}`}>
                     {pos.currentDayProfitLossPercentage >= 0 ? "+" : ""}
                     {pos.currentDayProfitLossPercentage.toFixed(2)}%
                   </td>
