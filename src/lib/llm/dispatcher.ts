@@ -34,6 +34,10 @@ export async function extractFinancialData(
   }
 
   // CLI mode (default)
-  const cliEndpoint = settings?.cliEndpoint ?? null;
+  // Use user's configured endpoint, fall back to env var, then local subprocess
+  const cliEndpoint =
+    settings?.cliEndpoint ??
+    process.env.PORTSIE_CLI_ENDPOINT ??
+    null;
   return extractViaCLI(processedFile, fileType, filename, cliEndpoint);
 }
