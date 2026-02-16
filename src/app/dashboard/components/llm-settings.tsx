@@ -90,7 +90,7 @@ export function LLMSettings() {
 
   if (loading) {
     return (
-      <div className="rounded-lg border p-6">
+      <div className="rounded-lg border p-4 sm:p-6">
         <div className="animate-pulse space-y-3">
           <div className="h-4 w-32 rounded bg-gray-200" />
           <div className="h-8 w-48 rounded bg-gray-200" />
@@ -102,7 +102,7 @@ export function LLMSettings() {
   return (
     <div className="space-y-6">
       {/* Mode Toggle */}
-      <div className="space-y-4 rounded-lg border p-6">
+      <div className="space-y-4 rounded-lg border p-4 sm:p-6">
         <h3 className="font-medium">Processing Backend</h3>
         <p className="text-sm text-gray-500">
           Choose how uploaded financial documents are processed.
@@ -177,11 +177,11 @@ export function LLMSettings() {
       </div>
 
       {/* API Key section */}
-      <div className="space-y-4 rounded-lg border p-6">
+      <div className="space-y-4 rounded-lg border p-4 sm:p-6">
         <h3 className="font-medium">Anthropic API Key</h3>
 
         {hasApiKey ? (
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-green-500" />
               <span className="text-sm text-gray-600">API key configured</span>
@@ -189,7 +189,7 @@ export function LLMSettings() {
             <button
               onClick={handleDeleteApiKey}
               disabled={saving}
-              className="rounded-md border px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+              className="w-full rounded-md border px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 sm:w-auto sm:py-1.5"
             >
               Remove Key
             </button>
@@ -219,7 +219,7 @@ export function LLMSettings() {
 
       {/* CLI Endpoint (advanced) */}
       {llmMode === "cli" && (
-        <div className="space-y-4 rounded-lg border p-6">
+        <div className="space-y-4 rounded-lg border p-4 sm:p-6">
           <h3 className="font-medium">CLI Endpoint</h3>
           <p className="text-sm text-gray-500">
             Optional. URL for a remote Claude CLI HTTP wrapper (e.g., on

@@ -42,11 +42,11 @@ export function DashboardShell({
   const showPortfolioControls = view === "portfolio" || view === "settings";
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-6 space-y-6">
+    <div className="mx-auto max-w-5xl px-4 py-4 space-y-4 sm:px-6 sm:py-6 sm:space-y-6">
       {/* Dashboard toolbar */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold">Brokerage and Exchange Connections</h1>
+          <h1 className="text-lg font-semibold sm:text-xl">Brokerage and Exchange Connections</h1>
           {view === "portfolio" && (
             <HideValuesToggle
               hideValues={hideValues}
@@ -59,7 +59,7 @@ export function DashboardShell({
             <>
               <button
                 onClick={() => setView("brokerage-select")}
-                className="rounded-md p-2 text-muted-foreground transition-colors hover:text-foreground"
+                className="rounded-md p-3 text-muted-foreground transition-colors hover:text-foreground sm:p-2"
                 title="Connect brokerage"
               >
                 <svg
@@ -80,7 +80,7 @@ export function DashboardShell({
                 onClick={() =>
                   setView(view === "settings" ? "portfolio" : "settings")
                 }
-                className={`rounded-md p-2 transition-colors ${
+                className={`rounded-md p-3 transition-colors sm:p-2 ${
                   view === "settings"
                     ? "bg-muted text-foreground"
                     : "text-muted-foreground hover:text-foreground"

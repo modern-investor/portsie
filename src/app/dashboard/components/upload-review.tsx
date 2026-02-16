@@ -71,11 +71,11 @@ export function UploadReview({
   }
 
   return (
-    <div className="space-y-4 rounded-lg border bg-white p-6">
+    <div className="space-y-4 rounded-lg border bg-white p-4 sm:p-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Review: {upload.filename}</h3>
+          <h3 className="truncate text-base font-semibold sm:text-lg">Review: {upload.filename}</h3>
           <div className="mt-1 flex items-center gap-3 text-sm text-gray-500">
             {extraction.statement_start_date && (
               <span>
@@ -93,7 +93,7 @@ export function UploadReview({
         </div>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600"
+          className="p-2 -m-2 text-gray-400 hover:text-gray-600"
         >
           <svg
             className="h-5 w-5"
@@ -142,7 +142,7 @@ export function UploadReview({
       )}
 
       {/* Summary counts */}
-      <div className="flex gap-4 text-sm">
+      <div className="flex flex-wrap gap-2 text-sm sm:gap-4">
         <span className="rounded-md bg-blue-50 px-3 py-1 text-blue-700">
           {totalTransactions} transaction{totalTransactions !== 1 ? "s" : ""}
         </span>
@@ -162,42 +162,42 @@ export function UploadReview({
             <table className="w-full text-xs">
               <thead>
                 <tr className="sticky top-0 border-b bg-gray-50 text-left text-gray-500">
-                  <th className="px-3 py-2 font-medium">Date</th>
-                  <th className="px-3 py-2 font-medium">Action</th>
-                  <th className="px-3 py-2 font-medium">Symbol</th>
-                  <th className="px-3 py-2 font-medium">Description</th>
-                  <th className="px-3 py-2 font-medium text-right">Qty</th>
-                  <th className="px-3 py-2 font-medium text-right">Price</th>
-                  <th className="px-3 py-2 font-medium text-right">Amount</th>
+                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Date</th>
+                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Action</th>
+                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Symbol</th>
+                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Description</th>
+                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Qty</th>
+                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Price</th>
+                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {extraction.transactions.map((t, i) => (
                   <tr key={i} className="border-b last:border-b-0">
-                    <td className="px-3 py-2 whitespace-nowrap">
+                    <td className="px-2 py-1.5 whitespace-nowrap sm:px-3 sm:py-2">
                       {t.transaction_date}
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">
                       <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono">
                         {t.action}
                       </span>
                     </td>
-                    <td className="px-3 py-2 font-medium">
+                    <td className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">
                       {t.symbol ?? "—"}
                     </td>
-                    <td className="max-w-[200px] truncate px-3 py-2 text-gray-500">
+                    <td className="max-w-[100px] truncate px-2 py-1.5 text-gray-500 sm:max-w-[200px] sm:px-3 sm:py-2">
                       {t.description}
                     </td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
                       {t.quantity ?? "—"}
                     </td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
                       {t.price_per_share
                         ? `$${t.price_per_share.toFixed(2)}`
                         : "—"}
                     </td>
                     <td
-                      className={`px-3 py-2 text-right font-medium ${
+                      className={`px-2 py-1.5 text-right sm:px-3 sm:py-2 font-medium ${
                         t.total_amount >= 0 ? "text-green-600" : "text-red-600"
                       }`}
                     >
@@ -223,18 +223,18 @@ export function UploadReview({
             <table className="w-full text-xs">
               <thead>
                 <tr className="sticky top-0 border-b bg-gray-50 text-left text-gray-500">
-                  <th className="px-3 py-2 font-medium">Symbol</th>
-                  <th className="px-3 py-2 font-medium text-right">Qty</th>
-                  <th className="px-3 py-2 font-medium text-right">
+                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Symbol</th>
+                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Qty</th>
+                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">
                     Avg Cost
                   </th>
-                  <th className="px-3 py-2 font-medium text-right">
+                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">
                     Mkt Price
                   </th>
-                  <th className="px-3 py-2 font-medium text-right">
+                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">
                     Mkt Value
                   </th>
-                  <th className="px-3 py-2 font-medium text-right">
+                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">
                     Unrealized P&L
                   </th>
                 </tr>
@@ -242,19 +242,19 @@ export function UploadReview({
               <tbody>
                 {extraction.positions.map((p, i) => (
                   <tr key={i} className="border-b last:border-b-0">
-                    <td className="px-3 py-2 font-medium">{p.symbol}</td>
-                    <td className="px-3 py-2 text-right">{p.quantity}</td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">{p.symbol}</td>
+                    <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">{p.quantity}</td>
+                    <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
                       {p.average_cost_basis
                         ? `$${p.average_cost_basis.toFixed(2)}`
                         : "—"}
                     </td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
                       {p.market_price_per_share
                         ? `$${p.market_price_per_share.toFixed(2)}`
                         : "—"}
                     </td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
                       {p.market_value
                         ? `$${p.market_value.toLocaleString("en-US", {
                             minimumFractionDigits: 2,
@@ -262,7 +262,7 @@ export function UploadReview({
                         : "—"}
                     </td>
                     <td
-                      className={`px-3 py-2 text-right ${
+                      className={`px-2 py-1.5 text-right sm:px-3 sm:py-2 ${
                         (p.unrealized_profit_loss ?? 0) >= 0
                           ? "text-green-600"
                           : "text-red-600"
@@ -335,25 +335,25 @@ export function UploadReview({
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-3 border-t pt-4">
+      <div className="flex flex-wrap items-center gap-2 border-t pt-4 sm:gap-3">
         <button
           onClick={() => setShowAccountModal(true)}
           disabled={confirming}
-          className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          className="rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
         >
           {confirming ? "Saving..." : "Confirm & Save"}
         </button>
         <button
           onClick={onReprocess}
           disabled={confirming}
-          className="rounded-md border px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          className="rounded-md border px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
         >
           Re-process
         </button>
         <button
           onClick={onClose}
           disabled={confirming}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="px-2 py-2 text-sm text-gray-500 hover:text-gray-700"
         >
           Cancel
         </button>

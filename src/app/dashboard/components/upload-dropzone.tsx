@@ -120,7 +120,7 @@ export function UploadDropzone({
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
-        className={`cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
+        className={`cursor-pointer rounded-lg border-2 border-dashed p-4 text-center transition-colors sm:p-8 ${
           dragging
             ? "border-blue-400 bg-blue-50"
             : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"

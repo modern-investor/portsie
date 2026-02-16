@@ -145,7 +145,7 @@ export function UploadList({
     <div className="space-y-2">
       {/* Batch action bar */}
       {processableIds.length > 0 && (
-        <div className="flex items-center gap-3 rounded-lg border border-blue-100 bg-blue-50/50 px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-blue-100 bg-blue-50/50 px-3 py-2 sm:gap-3 sm:px-4 sm:py-2.5">
           <input
             type="checkbox"
             checked={allChecked}
@@ -153,7 +153,7 @@ export function UploadList({
               if (el) el.indeterminate = someChecked;
             }}
             onChange={toggleAll}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 sm:h-4 sm:w-4"
           />
           <span className="text-sm text-gray-600">
             {checkedIds.size} of {processableIds.length} selected
@@ -181,7 +181,7 @@ export function UploadList({
         return (
           <div
             key={upload.id}
-            className="flex items-center gap-3 rounded-lg border px-4 py-3"
+            className="flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2.5 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-3"
           >
             {/* Checkbox for processable files */}
             {isProcessable ? (
@@ -189,10 +189,10 @@ export function UploadList({
                 type="checkbox"
                 checked={checkedIds.has(upload.id)}
                 onChange={() => toggleSelection(upload.id)}
-                className="h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="h-5 w-5 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 sm:h-4 sm:w-4"
               />
             ) : (
-              <div className="h-4 w-4 shrink-0" />
+              <div className="h-5 w-5 shrink-0 sm:h-4 sm:w-4" />
             )}
 
             {/* File type badge */}
@@ -275,11 +275,11 @@ export function UploadList({
               {!isProcessing && !isConfirmed && (
                 <button
                   onClick={() => onDelete(upload.id)}
-                  className="rounded-md px-2 py-1.5 text-xs text-gray-400 hover:text-red-600"
+                  className="rounded-md p-2.5 text-xs text-gray-400 hover:text-red-600 sm:px-2 sm:py-1.5"
                   title="Delete"
                 >
                   <svg
-                    className="h-4 w-4"
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"

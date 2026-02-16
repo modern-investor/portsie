@@ -53,14 +53,14 @@ export function SiteHeaderAuth({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium transition-opacity hover:opacity-80"
+        className="flex size-9 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium transition-opacity hover:opacity-80"
         title={user.email}
       >
         {initial}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-border bg-background p-1 shadow-lg z-50">
+        <div className="absolute right-0 top-full mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-background p-1 shadow-lg z-50">
           <div className="px-3 py-2 border-b border-border">
             <p className="text-sm font-medium truncate">{user.email}</p>
           </div>
