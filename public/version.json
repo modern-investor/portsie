@@ -1,12 +1,12 @@
 {
-  "version": "v260216.05 4:28a",
-  "release": 5,
-  "sha": "56660849",
-  "fullSha": "566608493e4dedbb18c4cbdeb7437b45d907d0f5",
+  "version": "v260216.06 4:59a",
+  "release": 6,
+  "sha": "9e5721c1",
+  "fullSha": "9e5721c16c335fc155e633024fbe8555ca3d2123",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000003",
-  "pushedAt": "2026-02-16T10:28:21+00",
-  "commits": [{"sha": "566608493e4dedbb18c4cbdeb7437b45d907d0f5", "short_sha": "56660849", "author": "rahulio", "message": "Migrate UI to shadcn/ui with brand palette and auth pages"}, {"sha": "5201c264209897b4745672d07094b3429123d8d1", "short_sha": "5201c264", "author": "rahulio", "message": "Add Next.js 16 + shadcn/ui stack with auth and Schwab setup pages"}]
+  "machine": "GitHub Actions 1000000004",
+  "pushedAt": "2026-02-16T10:59:26+00",
+  "commits": [{"sha": "9e5721c16c335fc155e633024fbe8555ca3d2123", "short_sha": "9e5721c1", "author": "rahulio", "message": "Add admin panel, homepage, upload system, LLM settings, and auth improvements"}]
 }
