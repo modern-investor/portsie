@@ -1,12 +1,12 @@
 {
-  "version": "v260216.11 5:44a",
-  "release": 11,
-  "sha": "af5bd57a",
-  "fullSha": "af5bd57ab790cd23fd60801f4e847fea02d2e549",
+  "version": "v260216.12 5:45a",
+  "release": 12,
+  "sha": "259691d0",
+  "fullSha": "259691d0c80f991bd7279c2253eababd30e2b773",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000009",
-  "pushedAt": "2026-02-16T11:44:39+00",
-  "commits": [{"sha": "af5bd57ab790cd23fd60801f4e847fea02d2e549", "short_sha": "af5bd57a", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/claude/serene-napier'"}, {"sha": "51c9dd92faffedb688d80ab6cf7563983851d40a", "short_sha": "51c9dd92", "author": "rahulio", "message": "Add header with logo and navigation to all pages"}]
+  "machine": "GitHub Actions 1000000010",
+  "pushedAt": "2026-02-16T11:45:32+00",
+  "commits": [{"sha": "259691d0c80f991bd7279c2253eababd30e2b773", "short_sha": "259691d0", "author": "rahulio", "message": "Support multiple file upload in dropzone"}]
 }
