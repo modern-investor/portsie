@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { fetchStyleGuide } from "@/lib/style-guide/server";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -13,32 +14,42 @@ export default async function Home() {
     redirect("/dashboard");
   }
 
+  const guide = await fetchStyleGuide();
+  const { branding } = guide;
+
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center p-6">
-      <div className="w-full max-w-md space-y-10 text-center">
-        {/* Large branding */}
-        <div className="flex flex-col items-center gap-5">
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center pt-16 p-6">
+      <div className="w-full max-w-lg space-y-8 text-center">
+        {/* Logo */}
+        <div className="flex flex-col items-center gap-4">
           <Image
-            src="/brand/portsie-icon-blue.png"
+            src={branding.logos.icon_blue}
             alt="Portsie"
-            width={120}
-            height={120}
+            width={100}
+            height={100}
             priority
           />
           <Image
-            src="/brand/portsie-wordmark-dark.png"
+            src={branding.logos.wordmark_dark}
             alt="PORTSIE"
-            width={220}
-            height={44}
+            width={200}
+            height={40}
             priority
           />
-          <p className="text-muted-foreground">
-            Portfolio investment tracker
-          </p>
         </div>
 
+        {/* Slogan */}
+        <h1 className="text-2xl font-semibold leading-snug tracking-tight text-foreground">
+          {branding.slogan}
+        </h1>
+
+        {/* Tagline */}
+        <p className="text-muted-foreground text-base">
+          {branding.tagline}
+        </p>
+
         {/* Auth actions */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 pt-2">
           <Link
             href="/login"
             className="rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
