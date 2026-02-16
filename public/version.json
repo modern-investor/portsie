@@ -1,12 +1,12 @@
 {
-  "version": "v260216.06 4:59a",
-  "release": 6,
-  "sha": "9e5721c1",
-  "fullSha": "9e5721c16c335fc155e633024fbe8555ca3d2123",
+  "version": "v260216.07 5:04a",
+  "release": 7,
+  "sha": "984e0be0",
+  "fullSha": "984e0be0a8c0bc7dba70dceebee7e455aac4190b",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000004",
-  "pushedAt": "2026-02-16T10:59:26+00",
-  "commits": [{"sha": "9e5721c16c335fc155e633024fbe8555ca3d2123", "short_sha": "9e5721c1", "author": "rahulio", "message": "Add admin panel, homepage, upload system, LLM settings, and auth improvements"}]
+  "machine": "GitHub Actions 1000000005",
+  "pushedAt": "2026-02-16T11:04:28+00",
+  "commits": [{"sha": "984e0be0a8c0bc7dba70dceebee7e455aac4190b", "short_sha": "984e0be0", "author": "rahulio", "message": "Merge branch 'claude/practical-proskuriakova'"}, {"sha": "214b09467134e2cf1de27576bcfa97c1bfb1c991", "short_sha": "214b0946", "author": "rahulio", "message": "Add database-driven style guide system with admin viewer"}]
 }
