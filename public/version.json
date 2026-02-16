@@ -1,12 +1,12 @@
 {
-  "version": "v260216.09 5:28a",
-  "release": 9,
-  "sha": "d7f92386",
-  "fullSha": "d7f92386c9ae88aa64e80f2954008826463bbf98",
+  "version": "v260216.10 5:40a",
+  "release": 10,
+  "sha": "21f52e21",
+  "fullSha": "21f52e217c126e76b45e64c2ac0aa3a7dbc0425c",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000007",
-  "pushedAt": "2026-02-16T11:28:01+00",
-  "commits": [{"sha": "d7f92386c9ae88aa64e80f2954008826463bbf98", "short_sha": "d7f92386", "author": "rahulio", "message": "Merge branch 'main' of https://github.com/modern-investor/portsie"}, {"sha": "48840aca0d9efc1b27f8af1b9f17cd391ea82e50", "short_sha": "48840aca", "author": "rahulio", "message": "Merge branch 'claude/friendly-gauss'"}, {"sha": "094a35d6546e2a8050110af164eaefd448f9dca9", "short_sha": "094a35d6", "author": "rahulio", "message": "Add brokerage selection screen as dashboard entry point"}]
+  "machine": "GitHub Actions 1000000008",
+  "pushedAt": "2026-02-16T11:40:35+00",
+  "commits": [{"sha": "21f52e217c126e76b45e64c2ac0aa3a7dbc0425c", "short_sha": "21f52e21", "author": "rahulio", "message": "Merge branch 'claude/friendly-gauss'"}, {"sha": "4b17a2ed282c39c0de34040982f1ff61db6a1e9f", "short_sha": "4b17a2ed", "author": "rahulio", "message": "Add missing UI dependencies to package.json"}]
 }
