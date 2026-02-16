@@ -34,6 +34,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -51,6 +52,47 @@ export default function AdminUsersPage() {
       setError(err instanceof Error ? err.message : "Failed to load users");
     } finally {
       setLoading(false);
+    }
+  }
+
+  const TEST_USERS = [
+    { email: "t1@alpacaplayhouse.com", name: "Test User 1" },
+    { email: "t2@alpacaplayhouse.com", name: "Test User 2" },
+    { email: "t3@alpacaplayhouse.com", name: "Test User 3" },
+    { email: "t4@alpacaplayhouse.com", name: "Test User 4" },
+  ];
+
+  async function seedTestUsers() {
+    setSeeding(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/admin/users/seed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ users: TEST_USERS }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to seed users");
+      }
+
+      const data = await res.json();
+      const parts: string[] = [];
+      if (data.created.length) parts.push(`Created: ${data.created.join(", ")}`);
+      if (data.skipped.length) parts.push(`Already existed: ${data.skipped.join(", ")}`);
+      if (data.errors.length) parts.push(`Errors: ${data.errors.map((e: { email: string; error: string }) => `${e.email} (${e.error})`).join(", ")}`);
+
+      if (data.errors.length) {
+        setError(parts.join(". "));
+      }
+
+      await fetchUsers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to seed users");
+    } finally {
+      setSeeding(false);
     }
   }
 
@@ -103,6 +145,13 @@ export default function AdminUsersPage() {
           </svg>
         </Link>
         <h1 className="text-xl font-semibold">User Management</h1>
+        <button
+          onClick={seedTestUsers}
+          disabled={seeding}
+          className="ml-auto rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+        >
+          {seeding ? "Seeding..." : "Seed Test Users"}
+        </button>
       </div>
 
       {error && (
