@@ -14,7 +14,12 @@ const PORT = parseInt(process.env.PORT || "8910", 10);
 const AUTH_TOKEN = process.env.AUTH_TOKEN; // shared secret with Vercel
 const MAX_TIMEOUT_MS = parseInt(process.env.MAX_TIMEOUT_MS || "180000", 10); // 3 min
 const MAX_BODY_SIZE = 50 * 1024 * 1024; // 50MB
-let isProcessing = false;
+const MAX_QUEUE_SIZE = 20;
+const MAX_CONCURRENT = parseInt(process.env.MAX_CONCURRENT || "3", 10); // concurrent claude processes
+
+let activeCount = 0; // number of currently running claude processes
+let warmupProcess = null; // track warmup child process
+const requestQueue = []; // queue for pending extraction requests
 
 function log(msg) {
   console.log(`[${new Date().toISOString()}] ${msg}`);
@@ -37,10 +42,14 @@ async function runClaude(prompt, file) {
       await writeFile(tempFilePath, buffer);
       log(`Wrote temp file: ${tempFilePath} (${buffer.length} bytes)`);
 
-      // Replace the placeholder in the prompt with the actual temp path
-      // The remote prompt says "Extract financial data from the FILE_TYPE file named FILENAME"
-      // We need to tell claude where the file actually is
       prompt += `\n\nThe file has been saved to "${tempFilePath}". Read it from that path.`;
+    }
+
+    // Kill warmup process on first real extraction to free resources
+    if (warmupProcess) {
+      try { warmupProcess.kill(); } catch {}
+      warmupProcess = null;
+      log("Killed warmup process for real extraction");
     }
 
     const args = [
@@ -56,7 +65,7 @@ async function runClaude(prompt, file) {
           CI: "true",
           HOME: process.env.HOME || "/home/bugfixer",
         },
-        stdio: ["pipe", "pipe", "pipe"],
+        stdio: ["ignore", "pipe", "pipe"],
         timeout: MAX_TIMEOUT_MS,
       });
 
@@ -83,12 +92,10 @@ async function runClaude(prompt, file) {
           return;
         }
 
-        // Parse the JSON output from claude --output-format json
         try {
           const parsed = JSON.parse(stdout);
           resolve(parsed);
         } catch {
-          // If not valid JSON, wrap the raw output
           resolve({ result: stdout });
         }
       });
@@ -97,6 +104,88 @@ async function runClaude(prompt, file) {
     if (tempFilePath) await unlink(tempFilePath).catch(() => {});
     if (tempDir) await rm(tempDir, { recursive: true }).catch(() => {});
   }
+}
+
+/**
+ * Try to drain queued requests up to MAX_CONCURRENT.
+ */
+function drainQueue() {
+  while (activeCount < MAX_CONCURRENT && requestQueue.length > 0) {
+    const { prompt, file, resolve, reject } = requestQueue.shift();
+    activeCount++;
+    log(`Starting extraction (active: ${activeCount}/${MAX_CONCURRENT}, queued: ${requestQueue.length}, file: ${file ? file.filename : "none"})`);
+
+    runClaude(prompt, file)
+      .then((result) => {
+        log(`Extraction complete (active: ${activeCount - 1}/${MAX_CONCURRENT}, queued: ${requestQueue.length})`);
+        resolve(result);
+      })
+      .catch((err) => {
+        log(`Extraction failed: ${err.message}`);
+        reject(err);
+      })
+      .finally(() => {
+        activeCount--;
+        // Try to start more queued work
+        drainQueue();
+      });
+  }
+}
+
+/**
+ * Enqueue an extraction request. Returns a promise that resolves when processing completes.
+ */
+function enqueueExtraction(prompt, file) {
+  return new Promise((resolve, reject) => {
+    if (requestQueue.length >= MAX_QUEUE_SIZE) {
+      reject(new Error("Queue full. Try again later."));
+      return;
+    }
+    const position = requestQueue.length + activeCount;
+    requestQueue.push({ prompt, file, resolve, reject });
+    log(`Queued extraction (position: ${position + 1}, active: ${activeCount}/${MAX_CONCURRENT}, queued: ${requestQueue.length})`);
+    // Try to start immediately if we have capacity
+    drainQueue();
+  });
+}
+
+/**
+ * Spawn a minimal warmup process to pre-load Claude runtime.
+ */
+function spawnWarmup() {
+  if (activeCount > 0 || warmupProcess) {
+    log("Warmup skipped (already processing or warming)");
+    return false;
+  }
+
+  log("Spawning warmup process...");
+  const child = spawn("claude", [
+    "-p", "Reply with just: ok",
+    "--output-format", "json",
+    "--dangerously-skip-permissions",
+  ], {
+    env: {
+      ...process.env,
+      CI: "true",
+      HOME: process.env.HOME || "/home/bugfixer",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30000, // 30s max for warmup
+  });
+
+  warmupProcess = child;
+
+  child.on("close", (code) => {
+    log(`Warmup process exited (code: ${code})`);
+    if (warmupProcess === child) warmupProcess = null;
+  });
+
+  child.on("error", (err) => {
+    log(`Warmup error: ${err.message}`);
+    if (warmupProcess === child) warmupProcess = null;
+  });
+
+  return true;
 }
 
 /**
@@ -124,7 +213,34 @@ const server = http.createServer(async (req, res) => {
   // Health check
   if (req.method === "GET" && req.url === "/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ status: "ok", service: "portsie-cli-wrapper" }));
+    res.end(JSON.stringify({
+      status: "ok",
+      service: "portsie-cli-wrapper",
+      active: activeCount,
+      maxConcurrent: MAX_CONCURRENT,
+      queued: requestQueue.length,
+      warming: !!warmupProcess,
+    }));
+    return;
+  }
+
+  // Warmup endpoint
+  if (req.method === "POST" && req.url === "/warmup") {
+    if (AUTH_TOKEN) {
+      const authHeader = req.headers["authorization"];
+      if (authHeader !== `Bearer ${AUTH_TOKEN}`) {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Unauthorized" }));
+        return;
+      }
+    }
+
+    const started = spawnWarmup();
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      status: started ? "warming" : "skipped",
+      reason: started ? "warmup spawned" : "already busy",
+    }));
     return;
   }
 
@@ -155,25 +271,17 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (isProcessing) {
-      res.writeHead(429, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Already processing a request. Try again shortly." }));
-      return;
-    }
-
-    isProcessing = true;
-    log(`Processing extraction (prompt: ${prompt.length} chars, file: ${file ? file.filename : "none"})`);
-
     try {
-      const result = await runClaude(prompt, file || null);
-      log(`Extraction complete`);
+      const result = await enqueueExtraction(prompt, file || null);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(result));
-    } finally {
-      isProcessing = false;
+    } catch (err) {
+      log(`Extraction error: ${err.message}`);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err.message }));
     }
   } catch (err) {
-    log(`Error: ${err.message}`);
+    log(`Request error: ${err.message}`);
     res.writeHead(500, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: err.message }));
   }
@@ -182,4 +290,5 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   log(`Portsie CLI wrapper listening on port ${PORT}`);
   log(`Auth: ${AUTH_TOKEN ? "enabled" : "DISABLED (no AUTH_TOKEN set)"}`);
+  log(`Concurrency: ${MAX_CONCURRENT}, max queue: ${MAX_QUEUE_SIZE}, timeout: ${MAX_TIMEOUT_MS}ms`);
 });
