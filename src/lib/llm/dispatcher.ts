@@ -34,10 +34,9 @@ export async function extractFinancialData(
   }
 
   // CLI mode (default)
-  // Use user's configured endpoint, fall back to env var, then local subprocess
+  // Fall back to PORTSIE_CLI_ENDPOINT env var if no per-user endpoint is configured.
+  // This ensures remote CLI works on Vercel where local `claude` isn't available.
   const cliEndpoint =
-    settings?.cliEndpoint ??
-    process.env.PORTSIE_CLI_ENDPOINT ??
-    null;
+    settings?.cliEndpoint ?? process.env.PORTSIE_CLI_ENDPOINT ?? null;
   return extractViaCLI(processedFile, fileType, filename, cliEndpoint);
 }

@@ -1,12 +1,12 @@
 {
-  "version": "v260216.21 8:53a",
-  "release": 21,
-  "sha": "a862ad7e",
-  "fullSha": "a862ad7ebf69c3478d455d51bf12f761966d25db",
+  "version": "v260216.24 11:51a",
+  "release": 24,
+  "sha": "cf78ab61",
+  "fullSha": "cf78ab61e7c0255bbc64ea02f0755e90b8159b80",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000019",
-  "pushedAt": "2026-02-16T14:53:14+00",
-  "commits": [{"sha": "a862ad7ebf69c3478d455d51bf12f761966d25db", "short_sha": "a862ad7e", "author": "rahulio", "message": "Optimize frontend for mobile (iPhone/Android 375px+)"}]
+  "machine": "GitHub Actions 1000000022",
+  "pushedAt": "2026-02-16T17:51:25+00",
+  "commits": [{"sha": "cf78ab61e7c0255bbc64ea02f0755e90b8159b80", "short_sha": "cf78ab61", "author": "rahulio", "message": "fix: fall back to PORTSIE_CLI_ENDPOINT env var for CLI mode on Vercel"}]
 }
