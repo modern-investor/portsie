@@ -1,12 +1,12 @@
 {
-  "version": "v260216.22 8:59a",
-  "release": 22,
-  "sha": "567e70ab",
-  "fullSha": "567e70abc90d386e721858a5406b414f881dec32",
+  "version": "v260216.23 11:13a",
+  "release": 23,
+  "sha": "2c1e22de",
+  "fullSha": "2c1e22de8649f35ae4c226fa54b874f61e88e978",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000020",
-  "pushedAt": "2026-02-16T14:59:34+00",
-  "commits": [{"sha": "567e70abc90d386e721858a5406b414f881dec32", "short_sha": "567e70ab", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/claude/clever-dewdney'"}, {"sha": "181c6f45fc65ac562d5fb1cfab07feb0df4da641", "short_sha": "181c6f45", "author": "rahulio", "message": "Add test user seeding to admin dashboard"}]
+  "machine": "GitHub Actions 1000000021",
+  "pushedAt": "2026-02-16T17:13:17+00",
+  "commits": [{"sha": "2c1e22de8649f35ae4c226fa54b874f61e88e978", "short_sha": "2c1e22de", "author": "rahulio", "message": "Fix version number not showing on login page"}]
 }
