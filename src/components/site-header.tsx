@@ -45,7 +45,7 @@ export async function SiteHeader() {
                 href="/dashboard"
                 className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                Dashboard
+                Connections
               </Link>
               {userIsAdmin && (
                 <Link

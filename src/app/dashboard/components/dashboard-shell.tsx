@@ -46,7 +46,7 @@ export function DashboardShell({
       {/* Dashboard toolbar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold">Portfolio</h1>
+          <h1 className="text-xl font-semibold">Brokerage and Exchange Connections</h1>
           {view === "portfolio" && (
             <HideValuesToggle
               hideValues={hideValues}
@@ -86,7 +86,7 @@ export function DashboardShell({
                     : "text-muted-foreground hover:text-foreground"
                 }`}
                 title={
-                  view === "settings" ? "Back to portfolio" : "Settings"
+                  view === "settings" ? "Back to connections" : "Settings"
                 }
               >
                 <svg
