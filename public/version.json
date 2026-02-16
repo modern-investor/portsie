@@ -1,12 +1,12 @@
 {
-  "version": "v260216.16 6:09a",
-  "release": 16,
-  "sha": "3e35b6eb",
-  "fullSha": "3e35b6eb038cd1927cfa3945a99e3f1518f613b6",
+  "version": "v260216.17 6:12a",
+  "release": 17,
+  "sha": "b640ece4",
+  "fullSha": "b640ece4e21dd298ec805b5facbc4a1681c6af49",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000014",
-  "pushedAt": "2026-02-16T12:09:58+00",
-  "commits": [{"sha": "3e35b6eb038cd1927cfa3945a99e3f1518f613b6", "short_sha": "3e35b6eb", "author": "rahulio", "message": "Merge branch 'claude/admiring-noyce'"}, {"sha": "d334f58ad07f5d37a056bb4bd308cf9f57743d23", "short_sha": "d334f58a", "author": "rahulio", "message": "Show enriched metadata in upload history and reuse processing results for duplicates"}]
+  "machine": "GitHub Actions 1000000015",
+  "pushedAt": "2026-02-16T12:12:33+00",
+  "commits": [{"sha": "b640ece4e21dd298ec805b5facbc4a1681c6af49", "short_sha": "b640ece4", "author": "Rahul", "message": "Merge pull request #3 from modern-investor/claude/vibrant-elion"}, {"sha": "0237d5f55eecc0bed96f120d20578ab45779d79f", "short_sha": "0237d5f5", "author": "rahulio", "message": "Add branding to style guide and update home page with slogan"}]
 }
