@@ -46,6 +46,7 @@ These must be set in Vercel project settings (Settings > Environment Variables):
 | `SUPABASE_URL` | Server only | Supabase URL (for admin/service-role operations) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server only | Supabase service role JWT (bypasses RLS) |
 | `SCHWAB_TOKEN_ENCRYPTION_KEY` | Server only | 64-char hex key for AES-256-GCM encryption |
+| `PORTSIE_CLI_AUTH_TOKEN` | Server only | Shared secret for authenticating with the DO CLI wrapper |
 
 **Not needed as env vars** (stored per-user in DB instead):
 - Anthropic API keys (encrypted in `llm_settings` table)
@@ -244,18 +245,71 @@ Users configure their preferred backend in Dashboard > Settings > LLM tab.
 
 ### Headless Claude on DigitalOcean
 
-For CLI mode with a remote endpoint, a DigitalOcean droplet runs a headless Claude Code instance:
+Since Portsie runs on Vercel (serverless), `claude` CLI cannot be installed there. For CLI mode, extraction requests are proxied to a lightweight HTTP wrapper service running on the shared AlpacApps DigitalOcean droplet (`159.89.157.120` / `openclawzcloudrunner`), where Claude Code is already installed and authenticated.
 
-**Setup:**
-1. Install Claude Code CLI on the DO server: `npm install -g @anthropic-ai/claude-code`
-2. Authenticate once via OAuth device flow: `claude` (follow the browser prompt to authorize with your Max plan account)
-3. Run a simple HTTP wrapper that accepts POST requests with a prompt and optional file content, executes `claude -p`, and returns the JSON response
-4. Set the `cli_endpoint` field in `llm_settings` to the DO server's URL (e.g., `https://claude.your-server.com/extract`)
+**Architecture:**
+
+```
+Vercel (Next.js API route)
+    |
+    | POST /extract  { prompt, file? }
+    | Authorization: Bearer <shared-secret>
+    |
+    v
+DO Droplet (159.89.157.120:8910)
+    |
+    | cli-wrapper/server.js (Node.js HTTP server)
+    |   - Writes binary files to temp dir
+    |   - Spawns: claude -p <prompt> --output-format json --dangerously-skip-permissions
+    |   - Concurrency guard (one-at-a-time)
+    |   - Returns { result: "..." } JSON
+    |
+    v
+Claude Code CLI (Max plan, no per-token cost)
+```
+
+**Service files** (in `cli-wrapper/`):
+
+| File | Purpose |
+|------|---------|
+| `server.js` | Node.js HTTP server — `POST /extract` and `GET /health` |
+| `portsie-cli.service` | systemd unit (runs as `bugfixer` user, same as AlpacApps workers) |
+| `install.sh` | Server setup script (copies files to `/opt/portsie-cli/`, installs systemd service) |
+
+**Deployment:**
+1. Claude Code CLI is already installed globally on the droplet (`npm install -g @anthropic-ai/claude-code`) and authenticated via the `bugfixer` user's Max plan
+2. Run `install.sh` on the droplet as root to set up `/opt/portsie-cli/`
+3. Set `AUTH_TOKEN` in `/opt/portsie-cli/.env` (shared secret)
+4. Set the same token as `PORTSIE_CLI_AUTH_TOKEN` in Vercel env vars
+5. Set `cli_endpoint` to `http://159.89.157.120:8910/extract` in the user's `llm_settings` (via Dashboard > Settings > LLM > CLI Endpoint)
+6. `systemctl enable portsie-cli && systemctl start portsie-cli`
+
+**Request format** (sent by `extractViaCLIRemote` in `llm-cli.ts`):
+```json
+{
+  "prompt": "<system prompt + file content or instructions>",
+  "file": {
+    "content": "<base64-encoded file data>",
+    "filename": "statement.pdf",
+    "mimeType": "application/pdf"
+  }
+}
+```
+
+The `file` field is only included for binary files (PDF, images). Text files (CSV, OFX, TXT) have their content inlined directly in the prompt.
+
+**Response format** (from `claude --output-format json`):
+```json
+{ "type": "result", "subtype": "success", "result": "<extracted JSON string>" }
+```
+
+The wrapper returns this directly. The Portsie client extracts the `result` field and passes it to `parseAndValidateExtraction()` — the same parser used by the API backend.
 
 **Key considerations:**
-- The `CLAUDECODE` environment variable is a nesting guard — if set, `claude -p` refuses to run (to prevent recursive invocation). This is only relevant if invoking from within a Claude Code session; it won't be set on the DO server or in the Next.js Vercel runtime.
-- CLI responses follow the structure `{ type: "result", subtype: "success", result: "..." }` when using `--output-format json`
-- The CLI backend extracts the `result` field and passes it to the same `parseAndValidateExtraction()` function used by the API backend
+- Port 8910 is used to avoid conflicts with other services on the droplet (8901 = PTZ proxy, 8902 = talkback relay, 8055 = Sonos proxy)
+- `--dangerously-skip-permissions` is required for non-interactive execution (same pattern as AlpacApps bug-fixer and feature-builder services)
+- Concurrency is limited to one extraction at a time via an `isProcessing` flag — additional requests get HTTP 429
+- The `CLAUDECODE` nesting guard env var is not set on the DO server, so `claude -p` runs normally
 
 ---
 

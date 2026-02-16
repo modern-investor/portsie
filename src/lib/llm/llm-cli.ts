@@ -116,9 +116,17 @@ async function extractViaCLIRemote(
     };
   }
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  const authToken = process.env.PORTSIE_CLI_AUTH_TOKEN;
+  if (authToken) {
+    headers["Authorization"] = `Bearer ${authToken}`;
+  }
+
   const response = await fetch(endpoint, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(120_000),
   });

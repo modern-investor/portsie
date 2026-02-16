@@ -1,0 +1,19 @@
+[Unit]
+Description=Portsie CLI Wrapper (Claude Code HTTP endpoint)
+After=network.target
+
+[Service]
+Type=simple
+User=bugfixer
+Environment=HOME=/home/bugfixer
+WorkingDirectory=/opt/portsie-cli
+EnvironmentFile=/opt/portsie-cli/.env
+ExecStart=/usr/bin/node /opt/portsie-cli/server.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=portsie-cli
+
+[Install]
+WantedBy=multi-user.target
