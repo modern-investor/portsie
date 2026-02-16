@@ -29,12 +29,20 @@ export default async function AdminPage() {
       {/* Admin Pages */}
       <div className="rounded-lg border p-4 space-y-3">
         <h2 className="text-lg font-semibold">Admin Pages</h2>
-        <Link
-          href="/admin/users"
-          className="block rounded-md bg-black px-4 py-2 text-sm text-white text-center hover:bg-gray-800"
-        >
-          User Management
-        </Link>
+        <div className="space-y-2">
+          <Link
+            href="/admin/users"
+            className="block rounded-md bg-black px-4 py-2 text-sm text-white text-center hover:bg-gray-800"
+          >
+            User Management
+          </Link>
+          <Link
+            href="/admin/style-guide"
+            className="block rounded-md bg-black px-4 py-2 text-sm text-white text-center hover:bg-gray-800"
+          >
+            Style Guide
+          </Link>
+        </div>
       </div>
 
       {/* External Links */}
