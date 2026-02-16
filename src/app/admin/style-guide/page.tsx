@@ -18,7 +18,7 @@ export default async function StyleGuidePage() {
         >
           &larr; Admin
         </Link>
-        <h1 className="text-2xl font-bold mt-1">Style Guide</h1>
+        <h1 className="text-xl font-semibold mt-1">Style Guide</h1>
         <p className="text-sm text-gray-500 mt-1">
           Design tokens from database &middot; Last updated{" "}
           {new Date(guide.updated_at).toLocaleString()}

@@ -1,9 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { LogoutButton } from "@/components/logout-button";
-import { SiteVersion } from "@/components/site-version";
 import { SchwabConnect } from "./schwab-connect";
 import { AccountOverview } from "./account-overview";
 import { PositionsTable } from "./positions-table";
@@ -18,14 +15,10 @@ type View = "portfolio" | "settings" | "brokerage-select" | "brokerage-setup";
 export function DashboardShell({
   isConnected,
   hasCredentials,
-  userEmail,
-  isAdmin,
   hasSetup,
 }: {
   isConnected: boolean;
   hasCredentials: boolean;
-  userEmail: string;
-  isAdmin?: boolean;
   hasSetup?: boolean;
 }) {
   const [hideValues, setHideValues] = useState(false);
@@ -49,25 +42,24 @@ export function DashboardShell({
   const showPortfolioControls = view === "portfolio" || view === "settings";
 
   return (
-    <div className="mx-auto max-w-4xl p-6 space-y-6">
+    <div className="mx-auto max-w-5xl px-6 py-6 space-y-6">
+      {/* Dashboard toolbar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <h1 className="text-xl font-semibold">Portfolio</h1>
           {view === "portfolio" && (
             <HideValuesToggle
               hideValues={hideValues}
               onToggle={() => setHideValues(!hideValues)}
             />
           )}
-          <SiteVersion className="text-gray-400" />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {showPortfolioControls && (
             <>
-              {/* Connect brokerage */}
               <button
                 onClick={() => setView("brokerage-select")}
-                className="rounded-md p-2 text-gray-400 transition-colors hover:text-gray-600"
+                className="rounded-md p-2 text-muted-foreground transition-colors hover:text-foreground"
                 title="Connect brokerage"
               >
                 <svg
@@ -84,15 +76,14 @@ export function DashboardShell({
                   />
                 </svg>
               </button>
-              {/* Settings toggle */}
               <button
                 onClick={() =>
                   setView(view === "settings" ? "portfolio" : "settings")
                 }
                 className={`rounded-md p-2 transition-colors ${
                   view === "settings"
-                    ? "bg-gray-200 text-gray-900"
-                    : "text-gray-400 hover:text-gray-600"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
                 title={
                   view === "settings" ? "Back to portfolio" : "Settings"
@@ -120,18 +111,8 @@ export function DashboardShell({
               </button>
             </>
           )}
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className="rounded-md border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
-            >
-              Admin
-            </Link>
-          )}
-          <LogoutButton />
         </div>
       </div>
-      <p className="text-sm text-gray-600">Logged in as: {userEmail}</p>
 
       {view === "brokerage-select" && (
         <BrokerageSelection onSelect={handleBrokerageSelect} />

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { StyleGuideInjector } from "@/components/style-guide-injector";
+import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,7 +30,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <StyleGuideInjector />
-        {children}
+        <SiteHeader />
+        <main className="min-h-[calc(100vh-3.5rem)]">{children}</main>
       </body>
     </html>
   );

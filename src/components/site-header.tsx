@@ -1,0 +1,65 @@
+import Image from "next/image";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/supabase/admin";
+import { SiteVersion } from "@/components/site-version";
+import { SiteHeaderAuth } from "@/components/site-header-auth";
+
+export async function SiteHeader() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const userIsAdmin = user ? await isAdmin(supabase, user.id) : false;
+
+  return (
+    <header className="border-b border-border bg-background">
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
+        {/* Left: Logo + Wordmark + Version */}
+        <div className="flex items-center gap-2.5">
+          <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2">
+            <Image
+              src="/brand/portsie-icon-dark.png"
+              alt="Portsie"
+              width={28}
+              height={28}
+              className="shrink-0"
+            />
+            <Image
+              src="/brand/portsie-wordmark-dark.png"
+              alt="PORTSIE"
+              width={80}
+              height={16}
+              className="shrink-0"
+            />
+          </Link>
+          <SiteVersion className="text-muted-foreground" />
+        </div>
+
+        {/* Right: Nav + Auth */}
+        <div className="flex items-center gap-4">
+          {user && (
+            <nav className="flex items-center gap-1">
+              <Link
+                href="/dashboard"
+                className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Dashboard
+              </Link>
+              {userIsAdmin && (
+                <Link
+                  href="/admin"
+                  className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Admin
+                </Link>
+              )}
+            </nav>
+          )}
+          <SiteHeaderAuth user={user ? { email: user.email ?? "" } : null} />
+        </div>
+      </div>
+    </header>
+  );
+}
