@@ -1,12 +1,12 @@
 {
-  "version": "v260216.18 6:20a",
-  "release": 18,
-  "sha": "4e52b4a2",
-  "fullSha": "4e52b4a268729b4963f1cbc357e25933307cea9c",
+  "version": "v260216.19 6:30a",
+  "release": 19,
+  "sha": "a1709fc5",
+  "fullSha": "a1709fc5638c15ff4cc4b1067d964a62b909cec5",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000016",
-  "pushedAt": "2026-02-16T12:20:01+00",
-  "commits": [{"sha": "4e52b4a268729b4963f1cbc357e25933307cea9c", "short_sha": "4e52b4a2", "author": "rahulio", "message": "Add application/json to storage bucket allowed MIME types"}]
+  "machine": "GitHub Actions 1000000017",
+  "pushedAt": "2026-02-16T12:30:37+00",
+  "commits": [{"sha": "a1709fc5638c15ff4cc4b1067d964a62b909cec5", "short_sha": "a1709fc5", "author": "rahulio", "message": "Replace brokerage placeholder logos with Logo.dev API"}]
 }
