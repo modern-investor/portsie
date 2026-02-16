@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { LogoutButton } from "@/components/logout-button";
 import { SiteVersion } from "@/components/site-version";
 import { SchwabConnect } from "./schwab-connect";
@@ -30,7 +31,15 @@ export function DashboardShell({
           />
           <SiteVersion className="text-gray-400" />
         </div>
-        <LogoutButton />
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin"
+            className="text-sm text-gray-500 hover:text-gray-700"
+          >
+            Admin
+          </Link>
+          <LogoutButton />
+        </div>
       </div>
       <p className="text-sm text-gray-600">Logged in as: {userEmail}</p>
 
