@@ -1,12 +1,12 @@
 {
-  "version": "v260216.23 11:13a",
-  "release": 23,
-  "sha": "2c1e22de",
-  "fullSha": "2c1e22de8649f35ae4c226fa54b874f61e88e978",
+  "version": "v260216.24 11:51a",
+  "release": 24,
+  "sha": "cf78ab61",
+  "fullSha": "cf78ab61e7c0255bbc64ea02f0755e90b8159b80",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000021",
-  "pushedAt": "2026-02-16T17:13:17+00",
-  "commits": [{"sha": "2c1e22de8649f35ae4c226fa54b874f61e88e978", "short_sha": "2c1e22de", "author": "rahulio", "message": "Fix version number not showing on login page"}]
+  "machine": "GitHub Actions 1000000022",
+  "pushedAt": "2026-02-16T17:51:25+00",
+  "commits": [{"sha": "cf78ab61e7c0255bbc64ea02f0755e90b8159b80", "short_sha": "cf78ab61", "author": "rahulio", "message": "fix: fall back to PORTSIE_CLI_ENDPOINT env var for CLI mode on Vercel"}]
 }
