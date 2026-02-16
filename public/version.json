@@ -1,12 +1,12 @@
 {
-  "version": "v260216.20 8:46a",
-  "release": 20,
-  "sha": "984e40c6",
-  "fullSha": "984e40c6b5912977984e1436a9c0d247f5c6427d",
+  "version": "v260216.21 8:53a",
+  "release": 21,
+  "sha": "a862ad7e",
+  "fullSha": "a862ad7ebf69c3478d455d51bf12f761966d25db",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000018",
-  "pushedAt": "2026-02-16T14:46:38+00",
-  "commits": [{"sha": "984e40c6b5912977984e1436a9c0d247f5c6427d", "short_sha": "984e40c6", "author": "Rahul", "message": "Merge pull request #4 from modern-investor/claude/pensive-northcutt"}, {"sha": "9c20ae6bbefe67280721e10b8819c51b0ff6cb0d", "short_sha": "9c20ae6b", "author": "rahulio", "message": "Document CLI wrapper service in architecture.md and CLAUDE.md"}, {"sha": "2e4901861f00e46b797db8d3f0b2e01c8f9c871a", "short_sha": "2e490186", "author": "rahulio", "message": "Add CLI wrapper service for DO-hosted Claude extraction"}]
+  "machine": "GitHub Actions 1000000019",
+  "pushedAt": "2026-02-16T14:53:14+00",
+  "commits": [{"sha": "a862ad7ebf69c3478d455d51bf12f761966d25db", "short_sha": "a862ad7e", "author": "rahulio", "message": "Optimize frontend for mobile (iPhone/Android 375px+)"}]
 }
