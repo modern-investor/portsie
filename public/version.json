@@ -1,12 +1,12 @@
 {
-  "version": "v260216.15 5:57a",
-  "release": 15,
-  "sha": "8f4dd5e0",
-  "fullSha": "8f4dd5e06bf090db0ad625ced403bab383e91384",
+  "version": "v260216.16 6:09a",
+  "release": 16,
+  "sha": "3e35b6eb",
+  "fullSha": "3e35b6eb038cd1927cfa3945a99e3f1518f613b6",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000013",
-  "pushedAt": "2026-02-16T11:57:15+00",
-  "commits": [{"sha": "8f4dd5e06bf090db0ad625ced403bab383e91384", "short_sha": "8f4dd5e0", "author": "rahulio", "message": "Merge branch 'claude/admiring-noyce'"}, {"sha": "abf9105ee91dd9e922fe37d3435b99e9dcfd4d38", "short_sha": "abf9105e", "author": "rahulio", "message": "Fix duplicate migration timestamp for user_profiles"}]
+  "machine": "GitHub Actions 1000000014",
+  "pushedAt": "2026-02-16T12:09:58+00",
+  "commits": [{"sha": "3e35b6eb038cd1927cfa3945a99e3f1518f613b6", "short_sha": "3e35b6eb", "author": "rahulio", "message": "Merge branch 'claude/admiring-noyce'"}, {"sha": "d334f58ad07f5d37a056bb4bd308cf9f57743d23", "short_sha": "d334f58a", "author": "rahulio", "message": "Show enriched metadata in upload history and reuse processing results for duplicates"}]
 }
