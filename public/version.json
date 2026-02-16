@@ -1,12 +1,12 @@
 {
-  "version": "v260216.14 5:55a",
-  "release": 14,
-  "sha": "fb710094",
-  "fullSha": "fb710094d17f8f474bb1fb5515e8df0aeded9413",
+  "version": "v260216.15 5:57a",
+  "release": 15,
+  "sha": "8f4dd5e0",
+  "fullSha": "8f4dd5e06bf090db0ad625ced403bab383e91384",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000012",
-  "pushedAt": "2026-02-16T11:55:21+00",
-  "commits": [{"sha": "fb710094d17f8f474bb1fb5515e8df0aeded9413", "short_sha": "fb710094", "author": "rahulio", "message": "Rename Dashboard/Portfolio labels to Connections/Brokerage and Exchange Connections"}]
+  "machine": "GitHub Actions 1000000013",
+  "pushedAt": "2026-02-16T11:57:15+00",
+  "commits": [{"sha": "8f4dd5e06bf090db0ad625ced403bab383e91384", "short_sha": "8f4dd5e0", "author": "rahulio", "message": "Merge branch 'claude/admiring-noyce'"}, {"sha": "abf9105ee91dd9e922fe37d3435b99e9dcfd4d38", "short_sha": "abf9105e", "author": "rahulio", "message": "Fix duplicate migration timestamp for user_profiles"}]
 }
