@@ -10,6 +10,9 @@ export function UploadSection() {
   const [uploads, setUploads] = useState<UploadedStatement[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [queuedIds, setQueuedIds] = useState<Set<string>>(new Set());
+  const [batchTotal, setBatchTotal] = useState(0);
+  const [batchDone, setBatchDone] = useState(0);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [accountMatches, setAccountMatches] = useState<AccountMatch[]>([]);
 
@@ -88,11 +91,28 @@ export function UploadSection() {
     }
   }
 
-  // Batch process: kick off all selected uploads concurrently
-  function handleBatchProcess(ids: string[]) {
+  // Batch process: process sequentially so users see queued → processing → done
+  async function handleBatchProcess(ids: string[]) {
+    // Mark all as queued, set up progress tracking
+    setQueuedIds(new Set(ids));
+    setBatchTotal(ids.length);
+    setBatchDone(0);
+
     for (const id of ids) {
-      handleProcess(id);
+      // Move from queued to processing
+      setQueuedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      await handleProcess(id);
+      setBatchDone((prev) => prev + 1);
     }
+
+    // Clear batch state when done
+    setQueuedIds(new Set());
+    setBatchTotal(0);
+    setBatchDone(0);
   }
 
   // Open review panel
@@ -179,6 +199,9 @@ export function UploadSection() {
         <UploadList
           uploads={uploads}
           processingIds={processingIds}
+          queuedIds={queuedIds}
+          batchTotal={batchTotal}
+          batchDone={batchDone}
           onBatchProcess={handleBatchProcess}
           onReview={handleReview}
           onDelete={handleDelete}

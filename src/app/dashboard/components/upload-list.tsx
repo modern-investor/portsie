@@ -8,6 +8,7 @@ const STATUS_STYLES: Record<
   { label: string; className: string }
 > = {
   pending: { label: "Pending", className: "bg-gray-100 text-gray-600" },
+  queued: { label: "Queued", className: "bg-yellow-100 text-yellow-700" },
   processing: {
     label: "Processing",
     className: "bg-blue-100 text-blue-700 animate-pulse",
@@ -71,12 +72,18 @@ function describeContent(upload: UploadedStatement): string | null {
 export function UploadList({
   uploads,
   processingIds,
+  queuedIds,
+  batchTotal,
+  batchDone,
   onBatchProcess,
   onReview,
   onDelete,
 }: {
   uploads: UploadedStatement[];
   processingIds: Set<string>;
+  queuedIds: Set<string>;
+  batchTotal: number;
+  batchDone: number;
   onBatchProcess: (ids: string[]) => void;
   onReview: (id: string) => void;
   onDelete: (id: string) => void;
@@ -144,7 +151,7 @@ export function UploadList({
   return (
     <div className="space-y-2">
       {/* Batch action bar */}
-      {processableIds.length > 0 && (
+      {processableIds.length > 0 && batchTotal === 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-blue-100 bg-blue-50/50 px-3 py-2 sm:gap-3 sm:px-4 sm:py-2.5">
           <input
             type="checkbox"
@@ -168,13 +175,37 @@ export function UploadList({
         </div>
       )}
 
+      {/* Batch progress bar */}
+      {batchTotal > 0 && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5 sm:px-4 sm:py-3">
+          <div className="mb-1.5 flex items-center justify-between text-sm">
+            <span className="font-medium text-blue-800">
+              Processing {batchDone + 1} of {batchTotal}
+            </span>
+            <span className="text-blue-600">
+              {batchDone} done
+              {batchTotal - batchDone - 1 > 0 && `, ${batchTotal - batchDone - 1} queued`}
+            </span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-blue-200">
+            <div
+              className="h-full rounded-full bg-blue-600 transition-all duration-500 ease-out"
+              style={{ width: `${(batchDone / batchTotal) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {uploads.map((upload) => {
+        const isQueued = queuedIds.has(upload.id);
         const isProcessing =
           processingIds.has(upload.id) ||
           upload.parse_status === "processing";
         const status = isProcessing
           ? STATUS_STYLES.processing
-          : STATUS_STYLES[upload.parse_status] ?? STATUS_STYLES.pending;
+          : isQueued
+            ? STATUS_STYLES.queued
+            : STATUS_STYLES[upload.parse_status] ?? STATUS_STYLES.pending;
         const isConfirmed = !!upload.confirmed_at;
         const isProcessable = processableIds.includes(upload.id);
 
