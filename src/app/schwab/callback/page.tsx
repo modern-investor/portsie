@@ -2,6 +2,16 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Check, CircleAlert, Loader2 } from "lucide-react";
 
 function SchwabCallbackHandler() {
   const searchParams = useSearchParams();
@@ -41,43 +51,58 @@ function SchwabCallbackHandler() {
   }, [searchParams, router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-md rounded-lg border p-8 text-center">
-        {status === "loading" && (
-          <>
-            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            <h2 className="text-lg font-semibold">
-              Connecting your Schwab account...
-            </h2>
-            <p className="mt-2 text-sm text-gray-500">
-              Please wait while we complete the authorization.
-            </p>
-          </>
-        )}
-        {status === "success" && (
-          <>
-            <h2 className="text-lg font-semibold text-green-600">
-              Connected!
-            </h2>
-            <p className="mt-2 text-sm text-gray-500">
-              Redirecting to dashboard...
-            </p>
-          </>
-        )}
-        {status === "error" && (
-          <>
-            <h2 className="text-lg font-semibold text-red-600">
-              Connection Failed
-            </h2>
-            <p className="mt-2 text-sm text-gray-500">{error}</p>
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="mt-4 rounded-md bg-black px-4 py-2 text-sm text-white hover:bg-gray-800"
-            >
-              Back to Dashboard
-            </button>
-          </>
-        )}
+    <div className="flex min-h-screen items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <Card className="text-center">
+          {status === "loading" && (
+            <CardHeader>
+              <div className="mx-auto">
+                <Loader2 className="text-primary size-8 animate-spin" />
+              </div>
+              <CardTitle>Connecting your Schwab account...</CardTitle>
+              <CardDescription>
+                Please wait while we complete the authorization.
+              </CardDescription>
+            </CardHeader>
+          )}
+
+          {status === "success" && (
+            <CardHeader>
+              <div className="bg-chart-2/15 mx-auto flex size-12 items-center justify-center rounded-full">
+                <Check className="text-chart-2 size-6" />
+              </div>
+              <CardTitle>Connected!</CardTitle>
+              <CardDescription>
+                Redirecting to dashboard...
+              </CardDescription>
+            </CardHeader>
+          )}
+
+          {status === "error" && (
+            <>
+              <CardHeader>
+                <div className="bg-destructive/10 mx-auto flex size-12 items-center justify-center rounded-full">
+                  <CircleAlert className="text-destructive size-6" />
+                </div>
+                <CardTitle>Connection Failed</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Alert variant="destructive">
+                  <CircleAlert className="size-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => router.push("/dashboard")}
+                >
+                  Back to Dashboard
+                </Button>
+              </CardContent>
+            </>
+          )}
+        </Card>
       </div>
     </div>
   );
@@ -88,7 +113,7 @@ export default function SchwabCallbackPage() {
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          <Loader2 className="text-primary size-8 animate-spin" />
         </div>
       }
     >

@@ -2,6 +2,31 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ClipboardCopy,
+  ExternalLink,
+  AlertTriangle,
+  CircleAlert,
+  Loader2,
+  Link2,
+} from "lucide-react";
 
 function StepIndicator({
   current,
@@ -16,26 +41,31 @@ function StepIndicator({
         const step = i + 1;
         const isActive = step === current;
         const isCompleted = step < current;
+
         return (
           <div key={step} className="flex items-center gap-2">
             <div
-              className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
-                isActive
-                  ? "bg-black text-white dark:bg-white dark:text-black"
-                  : isCompleted
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
-              }`}
+              className={cn(
+                "flex size-8 items-center justify-center rounded-full text-sm font-bold transition-colors",
+                isActive &&
+                  "bg-primary text-primary-foreground",
+                isCompleted &&
+                  "bg-chart-2 text-white",
+                !isActive &&
+                  !isCompleted &&
+                  "bg-muted text-muted-foreground"
+              )}
             >
-              {isCompleted ? "\u2713" : step}
+              {isCompleted ? <Check className="size-4" /> : step}
             </div>
             {step < total && (
               <div
-                className={`h-0.5 w-8 ${
+                className={cn(
+                  "h-0.5 w-8 transition-colors",
                   isCompleted
-                    ? "bg-green-500"
-                    : "bg-gray-200 dark:bg-gray-700"
-                }`}
+                    ? "bg-chart-2"
+                    : "bg-muted"
+                )}
               />
             )}
           </div>
@@ -89,7 +119,10 @@ export default function SchwabSetupPage() {
       const res = await fetch("/api/schwab/credentials", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ appKey: appKey.trim(), appSecret: appSecret.trim() }),
+        body: JSON.stringify({
+          appKey: appKey.trim(),
+          appSecret: appSecret.trim(),
+        }),
       });
 
       if (!res.ok) {
@@ -127,18 +160,23 @@ export default function SchwabSetupPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg p-6">
-      <button
+    <div className="mx-auto max-w-lg px-6 py-10">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="mb-6"
         onClick={() => router.push("/dashboard")}
-        className="mb-6 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-gray-300"
       >
-        &larr; Back to Dashboard
-      </button>
+        <ArrowLeft className="size-4" />
+        Back to Dashboard
+      </Button>
 
-      <h1 className="text-2xl font-bold">Set Up Schwab</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        Connect your brokerage account to view your portfolio in Portsie.
-      </p>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Set Up Schwab</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Connect your brokerage account to view your portfolio in Portsie.
+        </p>
+      </div>
 
       <div className="mt-6 mb-8">
         <StepIndicator current={step} total={3} />
@@ -147,144 +185,162 @@ export default function SchwabSetupPage() {
       {/* Step 1: Create Schwab Developer App */}
       {step === 1 && (
         <div className="space-y-6">
-          <div className="rounded-lg border p-6 space-y-4">
-            <h2 className="text-lg font-semibold">
-              Create a Schwab Developer App
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Portsie connects to your Schwab account through the Schwab API.
-              You need to create a free developer app to get API credentials.
-            </p>
+          <Card>
+            <CardHeader>
+              <CardTitle>Create a Schwab Developer App</CardTitle>
+              <CardDescription>
+                Portsie connects to your Schwab account through the Schwab API.
+                You need to create a free developer app to get API credentials.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ol className="list-decimal space-y-3 pl-5 text-sm leading-relaxed">
+                <li>
+                  Go to{" "}
+                  <a
+                    href="https://developer.schwab.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-medium underline underline-offset-4 hover:no-underline"
+                  >
+                    developer.schwab.com
+                    <ExternalLink className="size-3" />
+                  </a>{" "}
+                  and sign in with your Schwab brokerage credentials.
+                </li>
+                <li>
+                  Navigate to <strong>My Apps</strong> and click{" "}
+                  <strong>Create App</strong>.
+                </li>
+                <li>
+                  Enter any app name (e.g. &ldquo;Portsie&rdquo;).
+                </li>
+                <li>
+                  For the <strong>Callback URL</strong>, copy and paste the URL
+                  below:
+                </li>
+              </ol>
 
-            <ol className="list-decimal space-y-3 pl-5 text-sm leading-relaxed">
-              <li>
-                Go to{" "}
-                <a
-                  href="https://developer.schwab.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium underline hover:no-underline"
+              <div className="flex items-center gap-2 rounded-lg border bg-muted/50 p-3">
+                <code className="flex-1 break-all text-sm">
+                  {callbackUrl}
+                </code>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopy}
+                  className="shrink-0"
                 >
-                  developer.schwab.com
-                </a>{" "}
-                and sign in with your Schwab brokerage credentials.
-              </li>
-              <li>
-                Navigate to <strong>My Apps</strong> and click{" "}
-                <strong>Create App</strong>.
-              </li>
-              <li>
-                Enter any app name (e.g. &ldquo;Portsie&rdquo;).
-              </li>
-              <li>
-                For the <strong>Callback URL</strong>, copy and paste the URL
-                below:
-              </li>
-            </ol>
+                  {copied ? (
+                    <>
+                      <Check className="size-3" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardCopy className="size-3" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
 
-            <div className="flex items-center gap-2 rounded-md border bg-gray-50 p-3 dark:bg-gray-900">
-              <code className="flex-1 text-sm break-all">{callbackUrl}</code>
-              <button
-                onClick={handleCopy}
-                className="shrink-0 rounded-md border px-3 py-1.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+              <ol
+                className="list-decimal space-y-3 pl-5 text-sm leading-relaxed"
+                start={5}
               >
-                {copied ? "Copied!" : "Copy"}
-              </button>
-            </div>
+                <li>
+                  Enable the <strong>Accounts and Trading</strong> and{" "}
+                  <strong>Market Data</strong> API products.
+                </li>
+                <li>
+                  Click <strong>Create</strong> to submit your app.
+                </li>
+              </ol>
 
-            <ol className="list-decimal space-y-3 pl-5 text-sm leading-relaxed" start={5}>
-              <li>
-                Enable the <strong>Accounts and Trading</strong> and{" "}
-                <strong>Market Data</strong> API products.
-              </li>
-              <li>
-                Click <strong>Create</strong> to submit your app.
-              </li>
-            </ol>
+              <Alert>
+                <AlertTriangle className="size-4" />
+                <AlertTitle>Note</AlertTitle>
+                <AlertDescription>
+                  Schwab reviews new apps before activation. This typically takes
+                  1&ndash;3 business days. You can continue with the next step
+                  now and connect once approved.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
 
-            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
-              <strong>Note:</strong> Schwab reviews new apps before activation.
-              This typically takes 1&ndash;3 business days. You can continue
-              with the next step now and connect once approved.
-            </div>
-          </div>
-
-          <button
-            onClick={() => setStep(2)}
-            className="w-full rounded-md bg-black px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
-          >
+          <Button className="w-full" onClick={() => setStep(2)}>
             Next: Enter Credentials
-          </button>
+            <ArrowRight className="size-4" />
+          </Button>
         </div>
       )}
 
       {/* Step 2: Enter Credentials */}
       {step === 2 && (
         <div className="space-y-6">
-          <div className="rounded-lg border p-6 space-y-4">
-            <h2 className="text-lg font-semibold">Enter Your Credentials</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Find your App Key and App Secret in the Schwab developer portal
-              under <strong>My Apps</strong>. These are stored encrypted and
-              never exposed to your browser after saving.
-            </p>
+          <Card>
+            <CardHeader>
+              <CardTitle>Enter Your Credentials</CardTitle>
+              <CardDescription>
+                Find your App Key and App Secret in the Schwab developer portal
+                under <strong>My Apps</strong>. These are stored encrypted and
+                never exposed to your browser after saving.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <CircleAlert className="size-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
 
-            {error && (
-              <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-3">
-              <div>
-                <label
-                  htmlFor="appKey"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  App Key
-                </label>
-                <input
+              <div className="space-y-2">
+                <Label htmlFor="appKey">App Key</Label>
+                <Input
                   id="appKey"
                   type="text"
                   value={appKey}
                   onChange={(e) => setAppKey(e.target.value)}
                   placeholder="Your Schwab App Key"
-                  className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black dark:bg-gray-900 dark:focus:ring-white"
                 />
               </div>
-              <div>
-                <label
-                  htmlFor="appSecret"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  App Secret
-                </label>
-                <input
+
+              <div className="space-y-2">
+                <Label htmlFor="appSecret">App Secret</Label>
+                <Input
                   id="appSecret"
                   type="password"
                   value={appSecret}
                   onChange={(e) => setAppSecret(e.target.value)}
                   placeholder="Your Schwab App Secret"
-                  className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black dark:bg-gray-900 dark:focus:ring-white"
                 />
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <div className="flex gap-3">
-            <button
-              onClick={() => setStep(1)}
-              className="rounded-md border px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-900"
-            >
+            <Button variant="outline" onClick={() => setStep(1)}>
+              <ArrowLeft className="size-4" />
               Back
-            </button>
-            <button
+            </Button>
+            <Button
+              className="flex-1"
               onClick={handleSaveCredentials}
               disabled={saving || !appKey.trim() || !appSecret.trim()}
-              className="flex-1 rounded-md bg-black px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200"
             >
-              {saving ? "Saving..." : "Save Credentials"}
-            </button>
+              {saving ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Credentials"
+              )}
+            </Button>
           </div>
         </div>
       )}
@@ -292,57 +348,76 @@ export default function SchwabSetupPage() {
       {/* Step 3: Connect Account */}
       {step === 3 && (
         <div className="space-y-6">
-          <div className="rounded-lg border p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                <span className="text-lg text-green-600 dark:text-green-400">
-                  {"\u2713"}
-                </span>
+          <Card>
+            <CardContent className="space-y-4 pt-6">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-full bg-chart-2/15">
+                  <Check className="size-5 text-chart-2" />
+                </div>
+                <div>
+                  <p className="font-semibold leading-none">
+                    Credentials Saved
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    Your Schwab API credentials are securely stored.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-semibold">Credentials Saved</h2>
-                <p className="text-sm text-gray-500">
-                  Your Schwab API credentials are securely stored.
-                </p>
-              </div>
-            </div>
 
-            <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
-              <strong>Ready to connect?</strong> Make sure your Schwab developer
-              app has been approved (check its status at{" "}
-              <a
-                href="https://developer.schwab.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:no-underline"
-              >
-                developer.schwab.com
-              </a>
-              ). Once approved, click the button below to link your brokerage
-              account.
-            </div>
+              <Separator />
 
-            {error && (
-              <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
-                {error}
-              </div>
-            )}
-          </div>
+              <Alert>
+                <Link2 className="size-4" />
+                <AlertTitle>Ready to connect?</AlertTitle>
+                <AlertDescription>
+                  Make sure your Schwab developer app has been approved (check
+                  its status at{" "}
+                  <a
+                    href="https://developer.schwab.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-medium underline underline-offset-4 hover:no-underline"
+                  >
+                    developer.schwab.com
+                    <ExternalLink className="size-3" />
+                  </a>
+                  ). Once approved, click the button below to link your
+                  brokerage account.
+                </AlertDescription>
+              </Alert>
 
-          <button
+              {error && (
+                <Alert variant="destructive">
+                  <CircleAlert className="size-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+
+          <Button
+            className="w-full"
             onClick={handleConnect}
             disabled={connecting}
-            className="w-full rounded-md bg-black px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200"
           >
-            {connecting ? "Connecting..." : "Connect Schwab Account"}
-          </button>
+            {connecting ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              "Connect Schwab Account"
+            )}
+          </Button>
 
-          <button
+          <Button
+            variant="outline"
+            className="w-full"
             onClick={() => router.push("/dashboard")}
-            className="w-full rounded-md border px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-900"
           >
             Back to Dashboard
-          </button>
+          </Button>
         </div>
       )}
     </div>

@@ -5,6 +5,19 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { GoogleSignIn } from "@/components/google-sign-in";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { CircleAlert, Loader2 } from "lucide-react";
 
 export function SignupForm() {
   const [email, setEmail] = useState("");
@@ -41,86 +54,91 @@ export function SignupForm() {
   };
 
   return (
-    <form onSubmit={handleSignup} className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-center">
-        Create your Portsie account
-      </h1>
+    <Card>
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">Create your Portsie account</CardTitle>
+        <CardDescription>
+          Sign up with Google or create an account with email
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSignup} className="flex flex-col gap-4">
+          <GoogleSignIn />
 
-      <GoogleSignIn />
+          <div className="relative flex items-center">
+            <Separator className="flex-1" />
+            <span className="text-muted-foreground px-3 text-xs uppercase">
+              or
+            </span>
+            <Separator className="flex-1" />
+          </div>
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-gray-300" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-gray-500">or</span>
-        </div>
-      </div>
+          {error && (
+            <Alert variant="destructive">
+              <CircleAlert className="size-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-      {error && (
-        <p className="text-sm text-red-500 text-center">{error}</p>
-      )}
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+            />
+          </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor="email" className="text-sm font-medium">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          required
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Create a password"
+              required
+              minLength={6}
+            />
+          </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor="password" className="text-sm font-medium">
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Create a password"
-          required
-          minLength={6}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm your password"
+              required
+            />
+          </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor="confirmPassword" className="text-sm font-medium">
-          Confirm Password
-        </label>
-        <input
-          id="confirmPassword"
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm your password"
-          required
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
-      </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              "Sign up"
+            )}
+          </Button>
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="rounded-md bg-black px-4 py-2 text-sm text-white hover:bg-gray-800 disabled:opacity-50"
-      >
-        {isLoading ? "Creating account..." : "Sign up"}
-      </button>
-
-      <p className="text-sm text-center text-gray-600">
-        Already have an account?{" "}
-        <Link href="/login" className="text-blue-600 hover:underline">
-          Log in
-        </Link>
-      </p>
-    </form>
+          <p className="text-muted-foreground text-center text-sm">
+            Already have an account?{" "}
+            <Link
+              href="/login"
+              className="text-primary font-medium underline underline-offset-4 hover:no-underline"
+            >
+              Log in
+            </Link>
+          </p>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

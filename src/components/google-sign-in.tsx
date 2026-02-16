@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
 
 export function GoogleSignIn() {
   const handleGoogleSignIn = async () => {
@@ -14,10 +15,11 @@ export function GoogleSignIn() {
   };
 
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
+      className="w-full"
       onClick={handleGoogleSignIn}
-      className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
     >
       <svg width="18" height="18" viewBox="0 0 18 18">
         <path
@@ -38,6 +40,6 @@ export function GoogleSignIn() {
         />
       </svg>
       Sign in with Google
-    </button>
+    </Button>
   );
 }
