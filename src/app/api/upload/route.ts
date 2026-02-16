@@ -47,20 +47,11 @@ export async function POST(request: NextRequest) {
   // Check for duplicate upload (same file content for same user)
   const { data: existing } = await supabase
     .from("uploaded_statements")
-    .select("id, filename")
+    .select("*")
     .eq("user_id", user.id)
     .eq("file_hash", fileHash)
+    .limit(1)
     .single();
-
-  if (existing) {
-    return NextResponse.json(
-      {
-        error: `This file was already uploaded as "${existing.filename}"`,
-        existingId: existing.id,
-      },
-      { status: 409 }
-    );
-  }
 
   // Upload to Supabase Storage under user's folder
   const filePath = `${user.id}/${Date.now()}_${file.name}`;
@@ -76,18 +67,33 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // If a duplicate exists and was already processed, carry over its results
+  const isProcessed =
+    existing &&
+    (existing.parse_status === "completed" || existing.parse_status === "partial");
+
+  const insertData: Record<string, unknown> = {
+    user_id: user.id,
+    filename: file.name,
+    file_path: filePath,
+    file_type: fileType,
+    file_size_bytes: file.size,
+    file_hash: fileHash,
+    parse_status: isProcessed ? existing.parse_status : "pending",
+    ...(isProcessed && {
+      parsed_at: existing.parsed_at,
+      extracted_data: existing.extracted_data,
+      raw_llm_response: existing.raw_llm_response,
+      detected_account_info: existing.detected_account_info,
+      statement_start_date: existing.statement_start_date,
+      statement_end_date: existing.statement_end_date,
+    }),
+  };
+
   // Create metadata record in uploaded_statements
   const { data: statement, error: dbError } = await supabase
     .from("uploaded_statements")
-    .insert({
-      user_id: user.id,
-      filename: file.name,
-      file_path: filePath,
-      file_type: fileType,
-      file_size_bytes: file.size,
-      file_hash: fileHash,
-      parse_status: "pending",
-    })
+    .insert(insertData)
     .select()
     .single();
 
