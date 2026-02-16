@@ -37,7 +37,7 @@ export function UploadSection() {
     setUploads((prev) => [statement, ...prev]);
   }
 
-  // Trigger LLM processing
+  // Trigger LLM processing for a single upload
   async function handleProcess(uploadId: string) {
     setProcessingIds((prev) => new Set(prev).add(uploadId));
 
@@ -85,6 +85,13 @@ export function UploadSection() {
         next.delete(uploadId);
         return next;
       });
+    }
+  }
+
+  // Batch process: kick off all selected uploads concurrently
+  function handleBatchProcess(ids: string[]) {
+    for (const id of ids) {
+      handleProcess(id);
     }
   }
 
@@ -172,7 +179,7 @@ export function UploadSection() {
         <UploadList
           uploads={uploads}
           processingIds={processingIds}
-          onProcess={handleProcess}
+          onBatchProcess={handleBatchProcess}
           onReview={handleReview}
           onDelete={handleDelete}
         />

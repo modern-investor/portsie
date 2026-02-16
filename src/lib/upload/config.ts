@@ -15,11 +15,12 @@ export const UPLOAD_CONFIG = {
     "image/jpeg",
     "application/x-ofx",
     "application/x-qfx",
+    "application/json",
   ] as const,
 
   /** Human-readable accept string for file inputs */
   acceptString:
-    ".pdf,.csv,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.ofx,.qfx",
+    ".pdf,.csv,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.ofx,.qfx,.json",
 
   /** Claude model used for extraction (Sonnet for cost/quality balance) */
   claudeModel: "claude-sonnet-4-20250514" as const,

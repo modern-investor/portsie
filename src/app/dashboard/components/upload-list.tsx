@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import type { UploadedStatement } from "@/lib/upload/types";
 
 const STATUS_STYLES: Record<
@@ -28,6 +29,7 @@ const FILE_TYPE_ICONS: Record<string, string> = {
   ofx: "OFX",
   qfx: "QFX",
   txt: "TXT",
+  json: "JSON",
 };
 
 function formatFileSize(bytes: number | null): string {
@@ -40,20 +42,103 @@ function formatFileSize(bytes: number | null): string {
 export function UploadList({
   uploads,
   processingIds,
-  onProcess,
+  onBatchProcess,
   onReview,
   onDelete,
 }: {
   uploads: UploadedStatement[];
   processingIds: Set<string>;
-  onProcess: (id: string) => void;
+  onBatchProcess: (ids: string[]) => void;
   onReview: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
+  // Track IDs the user has explicitly unchecked; everything else defaults to checked
+  const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
+
+  // IDs that can be checked for batch processing (pending or failed, not currently processing)
+  const processableIds = useMemo(
+    () =>
+      uploads
+        .filter(
+          (u) =>
+            (u.parse_status === "pending" || u.parse_status === "failed") &&
+            !processingIds.has(u.id) &&
+            !u.confirmed_at
+        )
+        .map((u) => u.id),
+    [uploads, processingIds]
+  );
+
+  // All processable IDs are checked unless explicitly deselected
+  const checkedIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const id of processableIds) {
+      if (!deselectedIds.has(id)) set.add(id);
+    }
+    return set;
+  }, [processableIds, deselectedIds]);
+
+  function toggleSelection(id: string) {
+    if (checkedIds.has(id)) {
+      setDeselectedIds((prev) => new Set(prev).add(id));
+    } else {
+      setDeselectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  }
+
+  function toggleAll() {
+    if (checkedIds.size === processableIds.length) {
+      // Deselect all
+      setDeselectedIds(new Set(processableIds));
+    } else {
+      // Select all
+      setDeselectedIds(new Set());
+    }
+  }
+
+  function handleBatchProcess() {
+    const ids = Array.from(checkedIds);
+    if (ids.length > 0) {
+      onBatchProcess(ids);
+    }
+  }
+
   if (uploads.length === 0) return null;
+
+  const allChecked = processableIds.length > 0 && checkedIds.size === processableIds.length;
+  const someChecked = checkedIds.size > 0 && checkedIds.size < processableIds.length;
 
   return (
     <div className="space-y-2">
+      {/* Batch action bar */}
+      {processableIds.length > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-blue-100 bg-blue-50/50 px-4 py-2.5">
+          <input
+            type="checkbox"
+            checked={allChecked}
+            ref={(el) => {
+              if (el) el.indeterminate = someChecked;
+            }}
+            onChange={toggleAll}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <span className="text-sm text-gray-600">
+            {checkedIds.size} of {processableIds.length} selected
+          </span>
+          <button
+            onClick={handleBatchProcess}
+            disabled={checkedIds.size === 0}
+            className="ml-auto rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Process{checkedIds.size > 0 ? ` (${checkedIds.size})` : ""}
+          </button>
+        </div>
+      )}
+
       {uploads.map((upload) => {
         const isProcessing =
           processingIds.has(upload.id) ||
@@ -62,12 +147,25 @@ export function UploadList({
           ? STATUS_STYLES.processing
           : STATUS_STYLES[upload.parse_status] ?? STATUS_STYLES.pending;
         const isConfirmed = !!upload.confirmed_at;
+        const isProcessable = processableIds.includes(upload.id);
 
         return (
           <div
             key={upload.id}
             className="flex items-center gap-3 rounded-lg border px-4 py-3"
           >
+            {/* Checkbox for processable files */}
+            {isProcessable ? (
+              <input
+                type="checkbox"
+                checked={checkedIds.has(upload.id)}
+                onChange={() => toggleSelection(upload.id)}
+                className="h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+            ) : (
+              <div className="h-4 w-4 shrink-0" />
+            )}
+
             {/* File type badge */}
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-gray-100 text-xs font-semibold text-gray-500">
               {FILE_TYPE_ICONS[upload.file_type] ?? "?"}
@@ -98,24 +196,6 @@ export function UploadList({
 
             {/* Actions */}
             <div className="flex shrink-0 items-center gap-1">
-              {upload.parse_status === "pending" && !isProcessing && (
-                <button
-                  onClick={() => onProcess(upload.id)}
-                  className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
-                >
-                  Process
-                </button>
-              )}
-
-              {upload.parse_status === "failed" && !isProcessing && (
-                <button
-                  onClick={() => onProcess(upload.id)}
-                  className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
-                >
-                  Retry
-                </button>
-              )}
-
               {(upload.parse_status === "completed" ||
                 upload.parse_status === "partial") &&
                 !isConfirmed && (

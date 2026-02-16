@@ -9,7 +9,8 @@ export type UploadFileType =
   | "png"
   | "jpg"
   | "xlsx"
-  | "txt";
+  | "txt"
+  | "json";
 
 /** Maps browser MIME types to our internal file type identifiers */
 export const MIME_TO_FILE_TYPE: Record<string, UploadFileType> = {
@@ -22,6 +23,7 @@ export const MIME_TO_FILE_TYPE: Record<string, UploadFileType> = {
   "image/jpeg": "jpg",
   "application/x-ofx": "ofx",
   "application/x-qfx": "qfx",
+  "application/json": "json",
 };
 
 // ── LLM extraction result types ──

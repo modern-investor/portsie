@@ -96,6 +96,12 @@ export function processFileForLLM(
         textContent: fileBuffer.toString("utf-8"),
       };
 
+    case "json":
+      return {
+        contentType: "text",
+        textContent: fileBuffer.toString("utf-8"),
+      };
+
     default:
       throw new Error(`Unsupported file type: ${fileType}`);
   }
