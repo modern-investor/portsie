@@ -6,6 +6,7 @@ export interface BrokerageInfo {
   hasApiSupport: boolean;
   parentCompany?: string;
   logoPlaceholder: string;
+  logoDomain: string;
 }
 
 export const BROKERAGES: BrokerageInfo[] = [
@@ -16,6 +17,7 @@ export const BROKERAGES: BrokerageInfo[] = [
     description: "Connect via API or upload portfolio files",
     hasApiSupport: true,
     logoPlaceholder: "CS",
+    logoDomain: "schwab.com",
   },
   {
     id: "fidelity",
@@ -24,6 +26,7 @@ export const BROKERAGES: BrokerageInfo[] = [
     description: "Upload statements and portfolio files",
     hasApiSupport: false,
     logoPlaceholder: "FI",
+    logoDomain: "fidelity.com",
   },
   {
     id: "vanguard",
@@ -32,6 +35,7 @@ export const BROKERAGES: BrokerageInfo[] = [
     description: "Upload statements and portfolio files",
     hasApiSupport: false,
     logoPlaceholder: "VG",
+    logoDomain: "vanguard.com",
   },
   {
     id: "td-ameritrade",
@@ -41,6 +45,7 @@ export const BROKERAGES: BrokerageInfo[] = [
     hasApiSupport: false,
     parentCompany: "Charles Schwab",
     logoPlaceholder: "TD",
+    logoDomain: "tdameritrade.com",
   },
   {
     id: "etrade",
@@ -50,6 +55,7 @@ export const BROKERAGES: BrokerageInfo[] = [
     hasApiSupport: false,
     parentCompany: "Morgan Stanley",
     logoPlaceholder: "ET",
+    logoDomain: "etrade.com",
   },
   {
     id: "interactive-brokers",
@@ -58,6 +64,7 @@ export const BROKERAGES: BrokerageInfo[] = [
     description: "Upload statements and portfolio files",
     hasApiSupport: false,
     logoPlaceholder: "IB",
+    logoDomain: "interactivebrokers.com",
   },
   {
     id: "robinhood",
@@ -66,6 +73,7 @@ export const BROKERAGES: BrokerageInfo[] = [
     description: "Upload statements and portfolio files",
     hasApiSupport: false,
     logoPlaceholder: "RH",
+    logoDomain: "robinhood.com",
   },
   {
     id: "merrill-edge",
@@ -75,6 +83,7 @@ export const BROKERAGES: BrokerageInfo[] = [
     hasApiSupport: false,
     parentCompany: "Bank of America",
     logoPlaceholder: "ME",
+    logoDomain: "merrilledge.com",
   },
   {
     id: "jpmorgan",
@@ -83,6 +92,7 @@ export const BROKERAGES: BrokerageInfo[] = [
     description: "Upload statements and portfolio files",
     hasApiSupport: false,
     logoPlaceholder: "JP",
+    logoDomain: "jpmorgan.com",
   },
   {
     id: "ally-invest",
@@ -91,6 +101,7 @@ export const BROKERAGES: BrokerageInfo[] = [
     description: "Upload statements and portfolio files",
     hasApiSupport: false,
     logoPlaceholder: "AI",
+    logoDomain: "ally.com",
   },
 ];
 

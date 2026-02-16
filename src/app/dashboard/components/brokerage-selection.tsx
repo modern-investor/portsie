@@ -2,27 +2,15 @@
 
 import { BROKERAGES, type BrokerageInfo } from "@/lib/brokerage/types";
 import { Badge } from "@/components/ui/badge";
-
-const AVATAR_COLORS = [
-  "bg-blue-600",
-  "bg-emerald-600",
-  "bg-indigo-600",
-  "bg-amber-600",
-  "bg-purple-600",
-  "bg-cyan-600",
-  "bg-rose-600",
-  "bg-teal-600",
-  "bg-orange-600",
-  "bg-pink-600",
-];
+import { BrokerageLogo } from "@/components/brokerage-logo";
 
 function BrokerageCard({
   brokerage,
-  colorClass,
+  index,
   onSelect,
 }: {
   brokerage: BrokerageInfo;
-  colorClass: string;
+  index: number;
   onSelect: () => void;
 }) {
   return (
@@ -30,11 +18,12 @@ function BrokerageCard({
       onClick={onSelect}
       className="flex items-start gap-4 rounded-xl border bg-white p-4 text-left transition-all hover:border-gray-400 hover:shadow-md"
     >
-      <div
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${colorClass} text-sm font-bold text-white`}
-      >
-        {brokerage.logoPlaceholder}
-      </div>
+      <BrokerageLogo
+        domain={brokerage.logoDomain}
+        name={brokerage.name}
+        placeholder={brokerage.logoPlaceholder}
+        colorIndex={index}
+      />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="font-semibold text-gray-900">{brokerage.name}</p>
@@ -74,7 +63,7 @@ export function BrokerageSelection({
           <BrokerageCard
             key={brokerage.id}
             brokerage={brokerage}
-            colorClass={AVATAR_COLORS[i % AVATAR_COLORS.length]}
+            index={i}
             onSelect={() => onSelect(brokerage.id)}
           />
         ))}
