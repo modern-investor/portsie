@@ -39,6 +39,35 @@ function formatFileSize(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatDateRange(start: string | null, end: string | null): string | null {
+  if (!start && !end) return null;
+  if (start && end) {
+    // Same date = snapshot; different dates = range
+    if (start === end) return formatDate(start);
+    return `${formatDate(start)} – ${formatDate(end)}`;
+  }
+  return formatDate(start || end!);
+}
+
+/** Describe what kind of data was extracted */
+function describeContent(upload: UploadedStatement): string | null {
+  const data = upload.extracted_data;
+  if (!data) return null;
+  const parts: string[] = [];
+  if (data.transactions.length > 0)
+    parts.push(`${data.transactions.length} transaction${data.transactions.length !== 1 ? "s" : ""}`);
+  if (data.positions.length > 0)
+    parts.push(`${data.positions.length} position${data.positions.length !== 1 ? "s" : ""}`);
+  if (data.balances.length > 0)
+    parts.push(`${data.balances.length} balance${data.balances.length !== 1 ? "s" : ""}`);
+  return parts.length > 0 ? parts.join(", ") : null;
+}
+
 export function UploadList({
   uploads,
   processingIds,
@@ -174,8 +203,44 @@ export function UploadList({
             {/* File info */}
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{upload.filename}</p>
-              <div className="flex items-center gap-2 text-xs text-gray-400">
+              <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-xs text-gray-400">
+                {upload.detected_account_info?.institution_name && (
+                  <>
+                    <span className="font-medium text-gray-600">
+                      {upload.detected_account_info.institution_name}
+                    </span>
+                    <span aria-hidden>&middot;</span>
+                  </>
+                )}
+                {upload.detected_account_info?.account_type && (
+                  <>
+                    <span>{upload.detected_account_info.account_type}</span>
+                    <span aria-hidden>&middot;</span>
+                  </>
+                )}
+                {(() => {
+                  const range = formatDateRange(upload.statement_start_date, upload.statement_end_date);
+                  return range ? (
+                    <>
+                      <span>{range}</span>
+                      <span aria-hidden>&middot;</span>
+                    </>
+                  ) : null;
+                })()}
+                {(() => {
+                  const content = describeContent(upload);
+                  return content ? (
+                    <>
+                      <span>{content}</span>
+                      <span aria-hidden>&middot;</span>
+                    </>
+                  ) : null;
+                })()}
                 <span>{formatFileSize(upload.file_size_bytes)}</span>
+                <span aria-hidden>&middot;</span>
+                <span title={upload.created_at}>
+                  Uploaded {formatDate(upload.created_at)}
+                </span>
                 {upload.parse_error && (
                   <span
                     className="truncate text-red-500"
