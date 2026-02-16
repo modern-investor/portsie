@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { LogoutButton } from "@/components/logout-button";
 
 interface AdminUser {
   id: string;
@@ -83,38 +82,27 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/admin"
-            className="text-gray-400 hover:text-gray-600"
+    <div className="mx-auto max-w-5xl px-6 py-6 space-y-6">
+      <div className="flex items-center gap-3">
+        <Link
+          href="/admin"
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
           >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 19.5L8.25 12l7.5-7.5"
-              />
-            </svg>
-          </Link>
-          <h1 className="text-2xl font-bold">User Management</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard"
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
-          >
-            Dashboard
-          </Link>
-          <LogoutButton />
-        </div>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15.75 19.5L8.25 12l7.5-7.5"
+            />
+          </svg>
+        </Link>
+        <h1 className="text-xl font-semibold">User Management</h1>
       </div>
 
       {error && (

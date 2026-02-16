@@ -1,30 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { LogoutButton } from "@/components/logout-button";
 
 export default async function AdminPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   return (
-    <div className="mx-auto max-w-4xl p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Admin Panel</h1>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard"
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
-          >
-            Dashboard
-          </Link>
-          <LogoutButton />
-        </div>
-      </div>
-      <p className="text-sm text-gray-600">
-        Logged in as: {user?.email ?? ""}
-      </p>
+    <div className="mx-auto max-w-5xl px-6 py-6 space-y-6">
+      <h1 className="text-xl font-semibold">Admin Panel</h1>
 
       {/* Admin Pages */}
       <div className="rounded-lg border p-4 space-y-3">

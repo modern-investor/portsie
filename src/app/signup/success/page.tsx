@@ -11,7 +11,7 @@ import { Mail } from "lucide-react";
 
 export default function SignupSuccessPage() {
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-6">
+    <div className="flex min-h-[calc(100vh-3.5rem)] w-full items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <Card className="text-center">
           <CardHeader>
