@@ -1,12 +1,12 @@
 {
-  "version": "v260216.07 5:04a",
-  "release": 7,
-  "sha": "984e0be0",
-  "fullSha": "984e0be0a8c0bc7dba70dceebee7e455aac4190b",
+  "version": "v260216.08 5:13a",
+  "release": 8,
+  "sha": "fd203df4",
+  "fullSha": "fd203df4a74cb5db216e4e857c4c947a02f45755",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000005",
-  "pushedAt": "2026-02-16T11:04:28+00",
-  "commits": [{"sha": "984e0be0a8c0bc7dba70dceebee7e455aac4190b", "short_sha": "984e0be0", "author": "rahulio", "message": "Merge branch 'claude/practical-proskuriakova'"}, {"sha": "214b09467134e2cf1de27576bcfa97c1bfb1c991", "short_sha": "214b0946", "author": "rahulio", "message": "Add database-driven style guide system with admin viewer"}]
+  "machine": "GitHub Actions 1000000006",
+  "pushedAt": "2026-02-16T11:13:45+00",
+  "commits": [{"sha": "fd203df4a74cb5db216e4e857c4c947a02f45755", "short_sha": "fd203df4", "author": "rahulio", "message": "Add architecture.md and update .env.example with all env vars"}]
 }
