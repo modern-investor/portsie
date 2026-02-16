@@ -1,12 +1,12 @@
 {
-  "version": "v260216.27 1:24p",
-  "release": 27,
-  "sha": "53c99d26",
-  "fullSha": "53c99d26d8a41ac5cee8a000f9a3a41dc03416f3",
+  "version": "v260216.28 3:42p",
+  "release": 28,
+  "sha": "a22eff38",
+  "fullSha": "a22eff383de4fbb379c1cd84981b57cd20bc44be",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000025",
-  "pushedAt": "2026-02-16T19:24:38+00",
-  "commits": [{"sha": "53c99d26d8a41ac5cee8a000f9a3a41dc03416f3", "short_sha": "53c99d26", "author": "rahulio", "message": "Add dashboard tab navigation (Portfolio, Uploads, Settings)"}]
+  "machine": "GitHub Actions 1000000026",
+  "pushedAt": "2026-02-16T21:42:53+00",
+  "commits": [{"sha": "a22eff383de4fbb379c1cd84981b57cd20bc44be", "short_sha": "a22eff38", "author": "rahulio", "message": "Add portfolio analytics dashboard with asset class classification"}]
 }
