@@ -1,12 +1,12 @@
 {
-  "version": "v260216.24 11:51a",
-  "release": 24,
-  "sha": "cf78ab61",
-  "fullSha": "cf78ab61e7c0255bbc64ea02f0755e90b8159b80",
+  "version": "v260216.25 11:54a",
+  "release": 25,
+  "sha": "df691995",
+  "fullSha": "df6919953be5c750978033326f05c141265f5bf9",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000022",
-  "pushedAt": "2026-02-16T17:51:25+00",
-  "commits": [{"sha": "cf78ab61e7c0255bbc64ea02f0755e90b8159b80", "short_sha": "cf78ab61", "author": "rahulio", "message": "fix: fall back to PORTSIE_CLI_ENDPOINT env var for CLI mode on Vercel"}]
+  "machine": "GitHub Actions 1000000023",
+  "pushedAt": "2026-02-16T17:54:33+00",
+  "commits": [{"sha": "df6919953be5c750978033326f05c141265f5bf9", "short_sha": "df691995", "author": "Rahul", "message": "Merge pull request #6 from modern-investor/claude/tender-booth"}, {"sha": "f0ec5c90e4e1198ec777cd20cc09904cb0e6acb8", "short_sha": "f0ec5c90", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/main' into claude/tender-booth"}, {"sha": "2fb311b120e9740c595433dfe9fb4987a9454a36", "short_sha": "2fb311b1", "author": "rahulio", "message": "Add batch progress bar, queued status, and fix CLI endpoint fallback"}]
 }
