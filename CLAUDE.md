@@ -89,10 +89,16 @@ Users upload financial documents (PDF, CSV, Excel, images, OFX/QFX, text) which 
 
 ### LLM Backend Toggle
 Configurable per-user in Settings → LLM tab:
-- **CLI mode** (default): `claude -p` via subprocess or remote HTTP endpoint. Uses Max plan, no per-token cost.
+- **CLI mode** (default): Proxied to an HTTP wrapper on the DO droplet (`159.89.157.120:8910`). The wrapper spawns `claude -p` with `--dangerously-skip-permissions --output-format json`. Uses Max plan, no per-token cost. Auth via `PORTSIE_CLI_AUTH_TOKEN` Bearer header.
 - **API mode**: `@anthropic-ai/sdk` with per-user encrypted API key. Per-token billing.
 
 Settings stored in `llm_settings` table. The dispatcher (`src/lib/llm/dispatcher.ts`) reads user settings and routes to the correct backend.
+
+### CLI Wrapper (DigitalOcean)
+The `cli-wrapper/` directory contains a standalone HTTP service deployed to `/opt/portsie-cli/` on the shared AlpacApps DO droplet:
+- `cli-wrapper/server.js` — Node.js HTTP server (`POST /extract`, `GET /health`)
+- `cli-wrapper/portsie-cli.service` — systemd unit (runs as `bugfixer` user)
+- `cli-wrapper/install.sh` — server setup script
 
 ### Key files
 - `src/lib/upload/file-processor.ts` — pre-processes files by type (PDF/images as base64, XLSX→CSV, etc.)
