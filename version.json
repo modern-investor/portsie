@@ -1,12 +1,12 @@
 {
-  "version": "v260216.21 8:53a",
-  "release": 21,
-  "sha": "a862ad7e",
-  "fullSha": "a862ad7ebf69c3478d455d51bf12f761966d25db",
+  "version": "v260216.22 8:59a",
+  "release": 22,
+  "sha": "567e70ab",
+  "fullSha": "567e70abc90d386e721858a5406b414f881dec32",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000019",
-  "pushedAt": "2026-02-16T14:53:14+00",
-  "commits": [{"sha": "a862ad7ebf69c3478d455d51bf12f761966d25db", "short_sha": "a862ad7e", "author": "rahulio", "message": "Optimize frontend for mobile (iPhone/Android 375px+)"}]
+  "machine": "GitHub Actions 1000000020",
+  "pushedAt": "2026-02-16T14:59:34+00",
+  "commits": [{"sha": "567e70abc90d386e721858a5406b414f881dec32", "short_sha": "567e70ab", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/claude/clever-dewdney'"}, {"sha": "181c6f45fc65ac562d5fb1cfab07feb0df4da641", "short_sha": "181c6f45", "author": "rahulio", "message": "Add test user seeding to admin dashboard"}]
 }
