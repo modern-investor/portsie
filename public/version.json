@@ -1,12 +1,12 @@
 {
-  "version": "v260216.03 2:46a",
-  "release": 3,
-  "sha": "99dae0be",
-  "fullSha": "99dae0bee194376a0c7adfb63234a4ee268c607d",
+  "version": "v260216.04 3:46a",
+  "release": 4,
+  "sha": "fa5cde13",
+  "fullSha": "fa5cde13943648635b2bd1cc469ebda3684f9061",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000001",
-  "pushedAt": "2026-02-16T08:46:41+00",
-  "commits": [{"sha": "99dae0bee194376a0c7adfb63234a4ee268c607d", "short_sha": "99dae0be", "author": "rahulio", "message": "Add hide values toggle and allocation % column to dashboard"}, {"sha": "1f2b16636f2da4be91df8471c1fd77cfad2a8507", "short_sha": "1f2b1663", "author": "rahulio", "message": "Merge main and resolve conflicts for versioning system"}, {"sha": "e951cc8d7091d0f9aa4023e4acdf782eb2dcc79f", "short_sha": "e951cc8d", "author": "rahulio", "message": "Add date-based versioning system adapted from alpacapps"}, {"sha": "0e31d15ed78a48cf914ef56b632beabb4f220da8", "short_sha": "0e31d15e", "author": "rahulio", "message": "Add per-user Schwab credentials with in-app setup wizard"}]
+  "machine": "GitHub Actions 1000000002",
+  "pushedAt": "2026-02-16T09:46:52+00",
+  "commits": [{"sha": "fa5cde13943648635b2bd1cc469ebda3684f9061", "short_sha": "fa5cde13", "author": "rahulio", "message": "Add financial data schema: accounts, snapshots, transactions, market prices"}]
 }
