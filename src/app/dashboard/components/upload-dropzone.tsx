@@ -13,7 +13,7 @@ export function UploadDropzone({
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
-  const [uploadingFilename, setUploadingFilename] = useState("");
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = useCallback((file: File): string | null => {
@@ -26,41 +26,65 @@ export function UploadDropzone({
     return null;
   }, []);
 
-  const uploadFile = useCallback(
-    async (file: File) => {
-      const validationError = validateFile(file);
-      if (validationError) {
-        setError(validationError);
+  const uploadFiles = useCallback(
+    async (files: File[]) => {
+      // Validate all files first
+      const errors: string[] = [];
+      const validFiles: File[] = [];
+      for (const file of files) {
+        const validationError = validateFile(file);
+        if (validationError) {
+          errors.push(`${file.name}: ${validationError}`);
+        } else {
+          validFiles.push(file);
+        }
+      }
+
+      if (validFiles.length === 0) {
+        setError(errors.join("\n"));
         return;
       }
 
-      setError("");
+      setError(errors.length > 0 ? errors.join("\n") : "");
       setUploading(true);
-      setUploadingFilename(file.name);
+      setUploadProgress({ current: 0, total: validFiles.length });
 
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
+      for (let i = 0; i < validFiles.length; i++) {
+        const file = validFiles[i];
+        setUploadProgress({ current: i + 1, total: validFiles.length });
 
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
 
-        const data = await res.json();
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          });
 
-        if (!res.ok) {
-          setError(data.error || "Upload failed");
-          return;
+          const data = await res.json();
+
+          if (!res.ok) {
+            setError((prev) =>
+              prev
+                ? `${prev}\n${file.name}: ${data.error || "Upload failed"}`
+                : `${file.name}: ${data.error || "Upload failed"}`
+            );
+            continue;
+          }
+
+          onUploaded(data);
+        } catch {
+          setError((prev) =>
+            prev
+              ? `${prev}\n${file.name}: Upload failed`
+              : `${file.name}: Upload failed`
+          );
         }
-
-        onUploaded(data);
-      } catch {
-        setError("Upload failed. Please try again.");
-      } finally {
-        setUploading(false);
-        setUploadingFilename("");
       }
+
+      setUploading(false);
+      setUploadProgress({ current: 0, total: 0 });
     },
     [validateFile, onUploaded]
   );
@@ -70,20 +94,20 @@ export function UploadDropzone({
       e.preventDefault();
       setDragging(false);
 
-      const file = e.dataTransfer.files[0];
-      if (file) uploadFile(file);
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length > 0) uploadFiles(files);
     },
-    [uploadFile]
+    [uploadFiles]
   );
 
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) uploadFile(file);
-      // Reset input so the same file can be re-selected
+      const files = e.target.files ? Array.from(e.target.files) : [];
+      if (files.length > 0) uploadFiles(files);
+      // Reset input so the same files can be re-selected
       e.target.value = "";
     },
-    [uploadFile]
+    [uploadFiles]
   );
 
   return (
@@ -107,6 +131,7 @@ export function UploadDropzone({
           type="file"
           className="hidden"
           accept={UPLOAD_CONFIG.acceptString}
+          multiple
           onChange={handleFileSelect}
         />
 
@@ -114,7 +139,7 @@ export function UploadDropzone({
           <div className="space-y-2">
             <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
             <p className="text-sm text-gray-600">
-              Uploading {uploadingFilename}...
+              Uploading {uploadProgress.current} of {uploadProgress.total} file{uploadProgress.total !== 1 ? "s" : ""}...
             </p>
           </div>
         ) : (
@@ -144,7 +169,7 @@ export function UploadDropzone({
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
+        <div className="whitespace-pre-line rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
           {error}
         </div>
       )}
