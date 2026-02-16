@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { SchwabConnect } from "./schwab-connect";
-import { AccountOverview } from "./account-overview";
-import { PositionsTable } from "./positions-table";
+import { PortfolioView } from "./portfolio-view";
 import { HideValuesToggle } from "./hide-values-toggle";
 import { UploadSection } from "./upload-section";
 import { SettingsPanel } from "./settings-panel";
@@ -101,10 +100,7 @@ export function DashboardShell({
                 hasCredentials={hasCredentials}
               />
               {isConnected && (
-                <>
-                  <AccountOverview hideValues={hideValues} />
-                  <PositionsTable hideValues={hideValues} />
-                </>
+                <PortfolioView hideValues={hideValues} />
               )}
             </>
           )}
