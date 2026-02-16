@@ -1,12 +1,12 @@
 {
-  "version": "v260216.26 12:49p",
-  "release": 26,
-  "sha": "2c7de402",
-  "fullSha": "2c7de40215cef452de387e1ee55aa6e6250c5bb3",
+  "version": "v260216.27 1:24p",
+  "release": 27,
+  "sha": "53c99d26",
+  "fullSha": "53c99d26d8a41ac5cee8a000f9a3a41dc03416f3",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000024",
-  "pushedAt": "2026-02-16T18:49:48+00",
-  "commits": [{"sha": "2c7de40215cef452de387e1ee55aa6e6250c5bb3", "short_sha": "2c7de402", "author": "Rahul", "message": "Merge pull request #7 from modern-investor/claude/musing-bartik"}, {"sha": "a944166f96a5b7b17fcbf94fa7baea4812ea01b9", "short_sha": "a944166f", "author": "rahulio", "message": "Add CLI wrapper queue, concurrency, and warmup pre-spawn"}]
+  "machine": "GitHub Actions 1000000025",
+  "pushedAt": "2026-02-16T19:24:38+00",
+  "commits": [{"sha": "53c99d26d8a41ac5cee8a000f9a3a41dc03416f3", "short_sha": "53c99d26", "author": "rahulio", "message": "Add dashboard tab navigation (Portfolio, Uploads, Settings)"}]
 }
