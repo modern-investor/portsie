@@ -162,7 +162,7 @@ export function UploadDropzone({
               or drag and drop
             </p>
             <p className="text-xs text-gray-400">
-              PDF, CSV, Excel, images (PNG/JPG), OFX, QFX, TXT — up to 50MB
+              PDF, CSV, Excel, JSON, images (PNG/JPG), OFX, QFX, TXT — up to 50MB
             </p>
           </div>
         )}
