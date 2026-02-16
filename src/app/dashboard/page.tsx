@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { hasSchwabConnection } from "@/lib/schwab/tokens";
 import { hasSchwabCredentials } from "@/lib/schwab/credentials";
+import { isAdmin } from "@/lib/supabase/admin";
 import { DashboardShell } from "./components/dashboard-shell";
 
 export default async function DashboardPage() {
@@ -11,12 +12,14 @@ export default async function DashboardPage() {
 
   const hasCredentials = user ? await hasSchwabCredentials(supabase, user.id) : false;
   const isConnected = user ? await hasSchwabConnection(supabase, user.id) : false;
+  const userIsAdmin = user ? await isAdmin(supabase, user.id) : false;
 
   return (
     <DashboardShell
       isConnected={isConnected}
       hasCredentials={hasCredentials}
       userEmail={user?.email ?? ""}
+      isAdmin={userIsAdmin}
     />
   );
 }

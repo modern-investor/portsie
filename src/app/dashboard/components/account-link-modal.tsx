@@ -1,0 +1,198 @@
+"use client";
+
+import { useState } from "react";
+import type { AccountMatch, DetectedAccountInfo } from "@/lib/upload/types";
+
+export function AccountLinkModal({
+  accountMatches,
+  detectedInfo,
+  autoLinkedAccountId,
+  onConfirm,
+  onCancel,
+}: {
+  accountMatches: AccountMatch[];
+  detectedInfo: DetectedAccountInfo;
+  autoLinkedAccountId: string | null;
+  onConfirm: (params: {
+    accountId?: string;
+    createNewAccount?: boolean;
+    accountInfo?: {
+      account_type?: string;
+      institution_name?: string;
+      account_nickname?: string;
+    };
+  }) => void;
+  onCancel: () => void;
+}) {
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
+    autoLinkedAccountId ?? (accountMatches.length === 1 ? accountMatches[0].id : null)
+  );
+  const [createNew, setCreateNew] = useState(false);
+  const [nickname, setNickname] = useState(
+    detectedInfo.account_nickname ||
+      `${detectedInfo.institution_name || "Unknown"} Account`
+  );
+  const [institutionName, setInstitutionName] = useState(
+    detectedInfo.institution_name || ""
+  );
+  const [accountType, setAccountType] = useState(
+    detectedInfo.account_type || ""
+  );
+
+  function handleSubmit() {
+    if (createNew) {
+      onConfirm({
+        createNewAccount: true,
+        accountInfo: {
+          account_nickname: nickname,
+          institution_name: institutionName,
+          account_type: accountType || undefined,
+        },
+      });
+    } else if (selectedAccountId) {
+      onConfirm({ accountId: selectedAccountId });
+    }
+  }
+
+  const canSubmit = createNew || selectedAccountId;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+        <h3 className="text-lg font-semibold">Link to Account</h3>
+        <p className="mt-1 text-sm text-gray-500">
+          Choose which account this statement belongs to, or create a new one.
+        </p>
+
+        <div className="mt-4 space-y-3">
+          {/* Existing account matches */}
+          {accountMatches.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-gray-500 uppercase">
+                Matching accounts
+              </p>
+              {accountMatches.map((match) => (
+                <label
+                  key={match.id}
+                  className={`flex cursor-pointer items-center gap-3 rounded-md border p-3 transition-colors ${
+                    selectedAccountId === match.id && !createNew
+                      ? "border-blue-500 bg-blue-50"
+                      : "hover:bg-gray-50"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="account"
+                    checked={selectedAccountId === match.id && !createNew}
+                    onChange={() => {
+                      setSelectedAccountId(match.id);
+                      setCreateNew(false);
+                    }}
+                    className="accent-blue-600"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">
+                      {match.account_nickname ||
+                        match.institution_name ||
+                        "Unknown Account"}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {[
+                        match.institution_name,
+                        match.account_type,
+                        match.schwab_account_number
+                          ? `****${match.schwab_account_number.slice(-4)}`
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" — ")}
+                    </p>
+                    <p className="text-xs text-blue-500">
+                      {match.match_reason}
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Create new account option */}
+          <div className="space-y-2">
+            <label
+              className={`flex cursor-pointer items-center gap-3 rounded-md border p-3 transition-colors ${
+                createNew
+                  ? "border-blue-500 bg-blue-50"
+                  : "hover:bg-gray-50"
+              }`}
+            >
+              <input
+                type="radio"
+                name="account"
+                checked={createNew}
+                onChange={() => {
+                  setCreateNew(true);
+                  setSelectedAccountId(null);
+                }}
+                className="accent-blue-600"
+              />
+              <span className="text-sm font-medium">Create new account</span>
+            </label>
+
+            {createNew && (
+              <div className="ml-7 space-y-2">
+                <input
+                  type="text"
+                  placeholder="Account nickname"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="Institution name"
+                  value={institutionName}
+                  onChange={(e) => setInstitutionName(e.target.value)}
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                />
+                <select
+                  value={accountType}
+                  onChange={(e) => setAccountType(e.target.value)}
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                >
+                  <option value="">Account type (optional)</option>
+                  <option value="individual">Individual</option>
+                  <option value="ira">IRA</option>
+                  <option value="roth_ira">Roth IRA</option>
+                  <option value="joint">Joint</option>
+                  <option value="trust">Trust</option>
+                  <option value="401k">401(k)</option>
+                  <option value="403b">403(b)</option>
+                  <option value="529">529</option>
+                  <option value="custodial">Custodial</option>
+                  <option value="margin">Margin</option>
+                </select>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="rounded-md border px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            Save to Account
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
