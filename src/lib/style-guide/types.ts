@@ -32,6 +32,21 @@ export interface StyleGuideRadii {
   [key: string]: string;
 }
 
+export interface StyleGuideBrandingLogos {
+  icon_blue: string;
+  icon_dark: string;
+  icon_light: string;
+  wordmark_blue: string;
+  wordmark_dark: string;
+  wordmark_light: string;
+}
+
+export interface StyleGuideBranding {
+  slogan: string;
+  tagline: string;
+  logos: StyleGuideBrandingLogos;
+}
+
 export interface StyleGuide {
   id: number;
   colors: StyleGuideColors;
@@ -39,6 +54,7 @@ export interface StyleGuide {
   font_sizes: StyleGuideFontSizes;
   spacing: StyleGuideSpacing;
   radii: StyleGuideRadii;
+  branding: StyleGuideBranding;
   created_at: string;
   updated_at: string;
 }
