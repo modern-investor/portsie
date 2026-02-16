@@ -11,7 +11,7 @@ export function HideValuesToggle({
     <button
       onClick={onToggle}
       title={hideValues ? "Show dollar amounts" : "Hide dollar amounts"}
-      className="text-gray-300 hover:text-gray-400 transition-colors cursor-pointer"
+      className="p-3 -m-2 text-gray-300 hover:text-gray-400 transition-colors cursor-pointer sm:p-1 sm:m-0"
     >
       {hideValues ? (
         <svg
