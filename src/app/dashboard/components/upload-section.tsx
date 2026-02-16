@@ -91,28 +91,31 @@ export function UploadSection() {
     }
   }
 
-  // Batch process: process sequentially so users see queued → processing → done
-  async function handleBatchProcess(ids: string[]) {
-    // Mark all as queued, set up progress tracking
+  // Batch process: fire all concurrently — server queues and runs up to 3 at a time
+  function handleBatchProcess(ids: string[]) {
     setQueuedIds(new Set(ids));
     setBatchTotal(ids.length);
     setBatchDone(0);
 
     for (const id of ids) {
-      // Move from queued to processing
       setQueuedIds((prev) => {
         const next = new Set(prev);
         next.delete(id);
         return next;
       });
-      await handleProcess(id);
-      setBatchDone((prev) => prev + 1);
+      handleProcess(id).then(() => {
+        setBatchDone((prev) => {
+          const next = prev + 1;
+          // Clear batch state when all done
+          if (next >= ids.length) {
+            setQueuedIds(new Set());
+            setBatchTotal(0);
+            return 0;
+          }
+          return next;
+        });
+      });
     }
-
-    // Clear batch state when done
-    setQueuedIds(new Set());
-    setBatchTotal(0);
-    setBatchDone(0);
   }
 
   // Open review panel

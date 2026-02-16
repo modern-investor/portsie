@@ -3,6 +3,7 @@ import { createHash } from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import { MIME_TO_FILE_TYPE } from "@/lib/upload/types";
 import { UPLOAD_CONFIG } from "@/lib/upload/config";
+import { warmupCliEndpoint } from "@/lib/llm/warmup";
 
 /** POST /api/upload — Upload a file and create a metadata record */
 export async function POST(request: NextRequest) {
@@ -106,6 +107,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+
+  // Fire-and-forget: warm up the CLI endpoint so Claude is ready when user clicks Process
+  warmupCliEndpoint(supabase, user.id).catch(() => {
+    // Silently ignore warmup failures — it's just an optimization
+  });
 
   return NextResponse.json(statement, { status: 201 });
 }
