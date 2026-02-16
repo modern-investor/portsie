@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { SchwabAccount } from "@/lib/schwab/types";
 
-export function AccountOverview() {
+export function AccountOverview({ hideValues }: { hideValues: boolean }) {
   const [accounts, setAccounts] = useState<SchwabAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -18,6 +18,21 @@ export function AccountOverview() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  function formatDollar(value: number, fractionDigits = 2) {
+    if (hideValues) {
+      return <span className="text-gray-300 select-none">$*****</span>;
+    }
+    return (
+      <>
+        $
+        {value.toLocaleString("en-US", {
+          minimumFractionDigits: fractionDigits,
+          maximumFractionDigits: fractionDigits,
+        })}
+      </>
+    );
+  }
 
   if (loading) {
     return (
@@ -59,35 +74,21 @@ export function AccountOverview() {
                   {sec.accountNumber.slice(-4)}
                 </p>
                 <p className="text-2xl font-bold">
-                  $
-                  {(
+                  {formatDollar(
                     balances?.liquidationValue ??
-                    account.aggregatedBalance?.liquidationValue ??
-                    0
-                  ).toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
+                      account.aggregatedBalance?.liquidationValue ??
+                      0
+                  )}
                 </p>
               </div>
             </div>
             {balances && (
               <div className="mt-3 flex gap-6 text-sm text-gray-500">
                 {balances.cashBalance !== undefined && (
-                  <span>
-                    Cash: $
-                    {balances.cashBalance.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
+                  <span>Cash: {formatDollar(balances.cashBalance)}</span>
                 )}
                 {balances.buyingPower !== undefined && (
-                  <span>
-                    Buying Power: $
-                    {balances.buyingPower.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
+                  <span>Buying Power: {formatDollar(balances.buyingPower)}</span>
                 )}
               </div>
             )}

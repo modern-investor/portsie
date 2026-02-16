@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { LogoutButton } from "@/components/logout-button";
-import { SiteVersion } from "@/components/site-version";
+import { hasSchwabConnection } from "@/lib/schwab/tokens";
+import { hasSchwabCredentials } from "@/lib/schwab/credentials";
+import { DashboardShell } from "./components/dashboard-shell";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -8,18 +9,14 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const hasCredentials = user ? await hasSchwabCredentials(supabase, user.id) : false;
+  const isConnected = user ? await hasSchwabConnection(supabase, user.id) : false;
+
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <SiteVersion className="text-gray-400" />
-        </div>
-        <LogoutButton />
-      </div>
-      <p className="mt-2 text-sm text-gray-600">
-        Logged in as: {user?.email}
-      </p>
-    </div>
+    <DashboardShell
+      isConnected={isConnected}
+      hasCredentials={hasCredentials}
+      userEmail={user?.email ?? ""}
+    />
   );
 }

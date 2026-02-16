@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { SchwabPosition } from "@/lib/schwab/types";
 
-export function PositionsTable() {
+export function PositionsTable({ hideValues }: { hideValues: boolean }) {
   const [positions, setPositions] = useState<SchwabPosition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -48,6 +48,11 @@ export function PositionsTable() {
     );
   }
 
+  const totalMarketValue = positions.reduce(
+    (sum, pos) => sum + pos.marketValue,
+    0
+  );
+
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Positions</h2>
@@ -56,12 +61,19 @@ export function PositionsTable() {
           <thead>
             <tr className="border-b bg-gray-50 text-left text-gray-500">
               <th className="px-4 py-3 font-medium">Symbol</th>
-              <th className="px-4 py-3 font-medium">Quantity</th>
+              {!hideValues && (
+                <th className="px-4 py-3 font-medium">Quantity</th>
+              )}
               <th className="px-4 py-3 font-medium text-right">Avg Price</th>
-              <th className="px-4 py-3 font-medium text-right">
-                Market Value
-              </th>
-              <th className="px-4 py-3 font-medium text-right">Day P&L</th>
+              {!hideValues && (
+                <th className="px-4 py-3 font-medium text-right">
+                  Market Value
+                </th>
+              )}
+              <th className="px-4 py-3 font-medium text-right">Alloc %</th>
+              {!hideValues && (
+                <th className="px-4 py-3 font-medium text-right">Day P&L</th>
+              )}
               <th className="px-4 py-3 font-medium text-right">Day P&L %</th>
             </tr>
           </thead>
@@ -71,6 +83,10 @@ export function PositionsTable() {
                 pos.currentDayProfitLoss >= 0
                   ? "text-green-600"
                   : "text-red-600";
+              const allocationPct =
+                totalMarketValue > 0
+                  ? (pos.marketValue / totalMarketValue) * 100
+                  : 0;
               return (
                 <tr
                   key={pos.instrument.symbol}
@@ -84,24 +100,33 @@ export function PositionsTable() {
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-3">{pos.longQuantity}</td>
+                  {!hideValues && (
+                    <td className="px-4 py-3">{pos.longQuantity}</td>
+                  )}
                   <td className="px-4 py-3 text-right">
                     ${pos.averagePrice.toFixed(2)}
                   </td>
+                  {!hideValues && (
+                    <td className="px-4 py-3 text-right">
+                      $
+                      {pos.marketValue.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                  )}
                   <td className="px-4 py-3 text-right">
-                    $
-                    {pos.marketValue.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {allocationPct.toFixed(1)}%
                   </td>
-                  <td className={`px-4 py-3 text-right ${plColor}`}>
-                    {pos.currentDayProfitLoss >= 0 ? "+" : ""}$
-                    {pos.currentDayProfitLoss.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
+                  {!hideValues && (
+                    <td className={`px-4 py-3 text-right ${plColor}`}>
+                      {pos.currentDayProfitLoss >= 0 ? "+" : ""}$
+                      {pos.currentDayProfitLoss.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                  )}
                   <td className={`px-4 py-3 text-right ${plColor}`}>
                     {pos.currentDayProfitLossPercentage >= 0 ? "+" : ""}
                     {pos.currentDayProfitLossPercentage.toFixed(2)}%
