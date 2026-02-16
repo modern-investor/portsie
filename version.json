@@ -1,12 +1,12 @@
 {
-  "version": "v260216.17 6:12a",
-  "release": 17,
-  "sha": "b640ece4",
-  "fullSha": "b640ece4e21dd298ec805b5facbc4a1681c6af49",
+  "version": "v260216.18 6:20a",
+  "release": 18,
+  "sha": "4e52b4a2",
+  "fullSha": "4e52b4a268729b4963f1cbc357e25933307cea9c",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000015",
-  "pushedAt": "2026-02-16T12:12:33+00",
-  "commits": [{"sha": "b640ece4e21dd298ec805b5facbc4a1681c6af49", "short_sha": "b640ece4", "author": "Rahul", "message": "Merge pull request #3 from modern-investor/claude/vibrant-elion"}, {"sha": "0237d5f55eecc0bed96f120d20578ab45779d79f", "short_sha": "0237d5f5", "author": "rahulio", "message": "Add branding to style guide and update home page with slogan"}]
+  "machine": "GitHub Actions 1000000016",
+  "pushedAt": "2026-02-16T12:20:01+00",
+  "commits": [{"sha": "4e52b4a268729b4963f1cbc357e25933307cea9c", "short_sha": "4e52b4a2", "author": "rahulio", "message": "Add application/json to storage bucket allowed MIME types"}]
 }
