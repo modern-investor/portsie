@@ -1,12 +1,12 @@
 {
-  "version": "v260217.23 11:06a",
-  "release": 55,
-  "sha": "8a8ae350",
-  "fullSha": "8a8ae350d5ff75e35a0ab9f2541418bad10f91b9",
+  "version": "v260217.24 11:07a",
+  "release": 56,
+  "sha": "36fed3d2",
+  "fullSha": "36fed3d24944f996422e565294d8da8b2f88b625",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000053",
-  "pushedAt": "2026-02-17T17:06:10+00",
-  "commits": [{"sha": "8a8ae350d5ff75e35a0ab9f2541418bad10f91b9", "short_sha": "8a8ae350", "author": "rahulio", "message": "Inline upload review panel with reverse-chrono ordering"}]
+  "machine": "GitHub Actions 1000000054",
+  "pushedAt": "2026-02-17T17:07:56+00",
+  "commits": [{"sha": "36fed3d24944f996422e565294d8da8b2f88b625", "short_sha": "36fed3d2", "author": "rahulio", "message": "Fix tagline caching, update to ultra-mega-max intelligence\u2122"}]
 }
