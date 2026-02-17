@@ -12,7 +12,7 @@ const { tmpdir } = require("os");
 
 const PORT = parseInt(process.env.PORT || "8910", 10);
 const AUTH_TOKEN = process.env.AUTH_TOKEN; // shared secret with Vercel
-const MAX_TIMEOUT_MS = parseInt(process.env.MAX_TIMEOUT_MS || "180000", 10); // 3 min
+const MAX_TIMEOUT_MS = parseInt(process.env.MAX_TIMEOUT_MS || "300000", 10); // 5 min
 const MAX_BODY_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_QUEUE_SIZE = 20;
 const MAX_CONCURRENT = parseInt(process.env.MAX_CONCURRENT || "3", 10); // concurrent claude processes

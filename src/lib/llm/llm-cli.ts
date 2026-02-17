@@ -55,7 +55,7 @@ async function extractViaCLILocal(
       "claude",
       ["-p", prompt, "--output-format", "json"],
       {
-        timeout: 120_000, // 2 minute timeout
+        timeout: 300_000, // 5 minute timeout
         maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large responses
       }
     );
@@ -128,7 +128,7 @@ async function extractViaCLIRemote(
     method: "POST",
     headers,
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(120_000),
+    signal: AbortSignal.timeout(300_000), // 5 minute timeout
   });
 
   if (!response.ok) {
