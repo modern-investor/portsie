@@ -1,12 +1,12 @@
 {
-  "version": "v260216.31 9:36p",
-  "release": 31,
-  "sha": "a30482f7",
-  "fullSha": "a30482f7864cdc96cd0f15a89e465d9e799037ac",
+  "version": "v260217.09 5:23a",
+  "release": 40,
+  "sha": "e98efe02",
+  "fullSha": "e98efe02785ece13ef9d8ea2139f05de156305db",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000029",
-  "pushedAt": "2026-02-17T03:36:04+00",
-  "commits": [{"sha": "a30482f7864cdc96cd0f15a89e465d9e799037ac", "short_sha": "a30482f7", "author": "Rahul", "message": "Fix LLM extraction timeouts and grey out stale errors on reprocess (#8)"}]
+  "machine": "GitHub Actions 1000000038",
+  "pushedAt": "2026-02-17T11:23:16+00",
+  "commits": [{"sha": "e98efe02785ece13ef9d8ea2139f05de156305db", "short_sha": "e98efe02", "author": "rahulio", "message": "Merge branch 'claude/wizardly-brahmagupta'"}, {"sha": "aad2a41b6d1003f679569184246ea9f5824f6233", "short_sha": "aad2a41b", "author": "rahulio", "message": "Holdings-as-truth rearchitecture: add holdings table, reconciliation engine, stored account summaries"}]
 }

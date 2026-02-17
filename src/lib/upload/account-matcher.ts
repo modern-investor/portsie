@@ -95,6 +95,7 @@ export async function findMatchingAccounts(
 
 /**
  * Creates a new manual_upload account from detected account info.
+ * Stores the account number in schwab_account_number for future matching.
  * Returns the new account ID.
  */
 export async function createManualAccount(
@@ -107,6 +108,7 @@ export async function createManualAccount(
     .insert({
       user_id: userId,
       data_source: "manual_upload",
+      schwab_account_number: accountInfo.account_number ?? null,
       account_type: accountInfo.account_type ?? null,
       account_nickname:
         accountInfo.account_nickname ||
@@ -117,9 +119,79 @@ export async function createManualAccount(
     .select("id")
     .single();
 
-  if (error || !data) {
-    throw new Error(`Failed to create account: ${error?.message}`);
+  if (error) {
+    // Handle unique constraint violation (concurrent upload for same account)
+    if (error.code === "23505" && accountInfo.account_number) {
+      const { data: existing } = await supabase
+        .from("accounts")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("schwab_account_number", accountInfo.account_number)
+        .eq("data_source", "manual_upload")
+        .single();
+
+      if (existing) return existing.id;
+    }
+    throw new Error(`Failed to create account: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("Failed to create account: no data returned");
   }
 
   return data.id;
+}
+
+export interface AutoLinkResult {
+  accountId: string;
+  action: "matched" | "created";
+  matchReason?: string;
+  accountNickname?: string;
+}
+
+/**
+ * Automatically link to an existing account or create a new one.
+ *
+ * Match priority:
+ *   1. Exact account number match → auto-link
+ *   2. Single partial/institution match → auto-link
+ *   3. Multiple ambiguous matches or no matches → create new account
+ */
+export async function autoLinkOrCreateAccount(
+  supabase: SupabaseClient,
+  userId: string,
+  detectedInfo: DetectedAccountInfo
+): Promise<AutoLinkResult> {
+  const matches = await findMatchingAccounts(supabase, userId, detectedInfo);
+
+  // Priority 1: Exact account number match
+  const exactMatch = matches.find((m) => m.match_reason.includes("Exact"));
+  if (exactMatch) {
+    return {
+      accountId: exactMatch.id,
+      action: "matched",
+      matchReason: exactMatch.match_reason,
+      accountNickname: exactMatch.account_nickname ?? undefined,
+    };
+  }
+
+  // Priority 2: Single non-exact match (partial number or institution+type)
+  if (matches.length === 1) {
+    return {
+      accountId: matches[0].id,
+      action: "matched",
+      matchReason: matches[0].match_reason,
+      accountNickname: matches[0].account_nickname ?? undefined,
+    };
+  }
+
+  // No confident match → create new account
+  const newAccountId = await createManualAccount(supabase, userId, detectedInfo);
+  return {
+    accountId: newAccountId,
+    action: "created",
+    accountNickname:
+      detectedInfo.account_nickname ||
+      `${detectedInfo.institution_name || "Unknown"} Account`,
+  };
 }

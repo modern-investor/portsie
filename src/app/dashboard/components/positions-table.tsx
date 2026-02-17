@@ -1,47 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { SchwabPosition } from "@/lib/schwab/types";
+import { useState } from "react";
+import type { UnifiedPosition } from "@/app/api/portfolio/positions/route";
 
-export function PositionsTable({ hideValues }: { hideValues: boolean }) {
-  const [positions, setPositions] = useState<SchwabPosition[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+interface Props {
+  positions: UnifiedPosition[];
+  hideValues: boolean;
+}
 
-  useEffect(() => {
-    fetch("/api/schwab/positions")
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to fetch positions");
-        return res.json();
-      })
-      .then(setPositions)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="space-y-2">
-        <p className="text-sm text-gray-400">Loading positions...</p>
-        <div className="rounded-lg border p-6">
-          <div className="animate-pulse space-y-3">
-            <div className="h-4 w-24 rounded bg-gray-200" />
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-8 rounded bg-gray-200" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-        {error}
-      </div>
-    );
-  }
+export function PositionsTable({ positions, hideValues }: Props) {
+  const [accountFilter, setAccountFilter] = useState<string | null>(null);
 
   if (positions.length === 0) {
     return (
@@ -51,19 +19,47 @@ export function PositionsTable({ hideValues }: { hideValues: boolean }) {
     );
   }
 
-  const totalMarketValue = positions.reduce(
+  // Get unique account names for filter dropdown
+  const accountNames = Array.from(
+    new Set(positions.map((p) => p.accountName).filter(Boolean))
+  ) as string[];
+
+  const filtered = accountFilter
+    ? positions.filter((p) => p.accountName === accountFilter)
+    : positions;
+
+  const totalMarketValue = filtered.reduce(
     (sum, pos) => sum + pos.marketValue,
     0
   );
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Positions</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Positions</h2>
+        {accountNames.length > 1 && (
+          <select
+            value={accountFilter ?? ""}
+            onChange={(e) => setAccountFilter(e.target.value || null)}
+            className="rounded-md border border-gray-300 px-2 py-1 text-sm"
+          >
+            <option value="">All Accounts</option>
+            {accountNames.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-gray-50 text-left text-gray-500">
               <th className="px-2 py-2 font-medium sm:px-4 sm:py-3">Symbol</th>
+              {accountNames.length > 1 && !accountFilter && (
+                <th className="px-2 py-2 font-medium sm:px-4 sm:py-3">Account</th>
+              )}
               {!hideValues && (
                 <th className="px-2 py-2 font-medium sm:px-4 sm:py-3">Quantity</th>
               )}
@@ -81,7 +77,7 @@ export function PositionsTable({ hideValues }: { hideValues: boolean }) {
             </tr>
           </thead>
           <tbody>
-            {positions.map((pos) => {
+            {filtered.map((pos, i) => {
               const plColor =
                 pos.currentDayProfitLoss >= 0
                   ? "text-green-600"
@@ -92,19 +88,24 @@ export function PositionsTable({ hideValues }: { hideValues: boolean }) {
                   : 0;
               return (
                 <tr
-                  key={pos.instrument.symbol}
+                  key={`${pos.accountId}-${pos.symbol}-${i}`}
                   className="border-b last:border-b-0"
                 >
                   <td className="px-2 py-2 sm:px-4 sm:py-3">
-                    <div className="font-medium">{pos.instrument.symbol}</div>
-                    {pos.instrument.description && (
+                    <div className="font-medium">{pos.symbol}</div>
+                    {pos.description && (
                       <div className="text-xs text-gray-400 truncate max-w-[120px] sm:max-w-[200px]">
-                        {pos.instrument.description}
+                        {pos.description}
                       </div>
                     )}
                   </td>
+                  {accountNames.length > 1 && !accountFilter && (
+                    <td className="px-2 py-2 sm:px-4 sm:py-3 text-xs text-gray-500">
+                      {pos.accountName}
+                    </td>
+                  )}
                   {!hideValues && (
-                    <td className="px-2 py-2 sm:px-4 sm:py-3">{pos.longQuantity}</td>
+                    <td className="px-2 py-2 sm:px-4 sm:py-3">{pos.quantity}</td>
                   )}
                   <td className="px-2 py-2 text-right sm:px-4 sm:py-3">
                     ${pos.averagePrice.toFixed(2)}

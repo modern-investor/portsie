@@ -108,6 +108,7 @@ export interface UploadedStatement {
   statement_end_date: string | null;
   raw_llm_response: unknown;
   extracted_data: LLMExtractionResult | null;
+  process_count: number;
   confirmed_at: string | null;
   detected_account_info: DetectedAccountInfo | null;
   created_at: string;

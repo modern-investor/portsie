@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { UploadDropzone } from "./upload-dropzone";
 import { UploadList } from "./upload-list";
 import { UploadReview } from "./upload-review";
-import type { UploadedStatement, AccountMatch } from "@/lib/upload/types";
+import type { UploadedStatement } from "@/lib/upload/types";
 
 export function UploadSection() {
   const [uploads, setUploads] = useState<UploadedStatement[]>([]);
@@ -13,8 +13,12 @@ export function UploadSection() {
   const [queuedIds, setQueuedIds] = useState<Set<string>>(new Set());
   const [batchTotal, setBatchTotal] = useState(0);
   const [batchDone, setBatchDone] = useState(0);
+  // Timestamps: q = queued, s = processing started, e = ended
+  const [timestamps, setTimestamps] = useState<Record<string, { q?: string; s?: string; e?: string }>>({});
+  // Track how many times each upload has been processed this session
+  const [processCount, setProcessCount] = useState<Record<string, number>>({});
   const [reviewingId, setReviewingId] = useState<string | null>(null);
-  const [accountMatches, setAccountMatches] = useState<AccountMatch[]>([]);
+  const reviewRef = useRef<HTMLDivElement>(null);
 
   // Fetch existing uploads on mount
   const fetchUploads = useCallback(async () => {
@@ -40,49 +44,38 @@ export function UploadSection() {
     setUploads((prev) => [statement, ...prev]);
   }
 
-  // Trigger LLM processing for a single upload
+  // Trigger LLM processing for a single upload (auto-links account and saves data)
   async function handleProcess(uploadId: string) {
     setProcessingIds((prev) => new Set(prev).add(uploadId));
+    setProcessCount((prev) => ({ ...prev, [uploadId]: (prev[uploadId] ?? 0) + 1 }));
+    // Record processing start timestamp (keep existing q timestamp)
+    setTimestamps((prev) => ({
+      ...prev,
+      [uploadId]: { ...prev[uploadId], s: new Date().toISOString() },
+    }));
 
     try {
-      const res = await fetch(`/api/upload/${uploadId}/process`, {
-        method: "POST",
-      });
-      const data = await res.json();
-
-      if (res.ok) {
-        // Refresh the specific upload record
-        const detailRes = await fetch(`/api/upload/${uploadId}`);
-        if (detailRes.ok) {
-          const updated = await detailRes.json();
-          setUploads((prev) =>
-            prev.map((u) => (u.id === uploadId ? updated : u))
-          );
-        }
-        // Store account matches for review
-        if (data.accountMatches) {
-          setAccountMatches(data.accountMatches);
-        }
-      } else {
-        // Refresh to show error status
-        const detailRes = await fetch(`/api/upload/${uploadId}`);
-        if (detailRes.ok) {
-          const updated = await detailRes.json();
-          setUploads((prev) =>
-            prev.map((u) => (u.id === uploadId ? updated : u))
-          );
-        }
-      }
+      await fetch(`/api/upload/${uploadId}/process`, { method: "POST" });
     } catch {
-      // Refresh to get current status
-      const detailRes = await fetch(`/api/upload/${uploadId}`);
-      if (detailRes.ok) {
-        const updated = await detailRes.json();
-        setUploads((prev) =>
-          prev.map((u) => (u.id === uploadId ? updated : u))
-        );
-      }
+      // Error status will be reflected in the refreshed upload record
     } finally {
+      // Record end timestamp
+      setTimestamps((prev) => ({
+        ...prev,
+        [uploadId]: { ...prev[uploadId], e: new Date().toISOString() },
+      }));
+      // Always refresh the upload record to get latest status
+      try {
+        const detailRes = await fetch(`/api/upload/${uploadId}`);
+        if (detailRes.ok) {
+          const updated = await detailRes.json();
+          setUploads((prev) =>
+            prev.map((u) => (u.id === uploadId ? updated : u))
+          );
+        }
+      } catch {
+        // Silently fail — user can refresh manually
+      }
       setProcessingIds((prev) => {
         const next = new Set(prev);
         next.delete(uploadId);
@@ -93,9 +86,16 @@ export function UploadSection() {
 
   // Batch process: fire all concurrently — server queues and runs up to 3 at a time
   function handleBatchProcess(ids: string[]) {
+    const now = new Date().toISOString();
     setQueuedIds(new Set(ids));
     setBatchTotal(ids.length);
     setBatchDone(0);
+    // Record queue timestamp for all items
+    setTimestamps((prev) => {
+      const next = { ...prev };
+      for (const id of ids) next[id] = { q: now };
+      return next;
+    });
 
     for (const id of ids) {
       setQueuedIds((prev) => {
@@ -118,16 +118,13 @@ export function UploadSection() {
     }
   }
 
-  // Open review panel
+  // Open review panel and scroll to it
   function handleReview(uploadId: string) {
     setReviewingId(uploadId);
-    // If we don't have account matches cached, re-fetch them
-    const upload = uploads.find((u) => u.id === uploadId);
-    if (upload?.detected_account_info && accountMatches.length === 0) {
-      // Account matches were from processing step; if we're reviewing later,
-      // the process route already ran so matches may need re-fetching.
-      // For now, we use whatever was cached.
-    }
+    // Scroll after React renders the review section
+    requestAnimationFrame(() => {
+      reviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }
 
   // Delete an upload
@@ -139,44 +136,14 @@ export function UploadSection() {
     }
   }
 
-  // Confirm extraction and save to DB
-  async function handleConfirm(params: {
-    accountId?: string;
-    createNewAccount?: boolean;
-    accountInfo?: {
-      account_type?: string;
-      institution_name?: string;
-      account_nickname?: string;
-    };
-  }) {
-    if (!reviewingId) return;
-
-    const res = await fetch(`/api/upload/${reviewingId}/confirm`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(params),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || "Confirmation failed");
-    }
-
-    // Refresh the upload record
-    const detailRes = await fetch(`/api/upload/${reviewingId}`);
-    if (detailRes.ok) {
-      const updated = await detailRes.json();
-      setUploads((prev) =>
-        prev.map((u) => (u.id === reviewingId ? updated : u))
-      );
-    }
-
-    setReviewingId(null);
-  }
-
   // Re-process a file
   async function handleReprocess() {
     if (reviewingId) {
+      const now = new Date().toISOString();
+      setTimestamps((prev) => ({
+        ...prev,
+        [reviewingId]: { q: now },
+      }));
       setReviewingId(null);
       await handleProcess(reviewingId);
     }
@@ -216,6 +183,8 @@ export function UploadSection() {
           queuedIds={queuedIds}
           batchTotal={batchTotal}
           batchDone={batchDone}
+          timestamps={timestamps}
+          processCount={processCount}
           onBatchProcess={handleBatchProcess}
           onReview={handleReview}
           onDelete={handleDelete}
@@ -223,13 +192,18 @@ export function UploadSection() {
       )}
 
       {reviewingUpload && (
-        <UploadReview
-          upload={reviewingUpload}
-          accountMatches={accountMatches}
-          onConfirm={handleConfirm}
-          onReprocess={handleReprocess}
-          onClose={() => setReviewingId(null)}
-        />
+        <div ref={reviewRef}>
+          <UploadReview
+            upload={reviewingUpload}
+            onReprocess={handleReprocess}
+            onClose={() => setReviewingId(null)}
+            onSaved={(updated) => {
+              setUploads((prev) =>
+                prev.map((u) => (u.id === updated.id ? updated : u))
+              );
+            }}
+          />
+        </div>
       )}
     </div>
   );

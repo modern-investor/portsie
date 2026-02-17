@@ -3,10 +3,8 @@
 import { useState } from "react";
 import type {
   UploadedStatement,
-  AccountMatch,
   LLMExtractionResult,
 } from "@/lib/upload/types";
-import { AccountLinkModal } from "./account-link-modal";
 
 const CONFIDENCE_STYLES = {
   high: { label: "High confidence", className: "text-green-700 bg-green-100" },
@@ -19,28 +17,52 @@ const CONFIDENCE_STYLES = {
 
 export function UploadReview({
   upload,
-  accountMatches,
-  onConfirm,
   onReprocess,
   onClose,
+  onSaved,
 }: {
   upload: UploadedStatement;
-  accountMatches: AccountMatch[];
-  onConfirm: (params: {
-    accountId?: string;
-    createNewAccount?: boolean;
-    accountInfo?: {
-      account_type?: string;
-      institution_name?: string;
-      account_nickname?: string;
-    };
-  }) => Promise<void>;
   onReprocess: () => void;
   onClose: () => void;
+  onSaved?: (updated: UploadedStatement) => void;
 }) {
-  const [confirming, setConfirming] = useState(false);
-  const [showAccountModal, setShowAccountModal] = useState(false);
-  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  async function handleSave() {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const body: Record<string, unknown> = {};
+      if (upload.account_id) {
+        body.accountId = upload.account_id;
+      } else {
+        body.createNewAccount = true;
+        if (upload.detected_account_info) {
+          body.accountInfo = upload.detected_account_info;
+        }
+      }
+      const res = await fetch(`/api/upload/${upload.id}/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save");
+      }
+      // Refresh the upload record to get confirmed_at
+      const detailRes = await fetch(`/api/upload/${upload.id}`);
+      if (detailRes.ok) {
+        const updated = await detailRes.json();
+        onSaved?.(updated);
+      }
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const extraction = upload.extracted_data as LLMExtractionResult | null;
   if (!extraction) return null;
@@ -49,26 +71,6 @@ export function UploadReview({
   const totalTransactions = extraction.transactions.length;
   const totalPositions = extraction.positions.length;
   const totalBalances = extraction.balances.length;
-
-  async function handleConfirm(params: {
-    accountId?: string;
-    createNewAccount?: boolean;
-    accountInfo?: {
-      account_type?: string;
-      institution_name?: string;
-      account_nickname?: string;
-    };
-  }) {
-    setConfirming(true);
-    setError("");
-    try {
-      await onConfirm(params);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Confirmation failed");
-    } finally {
-      setConfirming(false);
-    }
-  }
 
   return (
     <div className="space-y-4 rounded-lg border bg-white p-4 sm:p-6">
@@ -327,51 +329,39 @@ export function UploadReview({
         </div>
       )}
 
-      {/* Error */}
-      {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
-          {error}
-        </div>
-      )}
-
       {/* Actions */}
       <div className="flex flex-wrap items-center gap-2 border-t pt-4 sm:gap-3">
-        <button
-          onClick={() => setShowAccountModal(true)}
-          disabled={confirming}
-          className="rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-        >
-          {confirming ? "Saving..." : "Confirm & Save"}
-        </button>
+        {upload.confirmed_at ? (
+          <span className="rounded-md bg-green-100 px-3 py-2 text-sm font-medium text-green-700">
+            Saved to account
+          </span>
+        ) : (
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
+        )}
+        {saveError && (
+          <span className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+            {saveError}
+          </span>
+        )}
         <button
           onClick={onReprocess}
-          disabled={confirming}
-          className="rounded-md border px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          className="rounded-md border px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           Re-process
         </button>
         <button
           onClick={onClose}
-          disabled={confirming}
           className="px-2 py-2 text-sm text-gray-500 hover:text-gray-700"
         >
-          Cancel
+          Close
         </button>
       </div>
-
-      {/* Account link modal */}
-      {showAccountModal && (
-        <AccountLinkModal
-          accountMatches={accountMatches}
-          detectedInfo={extraction.account_info}
-          autoLinkedAccountId={upload.account_id}
-          onConfirm={(params) => {
-            setShowAccountModal(false);
-            handleConfirm(params);
-          }}
-          onCancel={() => setShowAccountModal(false)}
-        />
-      )}
     </div>
   );
 }
