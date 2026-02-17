@@ -104,7 +104,8 @@ export function UploadSection() {
     }
   }
 
-  // Batch process: fire all concurrently — server queues and runs up to 3 at a time
+  // Batch process: run sequentially so only one is actively processing at a time.
+  // Queued items show "Queued" until their turn.
   function handleBatchProcess(ids: string[]) {
     const now = new Date().toISOString();
     setQueuedIds(new Set(ids));
@@ -117,16 +118,18 @@ export function UploadSection() {
       return next;
     });
 
-    for (const id of ids) {
-      setQueuedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-      handleProcess(id).then(() => {
+    // Process sequentially so queued items stay visually distinct
+    (async () => {
+      for (const id of ids) {
+        // Move from queued → processing
+        setQueuedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        await handleProcess(id);
         setBatchDone((prev) => {
           const next = prev + 1;
-          // Clear batch state when all done
           if (next >= ids.length) {
             setQueuedIds(new Set());
             setBatchTotal(0);
@@ -134,8 +137,8 @@ export function UploadSection() {
           }
           return next;
         });
-      });
-    }
+      }
+    })();
   }
 
   // Open review panel and scroll to it
