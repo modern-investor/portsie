@@ -193,9 +193,20 @@ export function UploadSection() {
       <UploadDropzone onUploaded={handleFileUploaded} />
 
       {loading ? (
-        <div className="animate-pulse space-y-2">
+        <div className="space-y-2">
+          <p className="text-sm text-gray-400">Loading uploads...</p>
           {[1, 2].map((i) => (
-            <div key={i} className="h-16 rounded-lg bg-gray-200" />
+            <div
+              key={i}
+              className="flex h-16 items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 animate-pulse"
+            >
+              <div className="h-4 w-4 rounded bg-gray-200" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3.5 w-40 rounded bg-gray-200" />
+                <div className="h-3 w-24 rounded bg-gray-200" />
+              </div>
+              <div className="h-6 w-16 rounded-full bg-gray-200" />
+            </div>
           ))}
         </div>
       ) : (

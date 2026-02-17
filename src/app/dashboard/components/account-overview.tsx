@@ -36,13 +36,16 @@ export function AccountOverview({ hideValues }: { hideValues: boolean }) {
 
   if (loading) {
     return (
-      <div className="rounded-lg border p-4 sm:p-6">
-        <div className="animate-pulse space-y-3">
-          <div className="h-4 w-32 rounded bg-gray-200" />
-          <div className="h-8 w-48 rounded bg-gray-200" />
-          <div className="flex flex-col gap-2 sm:flex-row sm:gap-8">
-            <div className="h-4 w-24 rounded bg-gray-200" />
-            <div className="h-4 w-24 rounded bg-gray-200" />
+      <div className="space-y-2">
+        <p className="text-sm text-gray-400">Loading accounts...</p>
+        <div className="rounded-lg border p-4 sm:p-6">
+          <div className="animate-pulse space-y-3">
+            <div className="h-4 w-32 rounded bg-gray-200" />
+            <div className="h-8 w-48 rounded bg-gray-200" />
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-8">
+              <div className="h-4 w-24 rounded bg-gray-200" />
+              <div className="h-4 w-24 rounded bg-gray-200" />
+            </div>
           </div>
         </div>
       </div>

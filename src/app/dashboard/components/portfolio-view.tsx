@@ -110,6 +110,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
   if (loading) {
     return (
       <div className="space-y-4">
+        <p className="text-sm text-gray-400">Loading portfolio...</p>
         <div className="rounded-lg border p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-8 w-48 rounded bg-gray-200" />

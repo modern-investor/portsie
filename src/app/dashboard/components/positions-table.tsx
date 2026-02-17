@@ -21,12 +21,15 @@ export function PositionsTable({ hideValues }: { hideValues: boolean }) {
 
   if (loading) {
     return (
-      <div className="rounded-lg border p-6">
-        <div className="animate-pulse space-y-3">
-          <div className="h-4 w-24 rounded bg-gray-200" />
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-8 rounded bg-gray-200" />
-          ))}
+      <div className="space-y-2">
+        <p className="text-sm text-gray-400">Loading positions...</p>
+        <div className="rounded-lg border p-6">
+          <div className="animate-pulse space-y-3">
+            <div className="h-4 w-24 rounded bg-gray-200" />
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-8 rounded bg-gray-200" />
+            ))}
+          </div>
         </div>
       </div>
     );
