@@ -1,12 +1,12 @@
 {
-  "version": "v260217.11 6:00a",
-  "release": 42,
-  "sha": "5ae6a50c",
-  "fullSha": "5ae6a50c4a737e05485ea9da59d35372973ae01a",
+  "version": "v260217.12 6:01a",
+  "release": 43,
+  "sha": "680edbad",
+  "fullSha": "680edbad90926f914890b0750296f4dcd1e8748f",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000040",
-  "pushedAt": "2026-02-17T12:00:41+00",
-  "commits": [{"sha": "5ae6a50c4a737e05485ea9da59d35372973ae01a", "short_sha": "5ae6a50c", "author": "rahulio", "message": "Auto-process uploads: trigger LLM extraction immediately after file upload"}]
+  "machine": "GitHub Actions 1000000041",
+  "pushedAt": "2026-02-17T12:01:45+00",
+  "commits": [{"sha": "680edbad90926f914890b0750296f4dcd1e8748f", "short_sha": "680edbad", "author": "rahulio", "message": "Multi-account extraction: support 54+ accounts from a single Schwab summary upload"}]
 }
