@@ -1,12 +1,12 @@
 {
-  "version": "v260217.08 2:41a",
-  "release": 39,
-  "sha": "c8a7b203",
-  "fullSha": "c8a7b203d59800a7a622e4d91ff1c4e7ece9eae7",
+  "version": "v260217.09 5:23a",
+  "release": 40,
+  "sha": "e98efe02",
+  "fullSha": "e98efe02785ece13ef9d8ea2139f05de156305db",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000037",
-  "pushedAt": "2026-02-17T08:41:03+00",
-  "commits": [{"sha": "c8a7b203d59800a7a622e4d91ff1c4e7ece9eae7", "short_sha": "c8a7b203", "author": "rahulio", "message": "Fix quiltt migration to be idempotent (IF NOT EXISTS)"}]
+  "machine": "GitHub Actions 1000000038",
+  "pushedAt": "2026-02-17T11:23:16+00",
+  "commits": [{"sha": "e98efe02785ece13ef9d8ea2139f05de156305db", "short_sha": "e98efe02", "author": "rahulio", "message": "Merge branch 'claude/wizardly-brahmagupta'"}, {"sha": "aad2a41b6d1003f679569184246ea9f5824f6233", "short_sha": "aad2a41b", "author": "rahulio", "message": "Holdings-as-truth rearchitecture: add holdings table, reconciliation engine, stored account summaries"}]
 }
