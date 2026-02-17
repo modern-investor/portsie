@@ -4,6 +4,7 @@ import { processFileForLLM } from "@/lib/upload/file-processor";
 import { extractFinancialData } from "@/lib/llm/dispatcher";
 import { autoLinkOrCreateAccount } from "@/lib/upload/account-matcher";
 import { writeExtractedData } from "@/lib/upload/data-writer";
+import { getLLMSettings } from "@/lib/llm/settings";
 import type { UploadFileType } from "@/lib/upload/types";
 import type { AutoLinkResult } from "@/lib/upload/account-matcher";
 
@@ -44,12 +45,16 @@ export async function POST(
     );
   }
 
-  // Mark as processing
+  // Track processing attempt count
+  const newProcessCount = (statement.process_count ?? 0) + 1;
+
+  // Mark as processing and increment attempt counter
   await supabase
     .from("uploaded_statements")
     .update({
       parse_status: "processing",
       parse_error: null,
+      process_count: newProcessCount,
     })
     .eq("id", id);
 
@@ -180,6 +185,26 @@ export async function POST(
         parse_error: errorMessage,
       })
       .eq("id", id);
+
+    // Auto-log extraction failure on 2nd+ attempt for diagnostic review
+    if (newProcessCount >= 2) {
+      try {
+        const settings = await getLLMSettings(supabase, user.id);
+        await supabase.from("extraction_failures").insert({
+          user_id: user.id,
+          upload_id: id,
+          filename: statement.filename,
+          file_type: statement.file_type,
+          file_path: statement.file_path,
+          attempt_number: newProcessCount,
+          error_message: errorMessage,
+          llm_mode: settings?.llmMode ?? "cli",
+          file_size_bytes: statement.file_size_bytes,
+        });
+      } catch (logErr) {
+        console.error("Failed to log extraction failure:", logErr);
+      }
+    }
 
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }

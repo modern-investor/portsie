@@ -92,6 +92,7 @@ export function UploadList({
   batchTotal,
   batchDone,
   timestamps,
+  processCount,
   onBatchProcess,
   onReview,
   onDelete,
@@ -102,6 +103,7 @@ export function UploadList({
   batchTotal: number;
   batchDone: number;
   timestamps: Record<string, { q?: string; s?: string; e?: string }>;
+  processCount: Record<string, number>;
   onBatchProcess: (ids: string[]) => void;
   onReview: (id: string) => void;
   onDelete: (id: string) => void;
@@ -290,21 +292,6 @@ export function UploadList({
                 <span title={upload.created_at}>
                   &#x2191;{formatDate(upload.created_at)}
                 </span>
-                {(() => {
-                  const ts = timestamps[upload.id];
-                  if (!ts) return null;
-                  const parts: string[] = [];
-                  if (ts.q) parts.push(`q:${formatTime(ts.q)}`);
-                  if (ts.s) parts.push(`s:${formatTime(ts.s)}`);
-                  if (ts.e) parts.push(`e:${formatTime(ts.e)}`);
-                  if (parts.length === 0) return null;
-                  return (
-                    <>
-                      <span aria-hidden>&middot;</span>
-                      <span className="font-mono text-blue-500">{parts.join(" ")}</span>
-                    </>
-                  );
-                })()}
                 {upload.parse_error && (
                   <span
                     className={`truncate ${isProcessing || isQueued ? "text-gray-300 line-through" : "text-red-500"}`}
@@ -314,6 +301,23 @@ export function UploadList({
                   </span>
                 )}
               </div>
+              {/* Processing timestamps — 3rd line */}
+              {(() => {
+                const ts = timestamps[upload.id];
+                if (!ts) return null;
+                const parts: string[] = [];
+                if (ts.q) parts.push(`queued:${formatTime(ts.q)}`);
+                if (ts.s) parts.push(`started:${formatTime(ts.s)}`);
+                if (ts.e) parts.push(`completed:${formatTime(ts.e)}`);
+                if (parts.length === 0) return null;
+                const count = processCount[upload.id] ?? 0;
+                return (
+                  <div className="text-xs font-mono text-blue-500">
+                    {count >= 2 && <span className="font-semibold">#{count} </span>}
+                    {parts.join(" ")}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Status badge */}

@@ -15,6 +15,8 @@ export function UploadSection() {
   const [batchDone, setBatchDone] = useState(0);
   // Timestamps: q = queued, s = processing started, e = ended
   const [timestamps, setTimestamps] = useState<Record<string, { q?: string; s?: string; e?: string }>>({});
+  // Track how many times each upload has been processed this session
+  const [processCount, setProcessCount] = useState<Record<string, number>>({});
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const reviewRef = useRef<HTMLDivElement>(null);
 
@@ -45,6 +47,7 @@ export function UploadSection() {
   // Trigger LLM processing for a single upload (auto-links account and saves data)
   async function handleProcess(uploadId: string) {
     setProcessingIds((prev) => new Set(prev).add(uploadId));
+    setProcessCount((prev) => ({ ...prev, [uploadId]: (prev[uploadId] ?? 0) + 1 }));
     // Record processing start timestamp (keep existing q timestamp)
     setTimestamps((prev) => ({
       ...prev,
@@ -170,6 +173,7 @@ export function UploadSection() {
           batchTotal={batchTotal}
           batchDone={batchDone}
           timestamps={timestamps}
+          processCount={processCount}
           onBatchProcess={handleBatchProcess}
           onReview={handleReview}
           onDelete={handleDelete}
