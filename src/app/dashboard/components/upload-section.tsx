@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { UploadDropzone } from "./upload-dropzone";
 import { UploadList } from "./upload-list";
 import { UploadReview } from "./upload-review";
-import type { UploadedStatement, AccountMatch } from "@/lib/upload/types";
+import type { UploadedStatement } from "@/lib/upload/types";
 
 export function UploadSection() {
   const [uploads, setUploads] = useState<UploadedStatement[]>([]);
@@ -14,7 +14,6 @@ export function UploadSection() {
   const [batchTotal, setBatchTotal] = useState(0);
   const [batchDone, setBatchDone] = useState(0);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
-  const [accountMatches, setAccountMatches] = useState<AccountMatch[]>([]);
 
   // Fetch existing uploads on mount
   const fetchUploads = useCallback(async () => {
@@ -40,49 +39,27 @@ export function UploadSection() {
     setUploads((prev) => [statement, ...prev]);
   }
 
-  // Trigger LLM processing for a single upload
+  // Trigger LLM processing for a single upload (auto-links account and saves data)
   async function handleProcess(uploadId: string) {
     setProcessingIds((prev) => new Set(prev).add(uploadId));
 
     try {
-      const res = await fetch(`/api/upload/${uploadId}/process`, {
-        method: "POST",
-      });
-      const data = await res.json();
-
-      if (res.ok) {
-        // Refresh the specific upload record
-        const detailRes = await fetch(`/api/upload/${uploadId}`);
-        if (detailRes.ok) {
-          const updated = await detailRes.json();
-          setUploads((prev) =>
-            prev.map((u) => (u.id === uploadId ? updated : u))
-          );
-        }
-        // Store account matches for review
-        if (data.accountMatches) {
-          setAccountMatches(data.accountMatches);
-        }
-      } else {
-        // Refresh to show error status
-        const detailRes = await fetch(`/api/upload/${uploadId}`);
-        if (detailRes.ok) {
-          const updated = await detailRes.json();
-          setUploads((prev) =>
-            prev.map((u) => (u.id === uploadId ? updated : u))
-          );
-        }
-      }
+      await fetch(`/api/upload/${uploadId}/process`, { method: "POST" });
     } catch {
-      // Refresh to get current status
-      const detailRes = await fetch(`/api/upload/${uploadId}`);
-      if (detailRes.ok) {
-        const updated = await detailRes.json();
-        setUploads((prev) =>
-          prev.map((u) => (u.id === uploadId ? updated : u))
-        );
-      }
+      // Error status will be reflected in the refreshed upload record
     } finally {
+      // Always refresh the upload record to get latest status
+      try {
+        const detailRes = await fetch(`/api/upload/${uploadId}`);
+        if (detailRes.ok) {
+          const updated = await detailRes.json();
+          setUploads((prev) =>
+            prev.map((u) => (u.id === uploadId ? updated : u))
+          );
+        }
+      } catch {
+        // Silently fail — user can refresh manually
+      }
       setProcessingIds((prev) => {
         const next = new Set(prev);
         next.delete(uploadId);
@@ -121,13 +98,6 @@ export function UploadSection() {
   // Open review panel
   function handleReview(uploadId: string) {
     setReviewingId(uploadId);
-    // If we don't have account matches cached, re-fetch them
-    const upload = uploads.find((u) => u.id === uploadId);
-    if (upload?.detected_account_info && accountMatches.length === 0) {
-      // Account matches were from processing step; if we're reviewing later,
-      // the process route already ran so matches may need re-fetching.
-      // For now, we use whatever was cached.
-    }
   }
 
   // Delete an upload
@@ -137,41 +107,6 @@ export function UploadSection() {
       setUploads((prev) => prev.filter((u) => u.id !== uploadId));
       if (reviewingId === uploadId) setReviewingId(null);
     }
-  }
-
-  // Confirm extraction and save to DB
-  async function handleConfirm(params: {
-    accountId?: string;
-    createNewAccount?: boolean;
-    accountInfo?: {
-      account_type?: string;
-      institution_name?: string;
-      account_nickname?: string;
-    };
-  }) {
-    if (!reviewingId) return;
-
-    const res = await fetch(`/api/upload/${reviewingId}/confirm`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(params),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || "Confirmation failed");
-    }
-
-    // Refresh the upload record
-    const detailRes = await fetch(`/api/upload/${reviewingId}`);
-    if (detailRes.ok) {
-      const updated = await detailRes.json();
-      setUploads((prev) =>
-        prev.map((u) => (u.id === reviewingId ? updated : u))
-      );
-    }
-
-    setReviewingId(null);
   }
 
   // Re-process a file
@@ -214,8 +149,6 @@ export function UploadSection() {
       {reviewingUpload && (
         <UploadReview
           upload={reviewingUpload}
-          accountMatches={accountMatches}
-          onConfirm={handleConfirm}
           onReprocess={handleReprocess}
           onClose={() => setReviewingId(null)}
         />

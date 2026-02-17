@@ -13,7 +13,7 @@ const STATUS_STYLES: Record<
     label: "Processing",
     className: "bg-blue-100 text-blue-700 animate-pulse",
   },
-  completed: { label: "Ready to review", className: "bg-green-100 text-green-700" },
+  completed: { label: "Extracted", className: "bg-green-100 text-green-700" },
   partial: {
     label: "Partial extraction",
     className: "bg-amber-100 text-amber-700",
@@ -293,11 +293,14 @@ export function UploadList({
             {/* Actions */}
             <div className="flex shrink-0 items-center gap-1">
               {(upload.parse_status === "completed" ||
-                upload.parse_status === "partial") &&
-                !isConfirmed && (
+                upload.parse_status === "partial") && (
                   <button
                     onClick={() => onReview(upload.id)}
-                    className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
+                    className={`rounded-md px-3 py-1.5 text-xs font-medium ${
+                      isConfirmed
+                        ? "border text-gray-600 hover:bg-gray-50"
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    }`}
                   >
                     Review
                   </button>

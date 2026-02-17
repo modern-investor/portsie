@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { processFileForLLM } from "@/lib/upload/file-processor";
 import { extractFinancialData } from "@/lib/llm/dispatcher";
-import { findMatchingAccounts } from "@/lib/upload/account-matcher";
+import { autoLinkOrCreateAccount } from "@/lib/upload/account-matcher";
+import { writeExtractedData } from "@/lib/upload/data-writer";
 import type { UploadFileType } from "@/lib/upload/types";
+import type { AutoLinkResult } from "@/lib/upload/account-matcher";
 
 // LLM extraction can take several minutes for large PDF/CSV files
 export const maxDuration = 300; // 5 minutes
@@ -73,21 +75,7 @@ export async function POST(
     const { result: extractionResult, rawResponse } =
       await extractFinancialData(supabase, user.id, processedFile, fileType, statement.filename);
 
-    // Find matching existing accounts
-    const accountMatches = extractionResult.account_info
-      ? await findMatchingAccounts(supabase, user.id, extractionResult.account_info)
-      : [];
-
-    // Auto-link if there's exactly one exact match
-    let autoLinkedAccountId: string | null = null;
-    if (
-      accountMatches.length === 1 &&
-      accountMatches[0].match_reason.includes("Exact")
-    ) {
-      autoLinkedAccountId = accountMatches[0].id;
-    }
-
-    // Determine parse status
+    // Determine if extraction produced data
     const hasData =
       extractionResult.transactions.length > 0 ||
       extractionResult.positions.length > 0 ||
@@ -95,7 +83,67 @@ export async function POST(
 
     const parseStatus = hasData ? "completed" : "partial";
 
+    // Auto-link/create account and auto-confirm
+    let autoLinkResult: AutoLinkResult | null = null;
+    let autoConfirmed = false;
+    let transactionsCreated = 0;
+    let positionsCreated = 0;
+
+    if (hasData && extractionResult.account_info) {
+      try {
+        // If re-processing an already-confirmed upload, reuse the existing account
+        let accountId: string | null = null;
+
+        if (statement.account_id && statement.confirmed_at) {
+          const { data: existingAccount } = await supabase
+            .from("accounts")
+            .select("id")
+            .eq("id", statement.account_id)
+            .eq("is_active", true)
+            .single();
+
+          if (existingAccount) {
+            const existingId: string = existingAccount.id;
+            accountId = existingId;
+            autoLinkResult = {
+              accountId: existingId,
+              action: "matched",
+              matchReason: "Previously linked account",
+            };
+          }
+        }
+
+        // No existing link — auto-match or create
+        if (!accountId) {
+          autoLinkResult = await autoLinkOrCreateAccount(
+            supabase,
+            user.id,
+            extractionResult.account_info
+          );
+          accountId = autoLinkResult.accountId;
+        }
+
+        // Write data to canonical tables
+        const writeResult = await writeExtractedData(
+          supabase,
+          user.id,
+          accountId,
+          id,
+          extractionResult
+        );
+        transactionsCreated = writeResult.transactionsCreated;
+        positionsCreated = writeResult.positionsCreated;
+        autoConfirmed = true;
+      } catch (linkErr) {
+        // Auto-link/confirm failed — save extraction results anyway
+        console.error("Auto-link/confirm failed:", linkErr);
+      }
+    }
+
     // Save extraction results to the database
+    // Note: writeExtractedData already sets confirmed_at, account_id, and
+    // parse_status if auto-confirm succeeded. This update ensures extraction
+    // metadata is saved regardless.
     await supabase
       .from("uploaded_statements")
       .update({
@@ -104,7 +152,7 @@ export async function POST(
         extracted_data: extractionResult,
         raw_llm_response: rawResponse,
         detected_account_info: extractionResult.account_info,
-        account_id: autoLinkedAccountId,
+        account_id: autoLinkResult?.accountId ?? null,
         statement_start_date: extractionResult.statement_start_date,
         statement_end_date: extractionResult.statement_end_date,
       })
@@ -112,8 +160,12 @@ export async function POST(
 
     return NextResponse.json({
       extraction: extractionResult,
-      accountMatches,
-      autoLinkedAccountId,
+      autoLinkedAccountId: autoLinkResult?.accountId ?? null,
+      autoLinkAction: autoLinkResult?.action ?? null,
+      autoLinkReason: autoLinkResult?.matchReason ?? null,
+      autoConfirmed,
+      transactionsCreated,
+      positionsCreated,
       parseStatus,
     });
   } catch (err) {
