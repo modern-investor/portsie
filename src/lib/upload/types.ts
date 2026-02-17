@@ -75,6 +75,7 @@ export interface DetectedAccountInfo {
   account_type?: string | null;
   institution_name?: string | null;
   account_nickname?: string | null;
+  account_owner_name?: string | null;
 }
 
 export interface LLMExtractionResult {
@@ -123,4 +124,6 @@ export interface AccountMatch {
   account_type: string | null;
   schwab_account_number: string | null;
   match_reason: string;
+  entity_id?: string | null;
+  entity_name?: string | null;
 }

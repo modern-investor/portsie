@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { AccountMatch, DetectedAccountInfo } from "@/lib/upload/types";
+import type { Entity } from "@/lib/entities/types";
 
 export function AccountLinkModal({
   accountMatches,
@@ -21,11 +22,16 @@ export function AccountLinkModal({
       institution_name?: string;
       account_nickname?: string;
     };
+    entityId?: string;
+    createNewEntity?: boolean;
+    newEntityName?: string;
+    newEntityType?: string;
   }) => void;
   onCancel: () => void;
 }) {
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
-    autoLinkedAccountId ?? (accountMatches.length === 1 ? accountMatches[0].id : null)
+    autoLinkedAccountId ??
+      (accountMatches.length === 1 ? accountMatches[0].id : null)
   );
   const [createNew, setCreateNew] = useState(false);
   const [nickname, setNickname] = useState(
@@ -39,7 +45,69 @@ export function AccountLinkModal({
     detectedInfo.account_type || ""
   );
 
+  // Entity state
+  const [entities, setEntities] = useState<Entity[]>([]);
+  const [selectedEntityId, setSelectedEntityId] = useState<string>("");
+  const [createNewEntity, setCreateNewEntity] = useState(false);
+  const [newEntityName, setNewEntityName] = useState(
+    detectedInfo.account_owner_name || ""
+  );
+  const [newEntityType, setNewEntityType] = useState("other");
+
+  // Detect if this is a new owner
+  const detectedOwnerName = detectedInfo.account_owner_name;
+  const [isNewOwner, setIsNewOwner] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/entities")
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data: Entity[] = await res.json();
+        setEntities(data);
+
+        // Default to the default entity
+        const defaultEntity = data.find((e) => e.is_default);
+        if (defaultEntity) {
+          setSelectedEntityId(defaultEntity.id);
+        }
+
+        // Check if detected owner matches any entity
+        if (detectedOwnerName) {
+          const normalizedOwner = detectedOwnerName.toLowerCase().trim();
+          const match = data.find((e) => {
+            const name = e.entity_name.toLowerCase().trim();
+            return (
+              name === normalizedOwner ||
+              normalizedOwner.includes(name) ||
+              name.includes(normalizedOwner)
+            );
+          });
+
+          if (match) {
+            setSelectedEntityId(match.id);
+          } else {
+            setIsNewOwner(true);
+            setCreateNewEntity(true);
+            setNewEntityName(detectedOwnerName);
+          }
+        }
+      })
+      .catch(() => {
+        // Silent fail — entity selection just won't appear
+      });
+  }, [detectedOwnerName]);
+
   function handleSubmit() {
+    const entityParams = createNewEntity
+      ? {
+          createNewEntity: true as const,
+          newEntityName,
+          newEntityType,
+        }
+      : {
+          entityId: selectedEntityId || undefined,
+        };
+
     if (createNew) {
       onConfirm({
         createNewAccount: true,
@@ -48,23 +116,95 @@ export function AccountLinkModal({
           institution_name: institutionName,
           account_type: accountType || undefined,
         },
+        ...entityParams,
       });
     } else if (selectedAccountId) {
-      onConfirm({ accountId: selectedAccountId });
+      onConfirm({
+        accountId: selectedAccountId,
+        ...entityParams,
+      });
     }
   }
 
-  const canSubmit = createNew || selectedAccountId;
+  const canSubmit =
+    (createNew || selectedAccountId) &&
+    (!createNewEntity || newEntityName.trim());
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="mx-4 w-full max-w-md rounded-lg bg-white p-4 shadow-xl sm:p-6">
+      <div className="mx-4 w-full max-w-md max-h-[90vh] overflow-y-auto rounded-lg bg-white p-4 shadow-xl sm:p-6">
         <h3 className="text-lg font-semibold">Link to Account</h3>
         <p className="mt-1 text-sm text-gray-500">
           Choose which account this statement belongs to, or create a new one.
         </p>
 
+        {/* New owner detected banner */}
+        {isNewOwner && detectedOwnerName && (
+          <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+            <p className="text-sm font-medium text-amber-800">
+              New account owner detected
+            </p>
+            <p className="mt-0.5 text-xs text-amber-600">
+              &ldquo;{detectedOwnerName}&rdquo; doesn&apos;t match any existing
+              entity. A new entity will be created.
+            </p>
+          </div>
+        )}
+
         <div className="mt-4 space-y-3">
+          {/* Entity selection */}
+          {entities.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-gray-500 uppercase">
+                Account Owner (Entity)
+              </p>
+
+              <select
+                value={createNewEntity ? "__new__" : selectedEntityId}
+                onChange={(e) => {
+                  if (e.target.value === "__new__") {
+                    setCreateNewEntity(true);
+                    setSelectedEntityId("");
+                  } else {
+                    setCreateNewEntity(false);
+                    setSelectedEntityId(e.target.value);
+                  }
+                }}
+                className="w-full rounded-md border px-3 py-2 text-sm"
+              >
+                {entities.map((entity) => (
+                  <option key={entity.id} value={entity.id}>
+                    {entity.entity_name}
+                    {entity.is_default ? " (default)" : ""}
+                  </option>
+                ))}
+                <option value="__new__">+ Create new entity</option>
+              </select>
+
+              {createNewEntity && (
+                <div className="space-y-2 ml-2 pl-2 border-l-2 border-amber-200">
+                  <input
+                    type="text"
+                    placeholder="Entity name (e.g. Jane Smith, Smith Family Trust)"
+                    value={newEntityName}
+                    onChange={(e) => setNewEntityName(e.target.value)}
+                    className="w-full rounded-md border px-3 py-2 text-sm"
+                  />
+                  <select
+                    value={newEntityType}
+                    onChange={(e) => setNewEntityType(e.target.value)}
+                    className="w-full rounded-md border px-3 py-2 text-sm"
+                  >
+                    <option value="spouse">Spouse / Partner</option>
+                    <option value="trust">Trust</option>
+                    <option value="partner">Business Partner</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Existing account matches */}
           {accountMatches.length > 0 && (
             <div className="space-y-2">
@@ -105,7 +245,7 @@ export function AccountLinkModal({
                           : null,
                       ]
                         .filter(Boolean)
-                        .join(" — ")}
+                        .join(" \u2014 ")}
                     </p>
                     <p className="text-xs text-blue-500">
                       {match.match_reason}

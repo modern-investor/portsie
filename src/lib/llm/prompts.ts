@@ -11,7 +11,8 @@ You MUST respond with valid JSON matching this exact schema:
     "account_number": string | null,
     "account_type": string | null,
     "institution_name": string | null,
-    "account_nickname": string | null
+    "account_nickname": string | null,
+    "account_owner_name": string | null
   },
   "statement_start_date": "YYYY-MM-DD" | null,
   "statement_end_date": "YYYY-MM-DD" | null,
@@ -76,5 +77,6 @@ Rules:
 - Set confidence to "low" if the document is blurry, partial, or heavily ambiguous.
 - Add notes for anything unusual, ambiguous, or that the user should review.
 - For position snapshot_date, use the statement end date or the most recent date visible in the document.
+- Extract the account owner's name from the document if visible (e.g. "John Smith", "Smith Family Trust"). Set account_owner_name to null if not present.
 - Do NOT hallucinate data. Only extract what is explicitly present in the document.
 - Respond ONLY with the JSON object. No markdown fences, no explanation, no commentary.`;

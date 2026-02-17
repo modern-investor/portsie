@@ -20,10 +20,11 @@ export async function POST(
   }
 
   const body = await request.json();
-  const { accountId, createNewAccount, accountInfo } = body as {
+  const { accountId, createNewAccount, accountInfo, entityId } = body as {
     accountId?: string;
     createNewAccount?: boolean;
     accountInfo?: DetectedAccountInfo;
+    entityId?: string;
   };
 
   // Get the upload record
@@ -57,17 +58,22 @@ export async function POST(
 
   if (!targetAccountId && createNewAccount) {
     try {
-      targetAccountId = await createManualAccount(supabase, user.id, {
-        account_type:
-          accountInfo?.account_type ??
-          statement.detected_account_info?.account_type,
-        institution_name:
-          accountInfo?.institution_name ??
-          statement.detected_account_info?.institution_name,
-        account_nickname:
-          accountInfo?.account_nickname ??
-          statement.detected_account_info?.account_nickname,
-      });
+      targetAccountId = await createManualAccount(
+        supabase,
+        user.id,
+        {
+          account_type:
+            accountInfo?.account_type ??
+            statement.detected_account_info?.account_type,
+          institution_name:
+            accountInfo?.institution_name ??
+            statement.detected_account_info?.institution_name,
+          account_nickname:
+            accountInfo?.account_nickname ??
+            statement.detected_account_info?.account_nickname,
+        },
+        entityId
+      );
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "Failed to create account";

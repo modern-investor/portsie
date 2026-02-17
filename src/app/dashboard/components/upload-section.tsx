@@ -148,13 +148,44 @@ export function UploadSection() {
       institution_name?: string;
       account_nickname?: string;
     };
+    entityId?: string;
+    createNewEntity?: boolean;
+    newEntityName?: string;
+    newEntityType?: string;
   }) {
     if (!reviewingId) return;
+
+    let entityId = params.entityId;
+
+    // Create new entity first if requested
+    if (params.createNewEntity && params.newEntityName) {
+      try {
+        const entityRes = await fetch("/api/entities", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            entity_name: params.newEntityName,
+            entity_type: params.newEntityType || "other",
+          }),
+        });
+        if (entityRes.ok) {
+          const newEntity = await entityRes.json();
+          entityId = newEntity.id;
+        }
+      } catch {
+        // Fall through — entity creation failed, confirm without entity
+      }
+    }
 
     const res = await fetch(`/api/upload/${reviewingId}/confirm`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(params),
+      body: JSON.stringify({
+        accountId: params.accountId,
+        createNewAccount: params.createNewAccount,
+        accountInfo: params.accountInfo,
+        entityId,
+      }),
     });
 
     if (!res.ok) {
@@ -172,6 +203,27 @@ export function UploadSection() {
     }
 
     setReviewingId(null);
+  }
+
+  // Revert a confirmed upload
+  async function handleRevert(uploadId: string) {
+    try {
+      const res = await fetch(`/api/upload/${uploadId}/revert`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        // Refresh the upload record
+        const detailRes = await fetch(`/api/upload/${uploadId}`);
+        if (detailRes.ok) {
+          const updated = await detailRes.json();
+          setUploads((prev) =>
+            prev.map((u) => (u.id === uploadId ? updated : u))
+          );
+        }
+      }
+    } catch {
+      // Silent fail
+    }
   }
 
   // Re-process a file
@@ -208,6 +260,7 @@ export function UploadSection() {
           onBatchProcess={handleBatchProcess}
           onReview={handleReview}
           onDelete={handleDelete}
+          onRevert={handleRevert}
         />
       )}
 

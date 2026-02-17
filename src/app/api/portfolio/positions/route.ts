@@ -36,6 +36,8 @@ export interface UnifiedAccount {
   source: "schwab_api" | "manual_upload" | "manual_entry";
   cashBalance: number;
   liquidationValue: number;
+  entityId?: string;
+  entityName?: string;
 }
 
 export interface PortfolioData {
@@ -60,6 +62,25 @@ export async function GET() {
   let hasSchwab = false;
   let hasUploads = false;
 
+  // ── 0. Load Schwab DB accounts for entity info ──
+  const { data: schwabDbAccounts } = await supabase
+    .from("accounts")
+    .select("schwab_account_number, entity_id, entities(entity_name)")
+    .eq("user_id", user.id)
+    .eq("data_source", "schwab_api");
+
+  const schwabEntityMap = new Map<string, { entityId?: string; entityName?: string }>();
+  if (schwabDbAccounts) {
+    for (const a of schwabDbAccounts) {
+      if (a.schwab_account_number) {
+        schwabEntityMap.set(a.schwab_account_number, {
+          entityId: a.entity_id ?? undefined,
+          entityName: (a.entities as unknown as { entity_name: string } | null)?.entity_name ?? "Personal",
+        });
+      }
+    }
+  }
+
   // ── 1. Schwab API positions (if connected) ──
   try {
     const isConnected = await hasSchwabConnection(supabase, user.id);
@@ -72,6 +93,7 @@ export async function GET() {
       for (const acct of schwabAccounts) {
         const sec = acct.securitiesAccount;
         const bal = sec.currentBalances;
+        const entityInfo = schwabEntityMap.get(sec.accountNumber);
 
         accounts.push({
           id: `schwab_${sec.accountNumber}`,
@@ -84,6 +106,8 @@ export async function GET() {
             bal?.liquidationValue ??
             acct.aggregatedBalance?.liquidationValue ??
             0,
+          entityId: entityInfo?.entityId,
+          entityName: entityInfo?.entityName ?? "Personal",
         });
 
         for (const pos of sec.positions ?? []) {
@@ -101,7 +125,7 @@ export async function GET() {
     // Get all user accounts that aren't Schwab API (to avoid double-counting)
     const { data: dbAccounts } = await supabase
       .from("accounts")
-      .select("id, account_nickname, institution_name, account_type, data_source")
+      .select("id, account_nickname, institution_name, account_type, data_source, entity_id, entities(entity_name)")
       .eq("user_id", user.id)
       .neq("data_source", "schwab_api");
 
@@ -149,6 +173,8 @@ export async function GET() {
           source: acct.data_source as "manual_upload" | "manual_entry",
           cashBalance: bal?.cash_balance ?? 0,
           liquidationValue: bal?.liquidation_value ?? 0,
+          entityId: acct.entity_id ?? undefined,
+          entityName: (acct.entities as unknown as { entity_name: string } | null)?.entity_name ?? "Personal",
         });
 
         for (const sp of snapshotPositions) {

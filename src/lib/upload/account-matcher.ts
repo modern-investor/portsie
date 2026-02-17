@@ -13,7 +13,7 @@ export async function findMatchingAccounts(
   const { data: accounts, error } = await supabase
     .from("accounts")
     .select(
-      "id, account_nickname, institution_name, account_type, schwab_account_number"
+      "id, account_nickname, institution_name, account_type, schwab_account_number, entity_id"
     )
     .eq("user_id", userId)
     .eq("is_active", true);
@@ -75,6 +75,7 @@ export async function findMatchingAccounts(
         account_type: account.account_type,
         schwab_account_number: account.schwab_account_number,
         match_reason: matchReason,
+        entity_id: account.entity_id ?? null,
       });
     }
   }
@@ -100,7 +101,8 @@ export async function findMatchingAccounts(
 export async function createManualAccount(
   supabase: SupabaseClient,
   userId: string,
-  accountInfo: DetectedAccountInfo
+  accountInfo: DetectedAccountInfo,
+  entityId?: string
 ): Promise<string> {
   const { data, error } = await supabase
     .from("accounts")
@@ -113,6 +115,7 @@ export async function createManualAccount(
         `${accountInfo.institution_name || "Unknown"} Account`,
       institution_name: accountInfo.institution_name || "Unknown",
       is_active: true,
+      entity_id: entityId ?? null,
     })
     .select("id")
     .single();

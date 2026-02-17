@@ -78,6 +78,7 @@ export function UploadList({
   onBatchProcess,
   onReview,
   onDelete,
+  onRevert,
 }: {
   uploads: UploadedStatement[];
   processingIds: Set<string>;
@@ -87,6 +88,7 @@ export function UploadList({
   onBatchProcess: (ids: string[]) => void;
   onReview: (id: string) => void;
   onDelete: (id: string) => void;
+  onRevert?: (id: string) => void;
 }) {
   // Track IDs the user has explicitly unchecked; everything else defaults to checked
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
@@ -302,6 +304,19 @@ export function UploadList({
                     Review
                   </button>
                 )}
+
+              {isConfirmed && onRevert && (
+                <button
+                  onClick={() => {
+                    if (confirm("Revert this upload? All transactions, positions, and balances created from this file will be deleted.")) {
+                      onRevert(upload.id);
+                    }
+                  }}
+                  className="rounded-md px-3 py-1.5 text-xs font-medium text-orange-600 hover:bg-orange-50 border border-orange-200"
+                >
+                  Revert
+                </button>
+              )}
 
               {!isProcessing && !isConfirmed && (
                 <button
