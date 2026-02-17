@@ -1,12 +1,12 @@
 {
-  "version": "v260217.22 11:01a",
-  "release": 54,
-  "sha": "61821a59",
-  "fullSha": "61821a59958907129fddabdd0b8ef474aea4f452",
+  "version": "v260217.23 11:06a",
+  "release": 55,
+  "sha": "8a8ae350",
+  "fullSha": "8a8ae350d5ff75e35a0ab9f2541418bad10f91b9",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000052",
-  "pushedAt": "2026-02-17T17:01:53+00",
-  "commits": [{"sha": "61821a59958907129fddabdd0b8ef474aea4f452", "short_sha": "61821a59", "author": "rahulio", "message": "LLM-driven account matching: Claude decides account links during extraction"}]
+  "machine": "GitHub Actions 1000000053",
+  "pushedAt": "2026-02-17T17:06:10+00",
+  "commits": [{"sha": "8a8ae350d5ff75e35a0ab9f2541418bad10f91b9", "short_sha": "8a8ae350", "author": "rahulio", "message": "Inline upload review panel with reverse-chrono ordering"}]
 }
