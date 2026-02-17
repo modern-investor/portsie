@@ -1,12 +1,12 @@
 {
-  "version": "v260217.15 6:46a",
-  "release": 46,
-  "sha": "9c770651",
-  "fullSha": "9c770651b78d59e920db499c417701c019f935ff",
+  "version": "v260217.16 9:21a",
+  "release": 47,
+  "sha": "7156bc78",
+  "fullSha": "7156bc7899443adb911b1dbda2edcfd7d9366018",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000044",
-  "pushedAt": "2026-02-17T12:46:56+00",
-  "commits": [{"sha": "9c770651b78d59e920db499c417701c019f935ff", "short_sha": "9c770651", "author": "rahulio", "message": "Fix empty dashboard: holdings table never populated"}]
+  "machine": "GitHub Actions 1000000045",
+  "pushedAt": "2026-02-17T15:21:03+00",
+  "commits": [{"sha": "7156bc7899443adb911b1dbda2edcfd7d9366018", "short_sha": "7156bc78", "author": "rahulio", "message": "Merge branch 'claude/mystifying-mccarthy'"}, {"sha": "acc070f5ad4f9e1ee65fba3d43ef9562cd550711", "short_sha": "acc070f5", "author": "rahulio", "message": "Fix dashboard empty-state buttons navigating to wrong Connections tab"}]
 }
