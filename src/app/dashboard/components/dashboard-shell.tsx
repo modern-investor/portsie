@@ -14,8 +14,12 @@ export function DashboardShell({
   const [hideValues, setHideValues] = useState(false);
 
   function handleNavigateTab(tab: string) {
-    if (tab === "connections") {
-      window.location.href = "/dashboard/connections";
+    if (tab.startsWith("connections")) {
+      const subTab = tab.split(":")[1];
+      const url = subTab
+        ? `/dashboard/connections?tab=${subTab}`
+        : "/dashboard/connections";
+      window.location.href = url;
     }
   }
 
