@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { LLMExtractionResult, ExtractedAccount } from "./types";
 import type { ReconciliationResult } from "@/lib/holdings/types";
 import type { AutoLinkResult } from "./account-matcher";
+import { findOrCreateAggregateAccount } from "./account-matcher";
 import { reconcileHoldings } from "@/lib/holdings/reconcile";
 import { updateAccountSummary } from "@/lib/holdings/account-summary";
 
@@ -338,6 +339,59 @@ export async function writeMultiAccountData(
         );
         // Continue with other accounts even if one fails
       }
+    }
+  }
+
+  // ── Handle unallocated (aggregate) positions ──
+  // These are positions from summary sections that span multiple accounts
+  // (e.g. Schwab summary "Positions" section marked with ††).
+  if (
+    extractedData.unallocated_positions &&
+    extractedData.unallocated_positions.length > 0
+  ) {
+    try {
+      const institutionName =
+        extractedData.account_info?.institution_name ?? "Unknown";
+      const aggregateAccountId = await findOrCreateAggregateAccount(
+        supabase,
+        userId,
+        institutionName
+      );
+      linkedAccountIds.push(aggregateAccountId);
+
+      const aggData: LLMExtractionResult = {
+        account_info: {
+          institution_name: institutionName,
+          account_type: "aggregate",
+          account_nickname: `${institutionName} (Aggregate)`,
+        },
+        statement_start_date: extractedData.statement_start_date,
+        statement_end_date: extractedData.statement_end_date,
+        transactions: [],
+        positions: extractedData.unallocated_positions,
+        balances: [],
+        confidence: extractedData.confidence,
+        notes: [],
+      };
+
+      const aggResult = await writeExtractedData(
+        supabase,
+        userId,
+        aggregateAccountId,
+        statementId,
+        aggData
+      );
+
+      accountResults.push({
+        accountId: aggregateAccountId,
+        accountNickname: `${institutionName} (Aggregate)`,
+        reconciliation: aggResult,
+      });
+
+      totalSnapshotsWritten += aggResult.snapshotsWritten;
+      totalHoldingsCreated += aggResult.holdingsCreated;
+    } catch (err) {
+      console.error("Failed to write unallocated/aggregate positions:", err);
     }
   }
 
