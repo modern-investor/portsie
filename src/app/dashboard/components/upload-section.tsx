@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { UploadDropzone } from "./upload-dropzone";
 import { UploadList } from "./upload-list";
-import { UploadReview } from "./upload-review";
 import type { UploadedStatement } from "@/lib/upload/types";
 
 export function UploadSection() {
@@ -19,7 +18,6 @@ export function UploadSection() {
   // Track how many times each upload has been processed this session
   const [processCount, setProcessCount] = useState<Record<string, number>>({});
   const [reviewingId, setReviewingId] = useState<string | null>(null);
-  const reviewRef = useRef<HTMLDivElement>(null);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   const router = useRouter();
 
@@ -141,13 +139,9 @@ export function UploadSection() {
     })();
   }
 
-  // Open review panel and scroll to it
+  // Toggle review panel for a specific upload (empty string closes)
   function handleReview(uploadId: string) {
-    setReviewingId(uploadId);
-    // Scroll after React renders the review section
-    requestAnimationFrame(() => {
-      reviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    setReviewingId(uploadId || null);
   }
 
   // Delete an upload
@@ -171,10 +165,6 @@ export function UploadSection() {
       await handleProcess(reviewingId);
     }
   }
-
-  const reviewingUpload = reviewingId
-    ? uploads.find((u) => u.id === reviewingId)
-    : null;
 
   return (
     <div className="space-y-4">
@@ -225,26 +215,19 @@ export function UploadSection() {
           batchDone={batchDone}
           timestamps={timestamps}
           processCount={processCount}
+          reviewingId={reviewingId}
           onBatchProcess={handleBatchProcess}
           onReview={handleReview}
           onDelete={handleDelete}
+          onReprocess={handleReprocess}
+          onSaved={(updated) => {
+            setUploads((prev) =>
+              prev.map((u) => (u.id === updated.id ? updated : u))
+            );
+            setRedirectCountdown(3);
+          }}
+          onCloseReview={() => setReviewingId(null)}
         />
-      )}
-
-      {reviewingUpload && (
-        <div ref={reviewRef}>
-          <UploadReview
-            upload={reviewingUpload}
-            onReprocess={handleReprocess}
-            onClose={() => setReviewingId(null)}
-            onSaved={(updated) => {
-              setUploads((prev) =>
-                prev.map((u) => (u.id === updated.id ? updated : u))
-              );
-              setRedirectCountdown(3);
-            }}
-          />
-        </div>
       )}
     </div>
   );

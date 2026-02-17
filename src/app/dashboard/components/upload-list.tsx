@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import type { UploadedStatement } from "@/lib/upload/types";
+import { UploadReview } from "./upload-review";
 
 const STATUS_STYLES: Record<
   string,
@@ -139,9 +140,13 @@ export function UploadList({
   batchDone,
   timestamps,
   processCount,
+  reviewingId,
   onBatchProcess,
   onReview,
   onDelete,
+  onReprocess,
+  onSaved,
+  onCloseReview,
 }: {
   uploads: UploadedStatement[];
   processingIds: Set<string>;
@@ -150,9 +155,13 @@ export function UploadList({
   batchDone: number;
   timestamps: Record<string, { q?: string; s?: string; e?: string }>;
   processCount: Record<string, number>;
+  reviewingId: string | null;
   onBatchProcess: (ids: string[]) => void;
   onReview: (id: string) => void;
   onDelete: (id: string) => void;
+  onReprocess: () => void;
+  onSaved: (updated: UploadedStatement) => void;
+  onCloseReview: () => void;
 }) {
   // Track IDs the user has explicitly unchecked; everything else defaults to checked
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
@@ -209,10 +218,32 @@ export function UploadList({
     }
   }
 
+  // Ref for scrolling to expanded review
+  const reviewRef = useRef<HTMLDivElement>(null);
+
+  // Sort uploads in reverse chronological order
+  const sortedUploads = useMemo(
+    () => [...uploads].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+    [uploads]
+  );
+
+  // Scroll to expanded review when reviewingId changes
+  useEffect(() => {
+    if (reviewingId && reviewRef.current) {
+      requestAnimationFrame(() => {
+        reviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }, [reviewingId]);
+
   if (uploads.length === 0) return null;
 
   const allChecked = processableIds.length > 0 && checkedIds.size === processableIds.length;
   const someChecked = checkedIds.size > 0 && checkedIds.size < processableIds.length;
+
+  const reviewingUpload = reviewingId
+    ? uploads.find((u) => u.id === reviewingId) ?? null
+    : null;
 
   return (
     <div className="space-y-2">
@@ -262,7 +293,7 @@ export function UploadList({
         </div>
       )}
 
-      {uploads.map((upload) => {
+      {sortedUploads.map((upload) => {
         const isQueued = queuedIds.has(upload.id);
         const isProcessing =
           processingIds.has(upload.id) ||
@@ -274,147 +305,173 @@ export function UploadList({
             : STATUS_STYLES[upload.parse_status] ?? STATUS_STYLES.pending;
         const isConfirmed = !!upload.confirmed_at;
         const isProcessable = processableIds.includes(upload.id);
+        const isExpanded = reviewingId === upload.id;
+        const hasReview = upload.parse_status === "completed" || upload.parse_status === "partial";
 
         return (
-          <div
-            key={upload.id}
-            className="flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2.5 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-3"
-          >
-            {/* Checkbox for processable files */}
-            {isProcessable ? (
-              <input
-                type="checkbox"
-                checked={checkedIds.has(upload.id)}
-                onChange={() => toggleSelection(upload.id)}
-                className="h-5 w-5 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 sm:h-4 sm:w-4"
-              />
-            ) : (
-              <div className="h-5 w-5 shrink-0 sm:h-4 sm:w-4" />
-            )}
-
-            {/* File type badge */}
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-gray-100 text-xs font-semibold text-gray-500">
-              {FILE_TYPE_ICONS[upload.file_type] ?? "?"}
-            </span>
-
-            {/* File info */}
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{upload.filename}</p>
-              <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-xs text-gray-400">
-                {upload.detected_account_info?.institution_name && (
-                  <>
-                    <span className="font-medium text-gray-600">
-                      {upload.detected_account_info.institution_name}
-                    </span>
-                    <span aria-hidden>&middot;</span>
-                  </>
-                )}
-                {upload.detected_account_info?.account_type && (
-                  <>
-                    <span>{upload.detected_account_info.account_type}</span>
-                    <span aria-hidden>&middot;</span>
-                  </>
-                )}
-                {(() => {
-                  const range = formatDateRange(upload.statement_start_date, upload.statement_end_date);
-                  return range ? (
-                    <>
-                      <span>{range}</span>
-                      <span aria-hidden>&middot;</span>
-                    </>
-                  ) : null;
-                })()}
-                {(() => {
-                  const content = describeContent(upload);
-                  return content ? (
-                    <>
-                      <span>{content}</span>
-                      <span aria-hidden>&middot;</span>
-                    </>
-                  ) : null;
-                })()}
-                <span>{formatFileSize(upload.file_size_bytes)}</span>
-                <span aria-hidden>&middot;</span>
-                <span title={upload.created_at}>
-                  &#x2191;{formatDate(upload.created_at)}
-                </span>
-                {upload.parse_error && (
-                  <span
-                    className={`truncate ${isProcessing || isQueued ? "text-gray-300 line-through" : "text-red-500"}`}
-                    title={upload.parse_error}
-                  >
-                    {upload.parse_error}
-                  </span>
-                )}
-              </div>
-              {/* Processing timestamps — 3rd line */}
-              {(() => {
-                const ts = timestamps[upload.id];
-                if (!ts) return null;
-                const parts: string[] = [];
-                if (ts.q) parts.push(`queued:${formatTime(ts.q)}`);
-                if (ts.s) parts.push(`started:${formatTime(ts.s)}`);
-                if (ts.e) parts.push(`completed:${formatTime(ts.e)}`);
-                if (parts.length === 0) return null;
-                const count = processCount[upload.id] ?? 0;
-                return (
-                  <div className="text-xs font-mono text-blue-500">
-                    {count >= 2 && <span className="font-semibold">#{count} </span>}
-                    {parts.join(" ")}
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Status badge */}
-            <span
-              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}
+          <div key={upload.id} id={`upload-${upload.id}`}>
+            <div
+              className={`flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2.5 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-3 ${
+                hasReview ? "cursor-pointer hover:border-gray-300" : ""
+              } ${isExpanded ? "border-gray-400 bg-gray-50/50" : ""}`}
+              onClick={hasReview ? () => onReview(isExpanded ? "" : upload.id) : undefined}
             >
-              {isProcessing && <Spinner className="h-3 w-3" />}
-              {isConfirmed ? "Saved" : status.label}
-              {isProcessing && timestamps[upload.id]?.s && (
-                <ElapsedTimer since={timestamps[upload.id].s!} />
+              {/* Checkbox for processable files */}
+              {isProcessable ? (
+                <input
+                  type="checkbox"
+                  checked={checkedIds.has(upload.id)}
+                  onChange={() => toggleSelection(upload.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-5 w-5 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 sm:h-4 sm:w-4"
+                />
+              ) : (
+                <div className="h-5 w-5 shrink-0 sm:h-4 sm:w-4" />
               )}
-            </span>
 
-            {/* Actions — fixed width to prevent layout shift */}
-            <div className="flex shrink-0 items-center justify-end gap-1 w-[120px]">
-              {(upload.parse_status === "completed" ||
-                upload.parse_status === "partial") && (
+              {/* File type badge */}
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-gray-100 text-xs font-semibold text-gray-500">
+                {FILE_TYPE_ICONS[upload.file_type] ?? "?"}
+              </span>
+
+              {/* File info */}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{upload.filename}</p>
+                <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-xs text-gray-400">
+                  {upload.detected_account_info?.institution_name && (
+                    <>
+                      <span className="font-medium text-gray-600">
+                        {upload.detected_account_info.institution_name}
+                      </span>
+                      <span aria-hidden>&middot;</span>
+                    </>
+                  )}
+                  {upload.detected_account_info?.account_type && (
+                    <>
+                      <span>{upload.detected_account_info.account_type}</span>
+                      <span aria-hidden>&middot;</span>
+                    </>
+                  )}
+                  {(() => {
+                    const range = formatDateRange(upload.statement_start_date, upload.statement_end_date);
+                    return range ? (
+                      <>
+                        <span>{range}</span>
+                        <span aria-hidden>&middot;</span>
+                      </>
+                    ) : null;
+                  })()}
+                  {(() => {
+                    const content = describeContent(upload);
+                    return content ? (
+                      <>
+                        <span>{content}</span>
+                        <span aria-hidden>&middot;</span>
+                      </>
+                    ) : null;
+                  })()}
+                  <span>{formatFileSize(upload.file_size_bytes)}</span>
+                  <span aria-hidden>&middot;</span>
+                  <span title={upload.created_at}>
+                    &#x2191;{formatDate(upload.created_at)}
+                  </span>
+                  {upload.parse_error && (
+                    <span
+                      className={`truncate ${isProcessing || isQueued ? "text-gray-300 line-through" : "text-red-500"}`}
+                      title={upload.parse_error}
+                    >
+                      {upload.parse_error}
+                    </span>
+                  )}
+                </div>
+                {/* Processing timestamps — 3rd line */}
+                {(() => {
+                  const ts = timestamps[upload.id];
+                  if (!ts) return null;
+                  const parts: string[] = [];
+                  if (ts.q) parts.push(`queued:${formatTime(ts.q)}`);
+                  if (ts.s) parts.push(`started:${formatTime(ts.s)}`);
+                  if (ts.e) parts.push(`completed:${formatTime(ts.e)}`);
+                  if (parts.length === 0) return null;
+                  const count = processCount[upload.id] ?? 0;
+                  return (
+                    <div className="text-xs font-mono text-blue-500">
+                      {count >= 2 && <span className="font-semibold">#{count} </span>}
+                      {parts.join(" ")}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Status badge */}
+              <span
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}
+              >
+                {isProcessing && <Spinner className="h-3 w-3" />}
+                {isConfirmed ? "Saved" : status.label}
+                {isProcessing && timestamps[upload.id]?.s && (
+                  <ElapsedTimer since={timestamps[upload.id].s!} />
+                )}
+              </span>
+
+              {/* Actions — fixed width to prevent layout shift */}
+              <div className="flex shrink-0 items-center justify-end gap-1 w-[120px]">
+                {hasReview && (
                   <button
-                    onClick={() => onReview(upload.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onReview(isExpanded ? "" : upload.id);
+                    }}
                     className={`rounded-md px-3 py-1.5 text-xs font-medium ${
-                      isConfirmed
-                        ? "border text-gray-600 hover:bg-gray-50"
-                        : "bg-green-600 text-white hover:bg-green-700"
+                      isExpanded
+                        ? "bg-gray-200 text-gray-700"
+                        : isConfirmed
+                          ? "border text-gray-600 hover:bg-gray-50"
+                          : "bg-green-600 text-white hover:bg-green-700"
                     }`}
                   >
-                    View
+                    {isExpanded ? "Hide" : "View"}
                   </button>
                 )}
 
-              {!isProcessing && !isConfirmed && (
-                <button
-                  onClick={() => onDelete(upload.id)}
-                  className="rounded-md p-2.5 text-xs text-gray-400 hover:text-red-600 sm:px-2 sm:py-1.5"
-                  title="Delete"
-                >
-                  <svg
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                {!isProcessing && !isConfirmed && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(upload.id);
+                    }}
+                    className="rounded-md p-2.5 text-xs text-gray-400 hover:text-red-600 sm:px-2 sm:py-1.5"
+                    title="Delete"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                </button>
-              )}
+                    <svg
+                      className="h-5 w-5 sm:h-4 sm:w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* Inline review panel */}
+            {isExpanded && reviewingUpload && (
+              <div ref={reviewRef} className="mt-1">
+                <UploadReview
+                  upload={reviewingUpload}
+                  onReprocess={onReprocess}
+                  onClose={onCloseReview}
+                  onSaved={onSaved}
+                />
+              </div>
+            )}
           </div>
         );
       })}
