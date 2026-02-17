@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { writeExtractedData, writeMultiAccountData } from "@/lib/upload/data-writer";
-import { createManualAccount, autoLinkOrCreateMultipleAccounts } from "@/lib/upload/account-matcher";
-import type { DetectedAccountInfo, LLMExtractionResult } from "@/lib/upload/types";
+import { createManualAccount, resolveAccountLinks } from "@/lib/upload/account-matcher";
+import type { DetectedAccountInfo, LLMExtractionResult, ExistingAccountContext } from "@/lib/upload/types";
 
 /** POST /api/upload/[id]/confirm — Confirm extracted data and write to canonical tables */
 export async function POST(
@@ -57,10 +57,35 @@ export async function POST(
   try {
     if (isMultiAccount) {
       // ── Multi-account re-confirmation ──
-      const accountMap = await autoLinkOrCreateMultipleAccounts(
+      // Fetch existing accounts for resolveAccountLinks
+      const { data: rawAccounts } = await supabase
+        .from("accounts")
+        .select(
+          "id, account_nickname, institution_name, account_type, schwab_account_number, account_group"
+        )
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .order("updated_at", { ascending: false })
+        .limit(100);
+
+      const existingAccounts: ExistingAccountContext[] = (rawAccounts ?? []).map(
+        (a) => ({
+          id: a.id,
+          account_nickname: a.account_nickname,
+          institution_name: a.institution_name,
+          account_type: a.account_type,
+          account_number_hint: a.schwab_account_number
+            ? `...${a.schwab_account_number.slice(-4)}`
+            : null,
+          account_group: a.account_group,
+        })
+      );
+
+      const accountMap = await resolveAccountLinks(
         supabase,
         user.id,
-        extractedData.accounts!
+        extractedData.accounts!,
+        existingAccounts
       );
 
       const writeResult = await writeMultiAccountData(

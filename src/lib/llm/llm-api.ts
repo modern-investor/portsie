@@ -1,8 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { UPLOAD_CONFIG } from "../upload/config";
-import { EXTRACTION_SYSTEM_PROMPT } from "./prompts";
+import { buildExtractionPrompt } from "./prompts";
 import type { ProcessedFile } from "../upload/file-processor";
-import type { LLMExtractionResult, UploadFileType } from "../upload/types";
+import type { LLMExtractionResult, UploadFileType, ExistingAccountContext } from "../upload/types";
 import { parseAndValidateExtraction } from "./parse";
 
 /**
@@ -13,7 +13,8 @@ export async function extractViaAPI(
   apiKey: string,
   processedFile: ProcessedFile,
   fileType: UploadFileType,
-  filename: string
+  filename: string,
+  existingAccounts?: ExistingAccountContext[]
 ): Promise<{ result: LLMExtractionResult; rawResponse: unknown }> {
   const client = new Anthropic({ apiKey });
 
@@ -76,7 +77,8 @@ export async function extractViaAPI(
   const response = await client.messages.create({
     model: UPLOAD_CONFIG.claudeModel,
     max_tokens: UPLOAD_CONFIG.claudeMaxTokens,
-    system: EXTRACTION_SYSTEM_PROMPT,
+    temperature: 0,
+    system: buildExtractionPrompt(existingAccounts ?? []),
     messages: [{ role: "user", content: contentBlocks }],
   });
 

@@ -48,6 +48,7 @@ function AccountsSummary({ accounts }: { accounts: ExtractedAccount[] }) {
               <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Account</th>
               <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Type</th>
               <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Institution</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Match</th>
               <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Value</th>
               <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Positions</th>
             </tr>
@@ -63,11 +64,45 @@ function AccountsSummary({ accounts }: { accounts: ExtractedAccount[] }) {
   );
 }
 
+const MATCH_CONFIDENCE_STYLES = {
+  high: "text-green-700 bg-green-50 border-green-200",
+  medium: "text-amber-700 bg-amber-50 border-amber-200",
+  low: "text-red-700 bg-red-50 border-red-200",
+};
+
+function AccountMatchBadge({ acct }: { acct: ExtractedAccount }) {
+  const link = acct.account_link;
+  if (!link) return <span className="text-gray-300">—</span>;
+
+  const confidenceClass =
+    MATCH_CONFIDENCE_STYLES[link.match_confidence] ?? MATCH_CONFIDENCE_STYLES.low;
+
+  if (link.action === "match_existing") {
+    return (
+      <span
+        className={`inline-block rounded border px-1.5 py-0.5 ${confidenceClass}`}
+        title={link.match_reason}
+      >
+        Linked
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className="inline-block rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-blue-700"
+      title={link.match_reason}
+    >
+      New
+    </span>
+  );
+}
+
 function AccountGroupRows({ group, accounts }: { group: string; accounts: ExtractedAccount[] }) {
   return (
     <>
       <tr className="bg-gray-100">
-        <td colSpan={5} className="px-2 py-1 text-xs font-semibold text-gray-600 sm:px-3">
+        <td colSpan={6} className="px-2 py-1 text-xs font-semibold text-gray-600 sm:px-3">
           {group}
         </td>
       </tr>
@@ -91,6 +126,9 @@ function AccountGroupRows({ group, accounts }: { group: string; accounts: Extrac
             </td>
             <td className="px-2 py-1.5 text-gray-500 sm:px-3 sm:py-2">
               {acct.account_info.institution_name || "—"}
+            </td>
+            <td className="px-2 py-1.5 sm:px-3 sm:py-2">
+              <AccountMatchBadge acct={acct} />
             </td>
             <td className={`px-2 py-1.5 text-right font-medium sm:px-3 sm:py-2 ${
               value !== null && value < 0 ? "text-red-600" : ""
@@ -228,6 +266,11 @@ export function UploadReview({
               .filter(Boolean)
               .join(" — ") || "Unknown"}
           </span>
+          {extraction.accounts?.[0]?.account_link && (
+            <span className="ml-2">
+              <AccountMatchBadge acct={extraction.accounts[0]} />
+            </span>
+          )}
         </div>
       )}
 

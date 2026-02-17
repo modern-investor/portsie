@@ -4,10 +4,10 @@ import { writeFile, unlink, rm } from "fs/promises";
 import { mkdtemp } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
-import { EXTRACTION_SYSTEM_PROMPT } from "./prompts";
+import { buildExtractionPrompt } from "./prompts";
 import { parseAndValidateExtraction } from "./parse";
 import type { ProcessedFile } from "../upload/file-processor";
-import type { LLMExtractionResult, UploadFileType } from "../upload/types";
+import type { LLMExtractionResult, UploadFileType, ExistingAccountContext } from "../upload/types";
 
 const execFileAsync = promisify(execFile);
 
@@ -19,12 +19,13 @@ export async function extractViaCLI(
   processedFile: ProcessedFile,
   fileType: UploadFileType,
   filename: string,
-  cliEndpoint: string | null
+  cliEndpoint: string | null,
+  existingAccounts?: ExistingAccountContext[]
 ): Promise<{ result: LLMExtractionResult; rawResponse: unknown }> {
   if (cliEndpoint) {
-    return extractViaCLIRemote(cliEndpoint, processedFile, fileType, filename);
+    return extractViaCLIRemote(cliEndpoint, processedFile, fileType, filename, existingAccounts);
   }
-  return extractViaCLILocal(processedFile, fileType, filename);
+  return extractViaCLILocal(processedFile, fileType, filename, existingAccounts);
 }
 
 /**
@@ -35,7 +36,8 @@ export async function extractViaCLI(
 async function extractViaCLILocal(
   processedFile: ProcessedFile,
   fileType: UploadFileType,
-  filename: string
+  filename: string,
+  existingAccounts?: ExistingAccountContext[]
 ): Promise<{ result: LLMExtractionResult; rawResponse: unknown }> {
   let tempDir: string | null = null;
   let tempFilePath: string | null = null;
@@ -49,7 +51,7 @@ async function extractViaCLILocal(
       await writeFile(tempFilePath, buffer);
     }
 
-    const prompt = buildCLIPrompt(processedFile, fileType, filename, tempFilePath);
+    const prompt = buildCLIPrompt(processedFile, fileType, filename, tempFilePath, existingAccounts);
 
     const { stdout } = await execFileAsync(
       "claude",
@@ -101,9 +103,10 @@ async function extractViaCLIRemote(
   endpoint: string,
   processedFile: ProcessedFile,
   fileType: UploadFileType,
-  filename: string
+  filename: string,
+  existingAccounts?: ExistingAccountContext[]
 ): Promise<{ result: LLMExtractionResult; rawResponse: unknown }> {
-  const prompt = buildCLIPrompt(processedFile, fileType, filename, null);
+  const prompt = buildCLIPrompt(processedFile, fileType, filename, null, existingAccounts);
 
   const body: Record<string, unknown> = { prompt };
 
@@ -157,7 +160,8 @@ function buildCLIPrompt(
   processedFile: ProcessedFile,
   fileType: UploadFileType,
   filename: string,
-  tempFilePath: string | null
+  tempFilePath: string | null,
+  existingAccounts?: ExistingAccountContext[]
 ): string {
   let fileInstruction: string;
 
@@ -186,5 +190,5 @@ function buildCLIPrompt(
     fileInstruction = `Extract financial data from the ${fileType.toUpperCase()} file named "${filename}".`;
   }
 
-  return `${EXTRACTION_SYSTEM_PROMPT}\n\n${fileInstruction}\n\nRespond ONLY with the JSON object.`;
+  return `${buildExtractionPrompt(existingAccounts ?? [])}\n\n${fileInstruction}\n\nRespond ONLY with the JSON object.`;
 }

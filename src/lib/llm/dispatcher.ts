@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ProcessedFile } from "../upload/file-processor";
-import type { LLMExtractionResult, UploadFileType } from "../upload/types";
+import type { LLMExtractionResult, UploadFileType, ExistingAccountContext } from "../upload/types";
 import { getLLMSettings, getLLMApiKey, getLLMCliEndpoint } from "./settings";
 import { extractViaAPI } from "./llm-api";
 import { extractViaCLI } from "./llm-cli";
@@ -12,13 +12,17 @@ import { extractViaCLI } from "./llm-cli";
  *
  * This is the single entry point for the process route — same return type
  * regardless of which backend is used.
+ *
+ * @param existingAccounts - User's existing accounts injected into the prompt
+ *   so Claude can return account_link decisions (match_existing or create_new).
  */
 export async function extractFinancialData(
   supabase: SupabaseClient,
   userId: string,
   processedFile: ProcessedFile,
   fileType: UploadFileType,
-  filename: string
+  filename: string,
+  existingAccounts?: ExistingAccountContext[]
 ): Promise<{ result: LLMExtractionResult; rawResponse: unknown }> {
   const settings = await getLLMSettings(supabase, userId);
   const mode = settings?.llmMode ?? "cli";
@@ -30,7 +34,7 @@ export async function extractFinancialData(
         "API mode selected but no API key configured. Add your Anthropic API key in Settings → LLM."
       );
     }
-    return extractViaAPI(apiKey, processedFile, fileType, filename);
+    return extractViaAPI(apiKey, processedFile, fileType, filename, existingAccounts);
   }
 
   // CLI mode (default)
@@ -38,5 +42,5 @@ export async function extractFinancialData(
   // This ensures remote CLI works on Vercel where local `claude` isn't available.
   const cliEndpoint =
     settings?.cliEndpoint ?? process.env.PORTSIE_CLI_ENDPOINT ?? null;
-  return extractViaCLI(processedFile, fileType, filename, cliEndpoint);
+  return extractViaCLI(processedFile, fileType, filename, cliEndpoint, existingAccounts);
 }

@@ -17,6 +17,7 @@ begin
 end;
 $$;
 
+drop trigger if exists prompts_stamp_author on public.prompts;
 create trigger prompts_stamp_author
   before insert on public.prompts
   for each row execute function public.prompts_stamp_author();
@@ -27,12 +28,14 @@ drop policy if exists "prompts_update_admin" on public.prompts;
 drop policy if exists "prompts_delete_admin" on public.prompts;
 
 -- Any authenticated user can insert prompts
+drop policy if exists "prompts_insert_authenticated" on public.prompts;
 create policy "prompts_insert_authenticated"
   on public.prompts for insert
   to authenticated
   with check (true);
 
 -- Users can update their own prompts; admins can update any
+drop policy if exists "prompts_update_own_or_admin" on public.prompts;
 create policy "prompts_update_own_or_admin"
   on public.prompts for update
   to authenticated
@@ -46,6 +49,7 @@ create policy "prompts_update_own_or_admin"
   );
 
 -- Users can delete their own prompts; admins can delete any
+drop policy if exists "prompts_delete_own_or_admin" on public.prompts;
 create policy "prompts_delete_own_or_admin"
   on public.prompts for delete
   to authenticated

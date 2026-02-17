@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { processFileForLLM } from "@/lib/upload/file-processor";
 import { extractFinancialData } from "@/lib/llm/dispatcher";
-import { autoLinkOrCreateAccount, autoLinkOrCreateMultipleAccounts } from "@/lib/upload/account-matcher";
+import { resolveAccountLinks } from "@/lib/upload/account-matcher";
 import { writeExtractedData, writeMultiAccountData } from "@/lib/upload/data-writer";
 import { getLLMSettings } from "@/lib/llm/settings";
-import type { UploadFileType } from "@/lib/upload/types";
+import type { UploadFileType, ExistingAccountContext } from "@/lib/upload/types";
 import type { AutoLinkResult } from "@/lib/upload/account-matcher";
 
 // LLM extraction can take several minutes for large PDF/CSV files
@@ -60,6 +60,30 @@ export async function POST(
     .eq("id", id);
 
   try {
+    // Fetch the user's existing active accounts for prompt injection
+    const { data: rawAccounts } = await supabase
+      .from("accounts")
+      .select(
+        "id, account_nickname, institution_name, account_type, schwab_account_number, account_group"
+      )
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .order("updated_at", { ascending: false })
+      .limit(100);
+
+    const existingAccounts: ExistingAccountContext[] = (rawAccounts ?? []).map(
+      (a) => ({
+        id: a.id,
+        account_nickname: a.account_nickname,
+        institution_name: a.institution_name,
+        account_type: a.account_type,
+        account_number_hint: a.schwab_account_number
+          ? `...${a.schwab_account_number.slice(-4)}`
+          : null,
+        account_group: a.account_group,
+      })
+    );
+
     // Download file from Supabase Storage
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("statements")
@@ -77,9 +101,16 @@ export async function POST(
     // Pre-process the file for Claude
     const processedFile = processFileForLLM(buffer, fileType, fileData.type);
 
-    // Extract data via configured LLM backend (CLI or API)
+    // Extract data via configured LLM backend (CLI or API) with account context
     const { result: extractionResult, rawResponse } =
-      await extractFinancialData(supabase, user.id, processedFile, fileType, statement.filename);
+      await extractFinancialData(
+        supabase,
+        user.id,
+        processedFile,
+        fileType,
+        statement.filename,
+        existingAccounts
+      );
 
     // Determine if extraction produced data
     const hasData =
@@ -88,11 +119,6 @@ export async function POST(
       extractionResult.balances.length > 0;
 
     const parseStatus = hasData ? "completed" : "partial";
-
-    // Detect multi-account extraction
-    const isMultiAccount =
-      Array.isArray(extractionResult.accounts) &&
-      extractionResult.accounts.length > 1;
 
     // Auto-link/create account(s) and auto-confirm
     let autoLinkResult: AutoLinkResult | null = null;
@@ -105,12 +131,17 @@ export async function POST(
 
     if (hasData) {
       try {
-        if (isMultiAccount) {
-          // ── Multi-account path ──
-          const accountMap = await autoLinkOrCreateMultipleAccounts(
+        // Ensure we have an accounts array to work with
+        const accounts = extractionResult.accounts ?? [];
+
+        if (accounts.length > 0) {
+          // Resolve account links — handles Claude's account_link decisions,
+          // heuristic validation, and backward-compat fallback in one function
+          const accountMap = await resolveAccountLinks(
             supabase,
             user.id,
-            extractionResult.accounts!
+            accounts,
+            existingAccounts
           );
 
           const writeResult = await writeMultiAccountData(
@@ -123,7 +154,7 @@ export async function POST(
 
           transactionsCreated = writeResult.totalTransactionsCreated;
           positionsCreated = writeResult.totalSnapshotsWritten;
-          accountsCreated = extractionResult.accounts!.length;
+          accountsCreated = accounts.length;
           linkedAccountIds = writeResult.linkedAccountIds;
           autoConfirmed = true;
 
@@ -133,76 +164,63 @@ export async function POST(
             autoLinkResult = {
               accountId: firstLink.accountId,
               action: firstLink.action,
-              matchReason: `Multi-account: ${accountsCreated} accounts processed`,
+              matchReason:
+                accounts.length > 1
+                  ? `Multi-account: ${accountsCreated} accounts processed`
+                  : firstLink.matchReason,
               accountNickname: firstLink.accountNickname,
             };
           }
         } else {
-          // ── Single-account path (existing logic) ──
-          let accountId: string | null = null;
+          // No accounts array (shouldn't happen with current prompt, but handle gracefully)
+          // Fall back to creating a single account from top-level account_info
+          const { createManualAccount } = await import(
+            "@/lib/upload/account-matcher"
+          );
+          const accountInfo = extractionResult.account_info ?? {
+            institution_name: "Unknown",
+            account_type: null,
+            account_number: null,
+            account_nickname: statement.filename,
+          };
+          const newId = await createManualAccount(
+            supabase,
+            user.id,
+            accountInfo
+          );
 
-          // If re-processing an already-confirmed upload, reuse the existing account
-          if (statement.account_id && statement.confirmed_at) {
-            const { data: existingAccount } = await supabase
-              .from("accounts")
-              .select("id")
-              .eq("id", statement.account_id)
-              .eq("is_active", true)
-              .single();
-
-            if (existingAccount) {
-              const existingId: string = existingAccount.id;
-              accountId = existingId;
-              autoLinkResult = {
-                accountId: existingId,
-                action: "matched",
-                matchReason: "Previously linked account",
-              };
-            }
-          }
-
-          // No existing link — auto-match or create
-          if (!accountId) {
-            const accountInfo = extractionResult.account_info ?? {
-              institution_name: "Unknown",
-              account_type: null,
-              account_number: null,
-              account_nickname: statement.filename,
-            };
-            autoLinkResult = await autoLinkOrCreateAccount(
-              supabase,
-              user.id,
-              accountInfo
-            );
-            accountId = autoLinkResult.accountId;
-          }
-
-          // Write data to canonical tables
           const writeResult = await writeExtractedData(
             supabase,
             user.id,
-            accountId,
+            newId,
             id,
             extractionResult
           );
+
           transactionsCreated = writeResult.transactionsCreated;
           positionsCreated = writeResult.snapshotsWritten;
-          linkedAccountIds = [accountId];
+          linkedAccountIds = [newId];
           accountsCreated = 1;
           autoConfirmed = true;
+          autoLinkResult = {
+            accountId: newId,
+            action: "created",
+            accountNickname:
+              accountInfo.account_nickname ||
+              `${accountInfo.institution_name || "Unknown"} Account`,
+          };
         }
       } catch (linkErr) {
         // Auto-link/confirm failed — save extraction results anyway
         autoConfirmError =
-          linkErr instanceof Error ? linkErr.message : "Unknown auto-confirm error";
+          linkErr instanceof Error
+            ? linkErr.message
+            : "Unknown auto-confirm error";
         console.error("Auto-link/confirm failed:", linkErr);
       }
     }
 
     // Save extraction results to the database
-    // Note: writeExtractedData/writeMultiAccountData already set confirmed_at,
-    // account_id, and parse_status if auto-confirm succeeded. This update ensures
-    // extraction metadata is saved regardless.
     await supabase
       .from("uploaded_statements")
       .update({

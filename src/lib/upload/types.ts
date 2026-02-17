@@ -78,12 +78,31 @@ export interface DetectedAccountInfo {
   account_group?: string | null;
 }
 
+/** Claude's account linkage decision — returned inline in extraction results */
+export interface AccountLink {
+  action: "match_existing" | "create_new";
+  existing_account_id?: string; // UUID, present only when action === "match_existing"
+  match_confidence: "high" | "medium" | "low";
+  match_reason: string;
+}
+
 /** Per-account container for multi-account extractions */
 export interface ExtractedAccount {
+  account_link?: AccountLink; // Claude's matching decision (optional for backward compat)
   account_info: DetectedAccountInfo;
   transactions: ExtractedTransaction[];
   positions: ExtractedPosition[];
   balances: ExtractedBalance[];
+}
+
+/** Existing account context injected into the extraction prompt */
+export interface ExistingAccountContext {
+  id: string;
+  account_nickname: string | null;
+  institution_name: string | null;
+  account_type: string | null;
+  account_number_hint: string | null; // last 4 digits only, e.g. "...5902"
+  account_group: string | null;
 }
 
 export interface LLMExtractionResult {
@@ -130,13 +149,3 @@ export interface UploadedStatement {
   updated_at: string;
 }
 
-// ── Account match result ──
-
-export interface AccountMatch {
-  id: string;
-  account_nickname: string | null;
-  institution_name: string | null;
-  account_type: string | null;
-  schwab_account_number: string | null;
-  match_reason: string;
-}

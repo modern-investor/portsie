@@ -1,8 +1,54 @@
-import type { LLMExtractionResult, ExtractedAccount } from "../upload/types";
+import type { LLMExtractionResult, ExtractedAccount, AccountLink } from "../upload/types";
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Validate and normalize an account_link object from Claude's response.
+ * Returns the validated link or null if invalid/missing.
+ */
+function validateAccountLink(raw: unknown): AccountLink | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+
+  const link = raw as Record<string, unknown>;
+  const action = link.action;
+
+  if (action !== "match_existing" && action !== "create_new") return undefined;
+
+  const confidence = ["high", "medium", "low"].includes(link.match_confidence as string)
+    ? (link.match_confidence as AccountLink["match_confidence"])
+    : "low";
+
+  const reason = typeof link.match_reason === "string" ? link.match_reason : "";
+
+  if (action === "match_existing") {
+    const id = link.existing_account_id;
+    if (typeof id !== "string" || !UUID_REGEX.test(id)) {
+      // Invalid UUID — downgrade to create_new
+      return {
+        action: "create_new",
+        match_confidence: "low",
+        match_reason: `Invalid existing_account_id from LLM: ${String(id)}`,
+      };
+    }
+    return { action: "match_existing", existing_account_id: id, match_confidence: confidence, match_reason: reason };
+  }
+
+  return { action: "create_new", match_confidence: confidence, match_reason: reason };
+}
+
+/**
+ * Check if all accounts in the extraction result have valid account_link data.
+ * Returns true only when every account has a well-formed account_link.
+ */
+export function hasAccountLinks(result: LLMExtractionResult): boolean {
+  if (!result.accounts || result.accounts.length === 0) return false;
+  return result.accounts.every((a) => a.account_link != null);
+}
 
 /**
  * Parse raw text from Claude (API or CLI) into a validated LLMExtractionResult.
- * Handles markdown fence stripping, structural validation, and multi-account normalization.
+ * Handles markdown fence stripping, structural validation, multi-account normalization,
+ * and account_link validation.
  * Shared by both llm-api.ts and llm-cli.ts.
  */
 export function parseAndValidateExtraction(rawText: string): LLMExtractionResult {
@@ -49,6 +95,8 @@ export function parseAndValidateExtraction(rawText: string): LLMExtractionResult
       if (!Array.isArray(acct.balances)) {
         acct.balances = [];
       }
+      // Validate account_link if present
+      acct.account_link = validateAccountLink(acct.account_link);
     }
 
     // Synthesize top-level account_info from the first account if missing

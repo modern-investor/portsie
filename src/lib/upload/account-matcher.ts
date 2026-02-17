@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AccountMatch, DetectedAccountInfo, ExtractedAccount } from "./types";
+import type { DetectedAccountInfo, ExtractedAccount, ExistingAccountContext } from "./types";
 
 /**
  * Map account_type to the broader account_category for the DB constraint.
@@ -14,106 +14,11 @@ function accountTypeToCategory(accountType: string | null | undefined): string {
   return "brokerage";
 }
 
-/**
- * Finds existing user accounts that match the LLM-detected account info.
- * Returns matches ranked by confidence (exact number match first).
- */
-export async function findMatchingAccounts(
-  supabase: SupabaseClient,
-  userId: string,
-  detectedInfo: DetectedAccountInfo
-): Promise<AccountMatch[]> {
-  const { data: accounts, error } = await supabase
-    .from("accounts")
-    .select(
-      "id, account_nickname, institution_name, account_type, schwab_account_number"
-    )
-    .eq("user_id", userId)
-    .eq("is_active", true);
-
-  if (error || !accounts) return [];
-
-  const matches: AccountMatch[] = [];
-
-  for (const account of accounts) {
-    let matchReason = "";
-
-    // Priority 1: Exact account number match
-    if (detectedInfo.account_number && account.schwab_account_number) {
-      if (account.schwab_account_number === detectedInfo.account_number) {
-        matchReason = "Exact account number match";
-      } else if (
-        account.schwab_account_number.endsWith(
-          detectedInfo.account_number.slice(-4)
-        ) ||
-        detectedInfo.account_number.endsWith(
-          account.schwab_account_number.slice(-4)
-        )
-      ) {
-        matchReason = "Partial account number match (last 4 digits)";
-      } else if (
-        // Also match on last 3 digits (Schwab summaries often show ...XXX)
-        account.schwab_account_number.endsWith(
-          detectedInfo.account_number.slice(-3)
-        ) ||
-        detectedInfo.account_number.endsWith(
-          account.schwab_account_number.slice(-3)
-        )
-      ) {
-        matchReason = "Partial account number match (last 3 digits)";
-      }
-    }
-
-    // Priority 2: Institution + account type match
-    if (
-      !matchReason &&
-      detectedInfo.institution_name &&
-      account.institution_name
-    ) {
-      const detectedInst = detectedInfo.institution_name.toLowerCase();
-      const accountInst = account.institution_name.toLowerCase();
-
-      if (
-        detectedInst.includes(accountInst) ||
-        accountInst.includes(detectedInst)
-      ) {
-        if (
-          detectedInfo.account_type &&
-          account.account_type &&
-          detectedInfo.account_type.toLowerCase() ===
-            account.account_type.toLowerCase()
-        ) {
-          matchReason = "Institution and account type match";
-        } else {
-          matchReason = "Institution name match";
-        }
-      }
-    }
-
-    if (matchReason) {
-      matches.push({
-        id: account.id,
-        account_nickname: account.account_nickname,
-        institution_name: account.institution_name,
-        account_type: account.account_type,
-        schwab_account_number: account.schwab_account_number,
-        match_reason: matchReason,
-      });
-    }
-  }
-
-  // Sort: exact matches first, then partial, then institution
-  matches.sort((a, b) => {
-    const priority = (reason: string) => {
-      if (reason.includes("Exact")) return 0;
-      if (reason.includes("Partial")) return 1;
-      if (reason.includes("account type")) return 2;
-      return 3;
-    };
-    return priority(a.match_reason) - priority(b.match_reason);
-  });
-
-  return matches;
+export interface AutoLinkResult {
+  accountId: string;
+  action: "matched" | "created";
+  matchReason?: string;
+  accountNickname?: string;
 }
 
 /**
@@ -167,78 +72,215 @@ export async function createManualAccount(
   return data.id;
 }
 
-export interface AutoLinkResult {
-  accountId: string;
-  action: "matched" | "created";
-  matchReason?: string;
-  accountNickname?: string;
+/**
+ * Run heuristic number-based matching against the existing accounts list.
+ * Returns the best matching account ID if a number-based match is found,
+ * or null if no number match exists.
+ *
+ * This is used as a validator for Claude's account_link decisions:
+ * when the heuristic has a strong number-based match that disagrees with
+ * Claude's choice, the heuristic wins.
+ */
+function findHeuristicNumberMatch(
+  detectedInfo: DetectedAccountInfo,
+  existingAccounts: ExistingAccountContext[]
+): { accountId: string; reason: string } | null {
+  if (!detectedInfo.account_number) return null;
+
+  const detected = detectedInfo.account_number.replace(/^\.+/, "");
+
+  for (const acct of existingAccounts) {
+    if (!acct.account_number_hint) continue;
+    const hint = acct.account_number_hint.replace(/^\.+/, "");
+
+    // Exact match
+    if (hint === detected) {
+      return { accountId: acct.id, reason: `Exact account number match (${hint})` };
+    }
+
+    // Partial match: last 4 digits
+    if (
+      hint.length >= 4 &&
+      detected.length >= 4 &&
+      (hint.endsWith(detected.slice(-4)) || detected.endsWith(hint.slice(-4)))
+    ) {
+      return { accountId: acct.id, reason: `Partial account number match (last 4 digits)` };
+    }
+
+    // Partial match: last 3 digits
+    if (
+      hint.length >= 3 &&
+      detected.length >= 3 &&
+      (hint.endsWith(detected.slice(-3)) || detected.endsWith(hint.slice(-3)))
+    ) {
+      return { accountId: acct.id, reason: `Partial account number match (last 3 digits)` };
+    }
+  }
+
+  return null;
 }
 
 /**
- * Automatically link to an existing account or create a new one.
- *
- * Match priority:
- *   1. Exact account number match → auto-link
- *   2. Single partial/institution match → auto-link
- *   3. Multiple ambiguous matches or no matches → create new account
+ * Fallback heuristic matching for accounts without account_link
+ * (backward compat with old extracted_data). Uses the same priority logic
+ * as the old findMatchingAccounts + autoLinkOrCreateAccount.
  */
-export async function autoLinkOrCreateAccount(
+function findHeuristicMatch(
+  detectedInfo: DetectedAccountInfo,
+  existingAccounts: ExistingAccountContext[]
+): { accountId: string; reason: string } | null {
+  // Priority 1: Number-based match
+  const numberMatch = findHeuristicNumberMatch(detectedInfo, existingAccounts);
+  if (numberMatch) return numberMatch;
+
+  // Priority 2: Institution + account type match
+  if (detectedInfo.institution_name) {
+    const detectedInst = detectedInfo.institution_name.toLowerCase();
+    const matches: { accountId: string; reason: string }[] = [];
+
+    for (const acct of existingAccounts) {
+      if (!acct.institution_name) continue;
+      const acctInst = acct.institution_name.toLowerCase();
+
+      if (detectedInst.includes(acctInst) || acctInst.includes(detectedInst)) {
+        if (
+          detectedInfo.account_type &&
+          acct.account_type &&
+          detectedInfo.account_type.toLowerCase() === acct.account_type.toLowerCase()
+        ) {
+          matches.push({
+            accountId: acct.id,
+            reason: "Institution and account type match",
+          });
+        }
+      }
+    }
+
+    // Only auto-link if there's a single confident match
+    if (matches.length === 1) return matches[0];
+  }
+
+  return null;
+}
+
+/**
+ * Resolve account linkage for extracted accounts using Claude's account_link
+ * decisions, validated by heuristic matching as a safety net.
+ *
+ * For each extracted account:
+ * 1. If Claude returned account_link.match_existing with a UUID:
+ *    - Verify the UUID exists and belongs to the user
+ *    - If heuristic has a number-based match pointing to a DIFFERENT account,
+ *      prefer the heuristic (heuristic wins on number matches)
+ *    - Otherwise accept Claude's match
+ * 2. If Claude returned account_link.create_new: create the account
+ * 3. If no account_link (backward compat): fall back to full heuristic matching
+ */
+export async function resolveAccountLinks(
   supabase: SupabaseClient,
   userId: string,
-  detectedInfo: DetectedAccountInfo
-): Promise<AutoLinkResult> {
-  const matches = await findMatchingAccounts(supabase, userId, detectedInfo);
+  extractedAccounts: ExtractedAccount[],
+  existingAccounts: ExistingAccountContext[]
+): Promise<Map<number, AutoLinkResult>> {
+  const results = new Map<number, AutoLinkResult>();
 
-  // Priority 1: Exact account number match
-  const exactMatch = matches.find((m) => m.match_reason.includes("Exact"));
-  if (exactMatch) {
-    return {
-      accountId: exactMatch.id,
-      action: "matched",
-      matchReason: exactMatch.match_reason,
-      accountNickname: exactMatch.account_nickname ?? undefined,
-    };
+  for (let i = 0; i < extractedAccounts.length; i++) {
+    const acct = extractedAccounts[i];
+    const link = acct.account_link;
+    const info = acct.account_info;
+
+    // ── Path 1: Claude says match_existing ──
+    if (link?.action === "match_existing" && link.existing_account_id) {
+      // Verify the UUID exists and belongs to this user
+      const { data: verified } = await supabase
+        .from("accounts")
+        .select("id, account_nickname")
+        .eq("id", link.existing_account_id)
+        .eq("user_id", userId)
+        .eq("is_active", true)
+        .single();
+
+      if (verified) {
+        // Heuristic validator: if heuristic has a number-based match to a
+        // DIFFERENT account, prefer the heuristic
+        const heuristicMatch = findHeuristicNumberMatch(info, existingAccounts);
+        if (heuristicMatch && heuristicMatch.accountId !== verified.id) {
+          // Heuristic disagrees on a number match — prefer heuristic
+          results.set(i, {
+            accountId: heuristicMatch.accountId,
+            action: "matched",
+            matchReason: `Heuristic override: ${heuristicMatch.reason}`,
+            accountNickname: existingAccounts.find(
+              (a) => a.id === heuristicMatch.accountId
+            )?.account_nickname ?? undefined,
+          });
+          continue;
+        }
+
+        // Claude's match verified and heuristic agrees (or has no opinion)
+        results.set(i, {
+          accountId: verified.id,
+          action: "matched",
+          matchReason: link.match_reason,
+          accountNickname: verified.account_nickname ?? undefined,
+        });
+        continue;
+      }
+
+      // UUID verification failed (hallucinated or deleted account) — fall through
+    }
+
+    // ── Path 2: Claude says create_new ──
+    if (link?.action === "create_new") {
+      const newId = await createManualAccount(supabase, userId, info);
+      results.set(i, {
+        accountId: newId,
+        action: "created",
+        matchReason: link.match_reason,
+        accountNickname:
+          info.account_nickname ||
+          `${info.institution_name || "Unknown"} Account`,
+      });
+      continue;
+    }
+
+    // ── Path 3: No account_link (backward compat / fallback) ──
+    const heuristicMatch = findHeuristicMatch(info, existingAccounts);
+    if (heuristicMatch) {
+      results.set(i, {
+        accountId: heuristicMatch.accountId,
+        action: "matched",
+        matchReason: heuristicMatch.reason,
+        accountNickname: existingAccounts.find(
+          (a) => a.id === heuristicMatch.accountId
+        )?.account_nickname ?? undefined,
+      });
+    } else {
+      // No match — create new account
+      const newId = await createManualAccount(supabase, userId, info);
+      results.set(i, {
+        accountId: newId,
+        action: "created",
+        accountNickname:
+          info.account_nickname ||
+          `${info.institution_name || "Unknown"} Account`,
+      });
+    }
   }
 
-  // Priority 2: Single non-exact match (partial number or institution+type)
-  if (matches.length === 1) {
-    return {
-      accountId: matches[0].id,
-      action: "matched",
-      matchReason: matches[0].match_reason,
-      accountNickname: matches[0].account_nickname ?? undefined,
-    };
-  }
-
-  // No confident match → create new account
-  const newAccountId = await createManualAccount(supabase, userId, detectedInfo);
-  return {
-    accountId: newAccountId,
-    action: "created",
-    accountNickname:
-      detectedInfo.account_nickname ||
-      `${detectedInfo.institution_name || "Unknown"} Account`,
-  };
+  return results;
 }
 
-/**
- * Process multiple accounts from a multi-account extraction.
- * Fetches existing accounts once, then matches or creates each extracted account.
- * Returns a map from account index → AutoLinkResult.
- */
 /**
  * Find or create an aggregate account for a given institution.
  * Aggregate accounts hold positions that span multiple real accounts
  * (e.g. Schwab summary "Positions" section marked with ††).
- *
- * Returns the account ID.
  */
 export async function findOrCreateAggregateAccount(
   supabase: SupabaseClient,
   userId: string,
   institutionName: string
 ): Promise<string> {
-  // Look for existing aggregate account for this institution
   const { data: existing } = await supabase
     .from("accounts")
     .select("id")
@@ -249,7 +291,6 @@ export async function findOrCreateAggregateAccount(
 
   if (existing) return existing.id;
 
-  // Create a new aggregate account
   const { data, error } = await supabase
     .from("accounts")
     .insert({
@@ -274,8 +315,6 @@ export async function findOrCreateAggregateAccount(
 /**
  * Find or create an "unknown" account for positions whose
  * originating account can't be determined.
- *
- * Returns the account ID.
  */
 export async function findOrCreateUnknownAccount(
   supabase: SupabaseClient,
@@ -287,7 +326,6 @@ export async function findOrCreateUnknownAccount(
     ? `${institutionName} (Unknown Account)`
     : "Unknown Account";
 
-  // Look for existing unknown account for this institution
   const { data: existing } = await supabase
     .from("accounts")
     .select("id")
@@ -317,21 +355,4 @@ export async function findOrCreateUnknownAccount(
     throw new Error(`Failed to create unknown account: ${error.message}`);
   }
   return data!.id;
-}
-
-export async function autoLinkOrCreateMultipleAccounts(
-  supabase: SupabaseClient,
-  userId: string,
-  extractedAccounts: ExtractedAccount[]
-): Promise<Map<number, AutoLinkResult>> {
-  const results = new Map<number, AutoLinkResult>();
-
-  // Process each account sequentially to avoid race conditions on account creation
-  for (let i = 0; i < extractedAccounts.length; i++) {
-    const acctInfo = extractedAccounts[i].account_info;
-    const result = await autoLinkOrCreateAccount(supabase, userId, acctInfo);
-    results.set(i, result);
-  }
-
-  return results;
 }

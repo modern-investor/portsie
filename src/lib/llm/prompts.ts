@@ -1,7 +1,11 @@
+import type { ExistingAccountContext } from "../upload/types";
+
 /**
- * Shared extraction system prompt used by both API and CLI backends.
+ * Base extraction system prompt used by both API and CLI backends.
  * Instructs Claude to return raw JSON matching the LLMExtractionResult schema.
  * Supports both single-account and multi-account documents.
+ *
+ * Use buildExtractionPrompt() to get the full prompt with account context.
  */
 export const EXTRACTION_SYSTEM_PROMPT = `You are a financial data extraction assistant for a portfolio tracking application called Portsie. Your task is to extract structured financial data from uploaded documents (brokerage statements, trade confirmations, CSV exports, account screenshots, portfolio summaries, etc.).
 
@@ -12,6 +16,12 @@ You MUST respond with valid JSON matching this schema:
 {
   "accounts": [
     {
+      "account_link": {
+        "action": "match_existing" | "create_new",
+        "existing_account_id": "uuid" | null,
+        "match_confidence": "high" | "medium" | "low",
+        "match_reason": "why this account was matched or why it's new"
+      },
       "account_info": {
         "account_number": string | null,
         "account_type": string | null,
@@ -32,6 +42,12 @@ You MUST respond with valid JSON matching this schema:
 }
 
 Each account entry contains:
+
+account_link:
+  - action: "match_existing" if this account matches one of the user's existing accounts (listed below), or "create_new" if it's a new account not yet tracked.
+  - existing_account_id: The UUID of the matched existing account (required when action is "match_existing", null when "create_new").
+  - match_confidence: "high" if the match is certain (e.g., account number matches), "medium" if likely but not certain, "low" if ambiguous.
+  - match_reason: Brief explanation of why you matched or why it's new (e.g., "Account number ...902 matches existing hint ...5902 at Charles Schwab").
 
 account_info:
   - account_number: The account number (may be partial, e.g., last 3-4 digits like "...902"). Extract whatever is visible.
@@ -99,3 +115,65 @@ Rules:
 - For position snapshot_date, use the statement end date or the most recent date visible in the document.
 - Do NOT hallucinate data. Only extract what is explicitly present in the document.
 - Respond ONLY with the JSON object. No markdown fences, no explanation, no commentary.`;
+
+/** Max accounts to inject into prompt to stay within token budget */
+const MAX_ACCOUNT_CONTEXT = 100;
+
+/**
+ * Sanitize a user-controlled string before injecting it into the prompt.
+ * Prevents prompt injection via account nicknames or other user content.
+ */
+function sanitizeForPrompt(value: string | null): string | null {
+  if (!value) return null;
+  return value.slice(0, 50).replace(/[\n\r]/g, " ");
+}
+
+/**
+ * Build the full extraction prompt with the user's existing account context.
+ * This enables Claude to return account_link decisions (match_existing or create_new)
+ * directly in its extraction response, replacing heuristic matching.
+ */
+export function buildExtractionPrompt(
+  existingAccounts: ExistingAccountContext[]
+): string {
+  if (existingAccounts.length === 0) {
+    return (
+      EXTRACTION_SYSTEM_PROMPT +
+      `\n\nACCOUNT MATCHING:\nThe user has no existing accounts in their portfolio tracker. Use "create_new" for every account you detect in the document.`
+    );
+  }
+
+  // Cap account list and format for injection
+  const accounts = existingAccounts.slice(0, MAX_ACCOUNT_CONTEXT).map((a) => ({
+    id: a.id,
+    nickname: sanitizeForPrompt(a.account_nickname),
+    institution: sanitizeForPrompt(a.institution_name),
+    type: a.account_type,
+    number_hint: a.account_number_hint,
+    group: sanitizeForPrompt(a.account_group),
+  }));
+
+  const accountsJson = JSON.stringify(accounts);
+
+  const matchingSection = `
+
+ACCOUNT MATCHING:
+The user has the following existing accounts in their portfolio tracker. When you detect an account in the document, determine whether it matches one of these existing accounts or is a new account.
+
+--- USER'S EXISTING ACCOUNTS ---
+${accountsJson}
+--- END ACCOUNTS ---
+
+For each account in your "accounts" array, you MUST include an "account_link" object:
+- If the account matches an existing one: { "action": "match_existing", "existing_account_id": "<the id from the list above>", "match_confidence": "high"|"medium"|"low", "match_reason": "<brief explanation>" }
+- If no match exists: { "action": "create_new", "existing_account_id": null, "match_confidence": "high"|"medium"|"low", "match_reason": "<brief explanation>" }
+
+Matching guidance:
+- Account numbers: Documents often show only the last 3-4 digits (e.g., "...902"). Match against the number_hint field (e.g., "...5902" matches "...902" because the trailing digits overlap).
+- Institution names: Be flexible on abbreviations — "Schwab" matches "Charles Schwab", "BoA" matches "Bank of America".
+- Account renames: A document might show a different nickname than what's stored. Prioritize matching on number + institution + type over nickname.
+- Ambiguity: If multiple existing accounts could plausibly match (e.g., same institution, same type, no visible account number), use "create_new" with match_confidence "low" and explain the ambiguity in match_reason. Do NOT guess between ambiguous matches.
+- IDs must be exact: Only use IDs from the existing accounts list above. Never fabricate a UUID.`;
+
+  return EXTRACTION_SYSTEM_PROMPT + matchingSection;
+}
