@@ -37,6 +37,7 @@ begin
 end;
 $$;
 
+drop trigger if exists prompts_set_updated_at on public.prompts;
 create trigger prompts_set_updated_at
   before update on public.prompts
   for each row execute function public.prompts_updated_at();
@@ -45,12 +46,14 @@ create trigger prompts_set_updated_at
 alter table public.prompts enable row level security;
 
 -- Anyone authenticated can read prompts
+drop policy if exists "prompts_select_authenticated" on public.prompts;
 create policy "prompts_select_authenticated"
   on public.prompts for select
   to authenticated
   using (true);
 
 -- Admin users can insert, update, delete
+drop policy if exists "prompts_insert_admin" on public.prompts;
 create policy "prompts_insert_admin"
   on public.prompts for insert
   to authenticated
@@ -62,6 +65,7 @@ create policy "prompts_insert_admin"
     )
   );
 
+drop policy if exists "prompts_update_admin" on public.prompts;
 create policy "prompts_update_admin"
   on public.prompts for update
   to authenticated
@@ -73,6 +77,7 @@ create policy "prompts_update_admin"
     )
   );
 
+drop policy if exists "prompts_delete_admin" on public.prompts;
 create policy "prompts_delete_admin"
   on public.prompts for delete
   to authenticated
