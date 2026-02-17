@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { UploadDropzone } from "./upload-dropzone";
 import { UploadList } from "./upload-list";
 import { UploadReview } from "./upload-review";
@@ -19,6 +20,25 @@ export function UploadSection() {
   const [processCount, setProcessCount] = useState<Record<string, number>>({});
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const reviewRef = useRef<HTMLDivElement>(null);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const router = useRouter();
+
+  // Auto-redirect countdown after save
+  useEffect(() => {
+    if (redirectCountdown === null) return;
+    if (redirectCountdown <= 0) {
+      router.push("/dashboard");
+      return;
+    }
+    const timer = setTimeout(() => {
+      setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [redirectCountdown, router]);
+
+  function cancelRedirect() {
+    setRedirectCountdown(null);
+  }
 
   // Fetch existing uploads on mount
   const fetchUploads = useCallback(async () => {
@@ -155,6 +175,23 @@ export function UploadSection() {
 
   return (
     <div className="space-y-4">
+      {/* Auto-redirect banner */}
+      {redirectCountdown !== null && (
+        <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-4 py-3">
+          <span className="text-sm font-medium text-green-800">
+            Processing complete.
+            <br />
+            Switching to Analysis Dashboard in {redirectCountdown}s...
+          </span>
+          <button
+            onClick={cancelRedirect}
+            className="rounded-md border border-green-300 bg-white px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-50"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
       <h2 className="text-lg font-semibold">Upload Statements</h2>
 
       <UploadDropzone onUploaded={handleFileUploaded} onBatchComplete={handleBatchProcess} />
@@ -201,6 +238,7 @@ export function UploadSection() {
               setUploads((prev) =>
                 prev.map((u) => (u.id === updated.id ? updated : u))
               );
+              setRedirectCountdown(3);
             }}
           />
         </div>
