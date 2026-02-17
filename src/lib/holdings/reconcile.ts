@@ -119,35 +119,51 @@ export async function reconcileHoldings(
       });
     }
 
-    // Upsert the holding
-    const { error } = await supabase.from("holdings").upsert(
-      {
-        user_id: userId,
-        account_id: accountId,
-        symbol,
-        name: symbol,
-        cusip: pos.cusip ?? null,
-        asset_type: pos.asset_type ?? "EQUITY",
-        asset_category: "tradeable",
-        description: pos.description ?? null,
-        quantity: pos.quantity,
-        short_quantity: pos.short_quantity ?? 0,
-        quantity_unit: "shares",
-        purchase_price: pos.average_cost_basis ?? null,
-        cost_basis_total: pos.cost_basis_total ?? null,
-        current_price: pos.market_price_per_share ?? null,
-        market_value: pos.market_value ?? null,
-        valuation_date: pos.snapshot_date,
-        valuation_source: "statement",
-        day_profit_loss: null,
-        day_profit_loss_pct: null,
-        unrealized_profit_loss: pos.unrealized_profit_loss ?? null,
-        unrealized_profit_loss_pct: pos.unrealized_profit_loss_pct ?? null,
-        data_source: "manual_upload",
-        last_updated_from: `upload:${statementId}`,
-      },
-      { onConflict: "idx_holdings_account_asset" }
-    );
+    // Upsert the holding — manual select+insert/update because the unique
+    // index uses an expression (COALESCE(symbol,'')) that PostgREST can't
+    // resolve via onConflict.
+    const holdingData = {
+      user_id: userId,
+      account_id: accountId,
+      symbol,
+      name: symbol,
+      cusip: pos.cusip ?? null,
+      asset_type: pos.asset_type ?? "EQUITY",
+      asset_category: "tradeable",
+      description: pos.description ?? null,
+      quantity: pos.quantity,
+      short_quantity: pos.short_quantity ?? 0,
+      quantity_unit: "shares",
+      purchase_price: pos.average_cost_basis ?? null,
+      cost_basis_total: pos.cost_basis_total ?? null,
+      current_price: pos.market_price_per_share ?? null,
+      market_value: pos.market_value ?? null,
+      valuation_date: pos.snapshot_date,
+      valuation_source: "statement",
+      day_profit_loss: null,
+      day_profit_loss_pct: null,
+      unrealized_profit_loss: pos.unrealized_profit_loss ?? null,
+      unrealized_profit_loss_pct: pos.unrealized_profit_loss_pct ?? null,
+      data_source: "manual_upload",
+      last_updated_from: `upload:${statementId}`,
+    };
+
+    let error: { message: string } | null = null;
+
+    if (existing) {
+      // Update existing holding
+      const { error: updateErr } = await supabase
+        .from("holdings")
+        .update(holdingData)
+        .eq("id", existing.id);
+      error = updateErr;
+    } else {
+      // Insert new holding
+      const { error: insertErr } = await supabase
+        .from("holdings")
+        .insert(holdingData);
+      error = insertErr;
+    }
 
     if (error) {
       console.error(`Failed to upsert holding ${symbol}:`, error.message);
