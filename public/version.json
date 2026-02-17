@@ -1,12 +1,12 @@
 {
-  "version": "v260217.20 10:04a",
-  "release": 52,
-  "sha": "5ade7ab8",
-  "fullSha": "5ade7ab8be066f7b46cada934540c680e7f37832",
+  "version": "v260217.21 10:20a",
+  "release": 53,
+  "sha": "3e987451",
+  "fullSha": "3e9874510c0515a4a2ebaef6dd9b3cba19df114c",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000050",
-  "pushedAt": "2026-02-17T16:04:36+00",
-  "commits": [{"sha": "5ade7ab8be066f7b46cada934540c680e7f37832", "short_sha": "5ade7ab8", "author": "rahulio", "message": "Merge branch 'claude/happy-knuth'"}, {"sha": "3bdc052732d1d693ce8f7ef908329095410d1fd9", "short_sha": "3bdc0527", "author": "rahulio", "message": "Add spinner + elapsed timer to processing badge, sequential batch processing"}]
+  "machine": "GitHub Actions 1000000051",
+  "pushedAt": "2026-02-17T16:20:50+00",
+  "commits": [{"sha": "3e9874510c0515a4a2ebaef6dd9b3cba19df114c", "short_sha": "3e987451", "author": "rahulio", "message": "Merge branch 'claude/unruffled-buck'"}, {"sha": "f621d1802873504ee0b853d04192f8fddc4d2342", "short_sha": "f621d180", "author": "rahulio", "message": "Add waiting list, email infra, branding updates"}]
 }
