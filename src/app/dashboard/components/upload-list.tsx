@@ -302,7 +302,7 @@ export function UploadList({
                         : "bg-green-600 text-white hover:bg-green-700"
                     }`}
                   >
-                    Review
+                    View
                   </button>
                 )}
 

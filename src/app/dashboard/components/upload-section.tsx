@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { UploadDropzone } from "./upload-dropzone";
 import { UploadList } from "./upload-list";
 import { UploadReview } from "./upload-review";
@@ -14,6 +14,7 @@ export function UploadSection() {
   const [batchTotal, setBatchTotal] = useState(0);
   const [batchDone, setBatchDone] = useState(0);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const reviewRef = useRef<HTMLDivElement>(null);
 
   // Fetch existing uploads on mount
   const fetchUploads = useCallback(async () => {
@@ -95,9 +96,13 @@ export function UploadSection() {
     }
   }
 
-  // Open review panel
+  // Open review panel and scroll to it
   function handleReview(uploadId: string) {
     setReviewingId(uploadId);
+    // Scroll after React renders the review section
+    requestAnimationFrame(() => {
+      reviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }
 
   // Delete an upload
@@ -147,11 +152,13 @@ export function UploadSection() {
       )}
 
       {reviewingUpload && (
-        <UploadReview
-          upload={reviewingUpload}
-          onReprocess={handleReprocess}
-          onClose={() => setReviewingId(null)}
-        />
+        <div ref={reviewRef}>
+          <UploadReview
+            upload={reviewingUpload}
+            onReprocess={handleReprocess}
+            onClose={() => setReviewingId(null)}
+          />
+        </div>
       )}
     </div>
   );
