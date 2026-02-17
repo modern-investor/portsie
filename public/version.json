@@ -1,12 +1,12 @@
 {
-  "version": "v260217.18 9:47a",
-  "release": 49,
-  "sha": "908ba9c9",
-  "fullSha": "908ba9c91b63be34e537d50a53079906e67875d9",
+  "version": "v260217.19 9:58a",
+  "release": 50,
+  "sha": "36ab7c48",
+  "fullSha": "36ab7c4875385e87568b798c3c97a74e66b113f5",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000047",
-  "pushedAt": "2026-02-17T15:47:52+00",
-  "commits": [{"sha": "908ba9c91b63be34e537d50a53079906e67875d9", "short_sha": "908ba9c9", "author": "Rahul", "message": "Fix upload button flashing API connections tab before showing uploads (#11)"}]
+  "machine": "GitHub Actions 1000000049",
+  "pushedAt": "2026-02-17T15:58:52+00",
+  "commits": [{"sha": "36ab7c4875385e87568b798c3c97a74e66b113f5", "short_sha": "36ab7c48", "author": "rahulio", "message": "Auto-redirect to Dashboard after upload save with cancel option"}, {"sha": "298411e8b566bb20d8c9ade872ec6d6fc0e19ddf", "short_sha": "298411e8", "author": "rahulio", "message": "Open prompts to all users with author tagging"}, {"sha": "a9fce1c6357cc98b88a3f2007f9363efee02bf83", "short_sha": "a9fce1c6", "author": "rahulio", "message": "Add versioned prompts table for reusable prompt library"}]
 }
