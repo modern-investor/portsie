@@ -1,12 +1,12 @@
 {
-  "version": "v260217.03 12:59a",
-  "release": 34,
-  "sha": "67a65c5d",
-  "fullSha": "67a65c5dec17ea567c45438821c3718eb6173922",
+  "version": "v260217.04 1:24a",
+  "release": 35,
+  "sha": "2bdf6b44",
+  "fullSha": "2bdf6b442f042321873e2f861cc95f5852c1741a",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000032",
-  "pushedAt": "2026-02-17T06:59:11+00",
-  "commits": [{"sha": "67a65c5dec17ea567c45438821c3718eb6173922", "short_sha": "67a65c5d", "author": "rahulio", "message": "Replace eye icon with slider toggle for hiding dollar values"}]
+  "machine": "GitHub Actions 1000000033",
+  "pushedAt": "2026-02-17T07:24:25+00",
+  "commits": [{"sha": "2bdf6b442f042321873e2f861cc95f5852c1741a", "short_sha": "2bdf6b44", "author": "rahulio", "message": "Rename Review \u2192 View button and add smooth scroll to review section"}]
 }
