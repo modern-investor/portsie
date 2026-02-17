@@ -1,12 +1,12 @@
 {
-  "version": "v260217.21 10:20a",
-  "release": 53,
-  "sha": "3e987451",
-  "fullSha": "3e9874510c0515a4a2ebaef6dd9b3cba19df114c",
+  "version": "v260217.22 11:01a",
+  "release": 54,
+  "sha": "61821a59",
+  "fullSha": "61821a59958907129fddabdd0b8ef474aea4f452",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000051",
-  "pushedAt": "2026-02-17T16:20:50+00",
-  "commits": [{"sha": "3e9874510c0515a4a2ebaef6dd9b3cba19df114c", "short_sha": "3e987451", "author": "rahulio", "message": "Merge branch 'claude/unruffled-buck'"}, {"sha": "f621d1802873504ee0b853d04192f8fddc4d2342", "short_sha": "f621d180", "author": "rahulio", "message": "Add waiting list, email infra, branding updates"}]
+  "machine": "GitHub Actions 1000000052",
+  "pushedAt": "2026-02-17T17:01:53+00",
+  "commits": [{"sha": "61821a59958907129fddabdd0b8ef474aea4f452", "short_sha": "61821a59", "author": "rahulio", "message": "LLM-driven account matching: Claude decides account links during extraction"}]
 }
