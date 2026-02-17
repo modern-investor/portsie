@@ -1,12 +1,12 @@
 {
-  "version": "v260217.14 6:12a",
-  "release": 45,
-  "sha": "fdd40088",
-  "fullSha": "fdd40088b9ac0478f297482fddffa95d0bcd856b",
+  "version": "v260217.15 6:46a",
+  "release": 46,
+  "sha": "9c770651",
+  "fullSha": "9c770651b78d59e920db499c417701c019f935ff",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000043",
-  "pushedAt": "2026-02-17T12:12:54+00",
-  "commits": [{"sha": "fdd40088b9ac0478f297482fddffa95d0bcd856b", "short_sha": "fdd40088", "author": "rahulio", "message": "Fix null total_amount crashing transaction writes"}]
+  "machine": "GitHub Actions 1000000044",
+  "pushedAt": "2026-02-17T12:46:56+00",
+  "commits": [{"sha": "9c770651b78d59e920db499c417701c019f935ff", "short_sha": "9c770651", "author": "rahulio", "message": "Fix empty dashboard: holdings table never populated"}]
 }
