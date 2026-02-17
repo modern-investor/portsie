@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchStyleGuide } from "@/lib/style-guide/server";
 import { WaitlistForm } from "@/components/waitlist-form";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const supabase = await createClient();
   const {

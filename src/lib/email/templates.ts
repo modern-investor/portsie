@@ -84,10 +84,10 @@ async function getTagline(): Promise<string> {
 
     return (
       (data?.branding as { tagline?: string } | null)?.tagline ??
-      "The AI Agent for your Portfolio. Now with supa-ultra-max intelligence."
+      "The AI Agent for your Portfolio. Now with ultra-mega-max intelligence.\u2122"
     );
   } catch {
-    return "The AI Agent for your Portfolio. Now with supa-ultra-max intelligence.";
+    return "The AI Agent for your Portfolio. Now with ultra-mega-max intelligence.\u2122";
   }
 }
 
