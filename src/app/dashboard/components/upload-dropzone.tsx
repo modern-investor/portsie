@@ -7,8 +7,10 @@ import type { UploadedStatement } from "@/lib/upload/types";
 
 export function UploadDropzone({
   onUploaded,
+  onBatchComplete,
 }: {
   onUploaded: (statement: UploadedStatement) => void;
+  onBatchComplete?: (ids: string[]) => void;
 }) {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -49,6 +51,8 @@ export function UploadDropzone({
       setUploading(true);
       setUploadProgress({ current: 0, total: validFiles.length });
 
+      const uploadedIds: string[] = [];
+
       for (let i = 0; i < validFiles.length; i++) {
         const file = validFiles[i];
         setUploadProgress({ current: i + 1, total: validFiles.length });
@@ -74,6 +78,7 @@ export function UploadDropzone({
           }
 
           onUploaded(data);
+          uploadedIds.push(data.id);
         } catch {
           setError((prev) =>
             prev
@@ -85,8 +90,13 @@ export function UploadDropzone({
 
       setUploading(false);
       setUploadProgress({ current: 0, total: 0 });
+
+      // Auto-trigger processing for all successfully uploaded files
+      if (uploadedIds.length > 0) {
+        onBatchComplete?.(uploadedIds);
+      }
     },
-    [validateFile, onUploaded]
+    [validateFile, onUploaded, onBatchComplete]
   );
 
   const handleDrop = useCallback(

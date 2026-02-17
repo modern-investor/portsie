@@ -157,7 +157,7 @@ export function UploadSection() {
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Upload Statements</h2>
 
-      <UploadDropzone onUploaded={handleFileUploaded} />
+      <UploadDropzone onUploaded={handleFileUploaded} onBatchComplete={handleBatchProcess} />
 
       {loading ? (
         <div className="space-y-2">
