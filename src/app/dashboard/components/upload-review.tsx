@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type {
   UploadedStatement,
   LLMExtractionResult,
@@ -18,11 +19,51 @@ export function UploadReview({
   upload,
   onReprocess,
   onClose,
+  onSaved,
 }: {
   upload: UploadedStatement;
   onReprocess: () => void;
   onClose: () => void;
+  onSaved?: (updated: UploadedStatement) => void;
 }) {
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  async function handleSave() {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const body: Record<string, unknown> = {};
+      if (upload.account_id) {
+        body.accountId = upload.account_id;
+      } else {
+        body.createNewAccount = true;
+        if (upload.detected_account_info) {
+          body.accountInfo = upload.detected_account_info;
+        }
+      }
+      const res = await fetch(`/api/upload/${upload.id}/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save");
+      }
+      // Refresh the upload record to get confirmed_at
+      const detailRes = await fetch(`/api/upload/${upload.id}`);
+      if (detailRes.ok) {
+        const updated = await detailRes.json();
+        onSaved?.(updated);
+      }
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const extraction = upload.extracted_data as LLMExtractionResult | null;
   if (!extraction) return null;
 
@@ -295,8 +336,17 @@ export function UploadReview({
             Saved to account
           </span>
         ) : (
-          <span className="rounded-md bg-amber-100 px-3 py-2 text-sm font-medium text-amber-700">
-            Not yet saved — re-process to retry
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
+        )}
+        {saveError && (
+          <span className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+            {saveError}
           </span>
         )}
         <button

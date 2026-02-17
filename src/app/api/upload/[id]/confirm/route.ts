@@ -45,12 +45,7 @@ export async function POST(
     );
   }
 
-  if (statement.confirmed_at) {
-    return NextResponse.json(
-      { error: "This upload has already been confirmed" },
-      { status: 409 }
-    );
-  }
+  // Allow re-confirmation (e.g. after re-processing)
 
   // Determine the target account
   let targetAccountId = accountId || statement.account_id;

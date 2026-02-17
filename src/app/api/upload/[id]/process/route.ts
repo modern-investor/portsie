@@ -48,13 +48,14 @@ export async function POST(
   // Track processing attempt count
   const newProcessCount = (statement.process_count ?? 0) + 1;
 
-  // Mark as processing and increment attempt counter
+  // Mark as processing, increment attempt counter, and clear previous confirmation state
   await supabase
     .from("uploaded_statements")
     .update({
       parse_status: "processing",
       parse_error: null,
       process_count: newProcessCount,
+      confirmed_at: null,
     })
     .eq("id", id);
 
@@ -91,10 +92,11 @@ export async function POST(
     // Auto-link/create account and auto-confirm
     let autoLinkResult: AutoLinkResult | null = null;
     let autoConfirmed = false;
+    let autoConfirmError: string | null = null;
     let transactionsCreated = 0;
     let positionsCreated = 0;
 
-    if (hasData && extractionResult.account_info) {
+    if (hasData) {
       try {
         // If re-processing an already-confirmed upload, reuse the existing account
         let accountId: string | null = null;
@@ -120,10 +122,17 @@ export async function POST(
 
         // No existing link — auto-match or create
         if (!accountId) {
+          // Use detected account info, or fall back to filename-based info
+          const accountInfo = extractionResult.account_info ?? {
+            institution_name: "Unknown",
+            account_type: null,
+            account_number: null,
+            account_nickname: statement.filename,
+          };
           autoLinkResult = await autoLinkOrCreateAccount(
             supabase,
             user.id,
-            extractionResult.account_info
+            accountInfo
           );
           accountId = autoLinkResult.accountId;
         }
@@ -141,6 +150,8 @@ export async function POST(
         autoConfirmed = true;
       } catch (linkErr) {
         // Auto-link/confirm failed — save extraction results anyway
+        autoConfirmError =
+          linkErr instanceof Error ? linkErr.message : "Unknown auto-confirm error";
         console.error("Auto-link/confirm failed:", linkErr);
       }
     }
@@ -160,6 +171,7 @@ export async function POST(
         account_id: autoLinkResult?.accountId ?? null,
         statement_start_date: extractionResult.statement_start_date,
         statement_end_date: extractionResult.statement_end_date,
+        parse_error: autoConfirmError,
       })
       .eq("id", id);
 
@@ -169,6 +181,7 @@ export async function POST(
       autoLinkAction: autoLinkResult?.action ?? null,
       autoLinkReason: autoLinkResult?.matchReason ?? null,
       autoConfirmed,
+      autoConfirmError,
       transactionsCreated,
       positionsCreated,
       parseStatus,

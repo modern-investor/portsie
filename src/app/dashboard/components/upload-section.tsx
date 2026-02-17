@@ -186,6 +186,11 @@ export function UploadSection() {
             upload={reviewingUpload}
             onReprocess={handleReprocess}
             onClose={() => setReviewingId(null)}
+            onSaved={(updated) => {
+              setUploads((prev) =>
+                prev.map((u) => (u.id === updated.id ? updated : u))
+              );
+            }}
           />
         </div>
       )}

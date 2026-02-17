@@ -56,7 +56,46 @@ export async function writeExtractedData(
 
   // ── Write position snapshots ──
   if (extractedData.positions.length > 0) {
-    const positionRows = extractedData.positions.map((p) => ({
+    // Deduplicate by (snapshot_date, symbol) — aggregate if same symbol appears
+    // multiple times (e.g. Schwab summary spanning multiple sub-accounts)
+    const positionMap = new Map<
+      string,
+      (typeof extractedData.positions)[number]
+    >();
+    for (const p of extractedData.positions) {
+      const key = `${p.snapshot_date}|${p.symbol}`;
+      const existing = positionMap.get(key);
+      if (existing) {
+        // Merge: sum quantities and values
+        existing.quantity += p.quantity;
+        existing.short_quantity =
+          (existing.short_quantity ?? 0) + (p.short_quantity ?? 0);
+        if (p.market_value != null) {
+          existing.market_value =
+            (existing.market_value ?? 0) + p.market_value;
+        }
+        if (p.cost_basis_total != null) {
+          existing.cost_basis_total =
+            (existing.cost_basis_total ?? 0) + p.cost_basis_total;
+        }
+        if (p.unrealized_profit_loss != null) {
+          existing.unrealized_profit_loss =
+            (existing.unrealized_profit_loss ?? 0) + p.unrealized_profit_loss;
+        }
+        // Keep market price and avg cost from the latest entry (best guess)
+        if (p.market_price_per_share != null) {
+          existing.market_price_per_share = p.market_price_per_share;
+        }
+        if (p.average_cost_basis != null) {
+          existing.average_cost_basis = p.average_cost_basis;
+        }
+      } else {
+        positionMap.set(key, { ...p });
+      }
+    }
+
+    const deduped = Array.from(positionMap.values());
+    const positionRows = deduped.map((p) => ({
       user_id: userId,
       account_id: accountId,
       snapshot_date: p.snapshot_date,
@@ -91,7 +130,31 @@ export async function writeExtractedData(
 
   // ── Write balance snapshots ──
   if (extractedData.balances.length > 0) {
-    const balanceRows = extractedData.balances.map((b) => ({
+    // Deduplicate by snapshot_date — keep the most complete entry
+    const balanceMap = new Map<
+      string,
+      (typeof extractedData.balances)[number]
+    >();
+    for (const b of extractedData.balances) {
+      const existing = balanceMap.get(b.snapshot_date);
+      if (existing) {
+        // Merge: prefer non-null values
+        existing.liquidation_value =
+          b.liquidation_value ?? existing.liquidation_value;
+        existing.cash_balance = b.cash_balance ?? existing.cash_balance;
+        existing.available_funds = b.available_funds ?? existing.available_funds;
+        existing.total_cash = b.total_cash ?? existing.total_cash;
+        existing.equity = b.equity ?? existing.equity;
+        existing.long_market_value =
+          b.long_market_value ?? existing.long_market_value;
+        existing.buying_power = b.buying_power ?? existing.buying_power;
+      } else {
+        balanceMap.set(b.snapshot_date, { ...b });
+      }
+    }
+
+    const deduped = Array.from(balanceMap.values());
+    const balanceRows = deduped.map((b) => ({
       user_id: userId,
       account_id: accountId,
       snapshot_date: b.snapshot_date,
