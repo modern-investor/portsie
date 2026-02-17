@@ -274,7 +274,7 @@ export function UploadList({
                 </span>
                 {upload.parse_error && (
                   <span
-                    className="truncate text-red-500"
+                    className={`truncate ${isProcessing || isQueued ? "text-gray-300 line-through" : "text-red-500"}`}
                     title={upload.parse_error}
                   >
                     {upload.parse_error}

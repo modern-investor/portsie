@@ -5,6 +5,9 @@ import { extractFinancialData } from "@/lib/llm/dispatcher";
 import { findMatchingAccounts } from "@/lib/upload/account-matcher";
 import type { UploadFileType } from "@/lib/upload/types";
 
+// LLM extraction can take several minutes for large PDF/CSV files
+export const maxDuration = 300; // 5 minutes
+
 /** POST /api/upload/[id]/process — Trigger LLM extraction for an upload */
 export async function POST(
   _request: NextRequest,
