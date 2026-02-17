@@ -73,7 +73,7 @@ export function UploadSection() {
     }));
 
     try {
-      await fetch(`/api/upload/${uploadId}/process`, { method: "POST" });
+      await fetch(`/api/upload/${uploadId}/extract?auto_confirm=true`, { method: "POST" });
     } catch {
       // Error status will be reflected in the refreshed upload record
     } finally {

@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import type { UploadedStatement } from "@/lib/upload/types";
 import type {
-  UploadedStatement,
-  LLMExtractionResult,
-  ExtractedAccount,
-} from "@/lib/upload/types";
+  PortsieExtraction,
+  ExtractionAccount,
+  ExtractionPosition,
+  ExtractionTransaction,
+} from "@/lib/extraction/schema";
 
 const CONFIDENCE_STYLES = {
   high: { label: "High confidence", className: "text-green-700 bg-green-100" },
@@ -26,9 +28,9 @@ function formatCurrency(value: number): string {
 }
 
 /** Summarize accounts for the multi-account header card */
-function AccountsSummary({ accounts }: { accounts: ExtractedAccount[] }) {
+function AccountsSummary({ accounts }: { accounts: ExtractionAccount[] }) {
   // Group by account_group
-  const groups = new Map<string, ExtractedAccount[]>();
+  const groups = new Map<string, ExtractionAccount[]>();
   for (const acct of accounts) {
     const group = acct.account_info.account_group || "Other";
     const list = groups.get(group) ?? [];
@@ -48,9 +50,9 @@ function AccountsSummary({ accounts }: { accounts: ExtractedAccount[] }) {
               <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Account</th>
               <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Type</th>
               <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Institution</th>
-              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Match</th>
               <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Value</th>
               <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Positions</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Txns</th>
             </tr>
           </thead>
           <tbody>
@@ -64,41 +66,7 @@ function AccountsSummary({ accounts }: { accounts: ExtractedAccount[] }) {
   );
 }
 
-const MATCH_CONFIDENCE_STYLES = {
-  high: "text-green-700 bg-green-50 border-green-200",
-  medium: "text-amber-700 bg-amber-50 border-amber-200",
-  low: "text-red-700 bg-red-50 border-red-200",
-};
-
-function AccountMatchBadge({ acct }: { acct: ExtractedAccount }) {
-  const link = acct.account_link;
-  if (!link) return <span className="text-gray-300">—</span>;
-
-  const confidenceClass =
-    MATCH_CONFIDENCE_STYLES[link.match_confidence] ?? MATCH_CONFIDENCE_STYLES.low;
-
-  if (link.action === "match_existing") {
-    return (
-      <span
-        className={`inline-block rounded border px-1.5 py-0.5 ${confidenceClass}`}
-        title={link.match_reason}
-      >
-        Linked
-      </span>
-    );
-  }
-
-  return (
-    <span
-      className="inline-block rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-blue-700"
-      title={link.match_reason}
-    >
-      New
-    </span>
-  );
-}
-
-function AccountGroupRows({ group, accounts }: { group: string; accounts: ExtractedAccount[] }) {
+function AccountGroupRows({ group, accounts }: { group: string; accounts: ExtractionAccount[] }) {
   return (
     <>
       <tr className="bg-gray-100">
@@ -127,9 +95,6 @@ function AccountGroupRows({ group, accounts }: { group: string; accounts: Extrac
             <td className="px-2 py-1.5 text-gray-500 sm:px-3 sm:py-2">
               {acct.account_info.institution_name || "—"}
             </td>
-            <td className="px-2 py-1.5 sm:px-3 sm:py-2">
-              <AccountMatchBadge acct={acct} />
-            </td>
             <td className={`px-2 py-1.5 text-right font-medium sm:px-3 sm:py-2 ${
               value !== null && value < 0 ? "text-red-600" : ""
             }`}>
@@ -138,10 +103,128 @@ function AccountGroupRows({ group, accounts }: { group: string; accounts: Extrac
             <td className="px-2 py-1.5 text-right text-gray-500 sm:px-3 sm:py-2">
               {acct.positions.length || "—"}
             </td>
+            <td className="px-2 py-1.5 text-right text-gray-500 sm:px-3 sm:py-2">
+              {acct.transactions.length || "—"}
+            </td>
           </tr>
         );
       })}
     </>
+  );
+}
+
+/** Positions table — shared between per-account and unallocated positions */
+function PositionsTable({ positions, title }: { positions: ExtractionPosition[]; title: string }) {
+  if (positions.length === 0) return null;
+  return (
+    <div className="space-y-2">
+      <h4 className="text-sm font-semibold text-gray-700">{title}</h4>
+      <div className="max-h-48 overflow-auto rounded-md border">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="sticky top-0 border-b bg-gray-50 text-left text-gray-500">
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Symbol</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Qty</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Avg Cost</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Mkt Price</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Mkt Value</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Unrealized P&L</th>
+            </tr>
+          </thead>
+          <tbody>
+            {positions.map((p, i) => (
+              <tr key={i} className="border-b last:border-b-0">
+                <td className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">
+                  {p.symbol}
+                  {p.description && (
+                    <span className="ml-1 text-gray-400 text-[10px]">{p.description}</span>
+                  )}
+                </td>
+                <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">{p.quantity}</td>
+                <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
+                  {p.average_cost_basis ? `$${p.average_cost_basis.toFixed(2)}` : "—"}
+                </td>
+                <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
+                  {p.market_price_per_share ? `$${p.market_price_per_share.toFixed(2)}` : "—"}
+                </td>
+                <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
+                  {p.market_value
+                    ? `$${p.market_value.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                    : "—"}
+                </td>
+                <td
+                  className={`px-2 py-1.5 text-right sm:px-3 sm:py-2 ${
+                    (p.unrealized_profit_loss ?? 0) >= 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {p.unrealized_profit_loss != null
+                    ? `${p.unrealized_profit_loss >= 0 ? "+" : ""}$${Math.abs(
+                        p.unrealized_profit_loss
+                      ).toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                    : "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/** Transactions table */
+function TransactionsTable({ transactions }: { transactions: ExtractionTransaction[] }) {
+  if (transactions.length === 0) return null;
+  return (
+    <div className="space-y-2">
+      <h4 className="text-sm font-semibold text-gray-700">Transactions</h4>
+      <div className="max-h-64 overflow-auto rounded-md border">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="sticky top-0 border-b bg-gray-50 text-left text-gray-500">
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Date</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Action</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Symbol</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Description</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Qty</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Price</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {transactions.map((t, i) => (
+              <tr key={i} className="border-b last:border-b-0">
+                <td className="px-2 py-1.5 whitespace-nowrap sm:px-3 sm:py-2">
+                  {t.transaction_date}
+                </td>
+                <td className="px-2 py-1.5 sm:px-3 sm:py-2">
+                  <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono">{t.action}</span>
+                </td>
+                <td className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">{t.symbol ?? "—"}</td>
+                <td className="max-w-[100px] truncate px-2 py-1.5 text-gray-500 sm:max-w-[200px] sm:px-3 sm:py-2">
+                  {t.description}
+                </td>
+                <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">{t.quantity ?? "—"}</td>
+                <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
+                  {t.price_per_share ? `$${t.price_per_share.toFixed(2)}` : "—"}
+                </td>
+                <td
+                  className={`px-2 py-1.5 text-right sm:px-3 sm:py-2 font-medium ${
+                    t.total_amount >= 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {t.total_amount >= 0 ? "+" : ""}$
+                  {Math.abs(t.total_amount).toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
@@ -163,19 +246,10 @@ export function UploadReview({
     setSaving(true);
     setSaveError(null);
     try {
-      const body: Record<string, unknown> = {};
-      if (upload.account_id) {
-        body.accountId = upload.account_id;
-      } else {
-        body.createNewAccount = true;
-        if (upload.detected_account_info) {
-          body.accountInfo = upload.detected_account_info;
-        }
-      }
       const res = await fetch(`/api/upload/${upload.id}/confirm`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({}),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -194,16 +268,17 @@ export function UploadReview({
     }
   }
 
-  const extraction = upload.extracted_data as LLMExtractionResult | null;
+  const extraction = upload.extracted_data as PortsieExtraction | null;
   if (!extraction) return null;
 
   const confidence = CONFIDENCE_STYLES[extraction.confidence];
-  const isMultiAccount =
-    Array.isArray(extraction.accounts) && extraction.accounts.length > 1;
-  const totalTransactions = extraction.transactions.length;
-  const totalPositions = extraction.positions.length;
-  const totalBalances = extraction.balances.length;
-  const totalAccounts = extraction.accounts?.length ?? 1;
+  const isMultiAccount = extraction.accounts.length > 1;
+
+  // Aggregate stats from per-account data
+  const allTransactions = extraction.accounts.flatMap((a) => a.transactions);
+  const allPositions = extraction.accounts.flatMap((a) => a.positions);
+  const totalBalances = extraction.accounts.reduce((sum, a) => sum + a.balances.length, 0);
+  const totalAccounts = extraction.accounts.length;
 
   return (
     <div className="space-y-4 rounded-lg border bg-white p-4 sm:p-6">
@@ -212,11 +287,19 @@ export function UploadReview({
         <div>
           <h3 className="truncate text-base font-semibold sm:text-lg">Review: {upload.filename}</h3>
           <div className="mt-1 flex items-center gap-3 text-sm text-gray-500">
-            {extraction.statement_start_date && (
+            {extraction.document.institution_name && (
+              <span className="font-medium text-gray-700">{extraction.document.institution_name}</span>
+            )}
+            {extraction.document.statement_start_date && (
               <span>
-                {extraction.statement_start_date}
-                {extraction.statement_end_date &&
-                  ` to ${extraction.statement_end_date}`}
+                {extraction.document.statement_start_date}
+                {extraction.document.statement_end_date &&
+                  ` to ${extraction.document.statement_end_date}`}
+              </span>
+            )}
+            {extraction.document.document_type && (
+              <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-mono">
+                {extraction.document.document_type}
               </span>
             )}
             <span
@@ -230,47 +313,30 @@ export function UploadReview({
           onClick={onClose}
           className="p-2 -m-2 text-gray-400 hover:text-gray-600"
         >
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
       {/* Multi-account summary */}
-      {isMultiAccount && extraction.accounts && (
-        <AccountsSummary accounts={extraction.accounts} />
-      )}
+      {isMultiAccount && <AccountsSummary accounts={extraction.accounts} />}
 
       {/* Single-account info detected */}
-      {!isMultiAccount && extraction.account_info && (
+      {!isMultiAccount && extraction.accounts[0] && (
         <div className="rounded-md bg-gray-50 p-3 text-sm">
           <span className="font-medium text-gray-700">Detected account: </span>
           <span className="text-gray-600">
             {[
-              extraction.account_info.institution_name,
-              extraction.account_info.account_type,
-              extraction.account_info.account_number
-                ? `****${extraction.account_info.account_number.slice(-4)}`
+              extraction.accounts[0].account_info.institution_name,
+              extraction.accounts[0].account_info.account_type,
+              extraction.accounts[0].account_info.account_number
+                ? `****${extraction.accounts[0].account_info.account_number.replace(/^\.+/, "").slice(-4)}`
                 : null,
             ]
               .filter(Boolean)
               .join(" — ") || "Unknown"}
           </span>
-          {extraction.accounts?.[0]?.account_link && (
-            <span className="ml-2">
-              <AccountMatchBadge acct={extraction.accounts[0]} />
-            </span>
-          )}
         </div>
       )}
 
@@ -294,162 +360,50 @@ export function UploadReview({
           </span>
         )}
         <span className="rounded-md bg-blue-50 px-3 py-1 text-blue-700">
-          {totalTransactions} transaction{totalTransactions !== 1 ? "s" : ""}
+          {allTransactions.length} transaction{allTransactions.length !== 1 ? "s" : ""}
         </span>
         <span className="rounded-md bg-purple-50 px-3 py-1 text-purple-700">
-          {totalPositions} position{totalPositions !== 1 ? "s" : ""}
+          {allPositions.length} position{allPositions.length !== 1 ? "s" : ""}
         </span>
+        {extraction.unallocated_positions.length > 0 && (
+          <span className="rounded-md bg-orange-50 px-3 py-1 text-orange-700">
+            {extraction.unallocated_positions.length} aggregate position
+            {extraction.unallocated_positions.length !== 1 ? "s" : ""}
+          </span>
+        )}
         <span className="rounded-md bg-teal-50 px-3 py-1 text-teal-700">
           {totalBalances} balance snapshot{totalBalances !== 1 ? "s" : ""}
         </span>
       </div>
 
-      {/* Transactions table */}
-      {totalTransactions > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-gray-700">Transactions</h4>
-          <div className="max-h-64 overflow-auto rounded-md border">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="sticky top-0 border-b bg-gray-50 text-left text-gray-500">
-                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Date</th>
-                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Action</th>
-                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Symbol</th>
-                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Description</th>
-                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Qty</th>
-                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Price</th>
-                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {extraction.transactions.map((t, i) => (
-                  <tr key={i} className="border-b last:border-b-0">
-                    <td className="px-2 py-1.5 whitespace-nowrap sm:px-3 sm:py-2">
-                      {t.transaction_date}
-                    </td>
-                    <td className="px-2 py-1.5 sm:px-3 sm:py-2">
-                      <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono">
-                        {t.action}
-                      </span>
-                    </td>
-                    <td className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">
-                      {t.symbol ?? "—"}
-                    </td>
-                    <td className="max-w-[100px] truncate px-2 py-1.5 text-gray-500 sm:max-w-[200px] sm:px-3 sm:py-2">
-                      {t.description}
-                    </td>
-                    <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
-                      {t.quantity ?? "—"}
-                    </td>
-                    <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
-                      {t.price_per_share
-                        ? `$${t.price_per_share.toFixed(2)}`
-                        : "—"}
-                    </td>
-                    <td
-                      className={`px-2 py-1.5 text-right sm:px-3 sm:py-2 font-medium ${
-                        t.total_amount >= 0 ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {t.total_amount >= 0 ? "+" : ""}$
-                      {Math.abs(t.total_amount).toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      {/* Transactions table — all accounts merged */}
+      <TransactionsTable transactions={allTransactions} />
+
+      {/* Per-account positions (only if per-account, not unallocated) */}
+      {allPositions.length > 0 && (
+        <PositionsTable positions={allPositions} title="Positions (Per-Account)" />
       )}
 
-      {/* Positions table */}
-      {totalPositions > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-gray-700">Positions</h4>
-          <div className="max-h-48 overflow-auto rounded-md border">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="sticky top-0 border-b bg-gray-50 text-left text-gray-500">
-                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Symbol</th>
-                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Qty</th>
-                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">
-                    Avg Cost
-                  </th>
-                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">
-                    Mkt Price
-                  </th>
-                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">
-                    Mkt Value
-                  </th>
-                  <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">
-                    Unrealized P&L
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {extraction.positions.map((p, i) => (
-                  <tr key={i} className="border-b last:border-b-0">
-                    <td className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">{p.symbol}</td>
-                    <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">{p.quantity}</td>
-                    <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
-                      {p.average_cost_basis
-                        ? `$${p.average_cost_basis.toFixed(2)}`
-                        : "—"}
-                    </td>
-                    <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
-                      {p.market_price_per_share
-                        ? `$${p.market_price_per_share.toFixed(2)}`
-                        : "—"}
-                    </td>
-                    <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">
-                      {p.market_value
-                        ? `$${p.market_value.toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                          })}`
-                        : "—"}
-                    </td>
-                    <td
-                      className={`px-2 py-1.5 text-right sm:px-3 sm:py-2 ${
-                        (p.unrealized_profit_loss ?? 0) >= 0
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {p.unrealized_profit_loss != null
-                        ? `${p.unrealized_profit_loss >= 0 ? "+" : ""}$${Math.abs(
-                            p.unrealized_profit_loss
-                          ).toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                          })}`
-                        : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      {/* Unallocated (aggregate) positions */}
+      {extraction.unallocated_positions.length > 0 && (
+        <PositionsTable
+          positions={extraction.unallocated_positions}
+          title="Aggregate Positions (Multi-Account)"
+        />
       )}
 
-      {/* Balance snapshots (only for single-account; multi-account shows balances in the accounts table) */}
-      {totalBalances > 0 && !isMultiAccount && (
+      {/* Balance snapshots (single-account only) */}
+      {totalBalances > 0 && !isMultiAccount && extraction.accounts[0] && (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-gray-700">
-            Balance Snapshots
-          </h4>
+          <h4 className="text-sm font-semibold text-gray-700">Balance Snapshots</h4>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {extraction.balances.map((b, i) => (
+            {extraction.accounts[0].balances.map((b, i) => (
               <div key={i} className="rounded-md border p-3 text-sm">
                 <p className="text-xs text-gray-400">{b.snapshot_date}</p>
                 {b.liquidation_value != null && (
                   <p>
                     <span className="text-gray-500">Total: </span>
-                    <span className="font-medium">
-                      {formatCurrency(b.liquidation_value)}
-                    </span>
+                    <span className="font-medium">{formatCurrency(b.liquidation_value)}</span>
                   </p>
                 )}
                 {b.cash_balance != null && (
@@ -482,19 +436,17 @@ export function UploadReview({
             disabled={saving}
             className="rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
           >
-            {saving ? "Saving…" : "Save"}
+            {saving ? "Saving…" : "Confirm & Save"}
           </button>
         )}
         {saveError && (
-          <span className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
-            {saveError}
-          </span>
+          <span className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{saveError}</span>
         )}
         <button
           onClick={onReprocess}
           className="rounded-md border px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
-          Re-process
+          Re-extract
         </button>
         <button
           onClick={onClose}

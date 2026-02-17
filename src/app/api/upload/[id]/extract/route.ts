@@ -2,30 +2,37 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { processFileForLLM } from "@/lib/upload/file-processor";
 import { extractFinancialData } from "@/lib/llm/dispatcher";
+import { getLLMSettings } from "@/lib/llm/settings";
 import {
   loadExistingAccountsForMatching,
   matchAccounts,
 } from "@/lib/extraction/account-matcher";
 import { writeExtraction } from "@/lib/extraction/db-writer";
-import { getLLMSettings } from "@/lib/llm/settings";
 import type { UploadFileType } from "@/lib/upload/types";
+import type { PortsieExtraction } from "@/lib/extraction/schema";
 
 // LLM extraction can take several minutes for large PDF/CSV files
 export const maxDuration = 300; // 5 minutes
 
 /**
- * POST /api/upload/[id]/process
+ * POST /api/upload/[id]/extract
  *
- * DEPRECATED: Use /api/upload/[id]/extract?auto_confirm=true instead.
+ * Stage 1+2: LLM extraction → schema validation.
+ * Stores the validated PortsieExtraction in extracted_data.
+ * Sets parse_status to "extracted".
  *
- * This route is kept for backward compatibility. It runs the full
- * 3-stage pipeline (extract → match → write) in one call.
+ * Query params:
+ *   ?auto_confirm=true — Chains all stages (extract → match → write) in one call.
+ *                         This is the fire-and-forget mode for batch processing.
  */
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const autoConfirm =
+    request.nextUrl.searchParams.get("auto_confirm") === "true";
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -54,8 +61,10 @@ export async function POST(
     );
   }
 
+  // Track processing attempt count
   const newProcessCount = (statement.process_count ?? 0) + 1;
 
+  // Mark as processing
   await supabase
     .from("uploaded_statements")
     .update({
@@ -67,7 +76,7 @@ export async function POST(
     .eq("id", id);
 
   try {
-    // Download file
+    // Download file from Supabase Storage
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("statements")
       .download(statement.file_path);
@@ -80,9 +89,11 @@ export async function POST(
 
     const buffer = Buffer.from(await fileData.arrayBuffer());
     const fileType = statement.file_type as UploadFileType;
+
+    // Pre-process the file for Claude
     const processedFile = processFileForLLM(buffer, fileType, fileData.type);
 
-    // Stage 1+2: Extract + validate
+    // ── Stage 1+2: LLM extraction + validation ──
     const { extraction, rawResponse } = await extractFinancialData(
       supabase,
       user.id,
@@ -91,7 +102,7 @@ export async function POST(
       statement.filename
     );
 
-    // Check if extraction produced data
+    // Determine if extraction produced data
     const totalPositions =
       extraction.accounts.reduce((sum, a) => sum + a.positions.length, 0) +
       extraction.unallocated_positions.length;
@@ -104,13 +115,12 @@ export async function POST(
       0
     );
     const hasData = totalPositions > 0 || totalTransactions > 0 || totalBalances > 0;
-    const parseStatus = hasData ? "extracted" : "partial";
 
-    // Save extraction
+    // Save extraction results — parse_status = "extracted"
     await supabase
       .from("uploaded_statements")
       .update({
-        parse_status: parseStatus,
+        parse_status: hasData ? "extracted" : "partial",
         parsed_at: new Date().toISOString(),
         extracted_data: extraction,
         raw_llm_response: rawResponse,
@@ -118,39 +128,71 @@ export async function POST(
         extraction_schema_version: extraction.schema_version,
         statement_start_date: extraction.document.statement_start_date,
         statement_end_date: extraction.document.statement_end_date,
+        parse_error: null,
       })
       .eq("id", id);
 
-    // Stage 2.5+3: Auto-confirm
-    let autoConfirmed = false;
-    let autoConfirmError: string | null = null;
-
-    if (hasData) {
+    // ── Auto-confirm mode: chain into Stage 2.5+3 ──
+    if (autoConfirm && hasData) {
       try {
         const existingAccounts = await loadExistingAccountsForMatching(
           supabase,
           user.id
         );
         const accountMap = matchAccounts(extraction, existingAccounts);
-        await writeExtraction(supabase, user.id, id, extraction, accountMap);
-        autoConfirmed = true;
-      } catch (err) {
-        autoConfirmError =
-          err instanceof Error ? err.message : "Unknown auto-confirm error";
-        console.error("Auto-confirm failed:", err);
+        const writeReport = await writeExtraction(
+          supabase,
+          user.id,
+          id,
+          extraction,
+          accountMap
+        );
+
+        return NextResponse.json({
+          extraction,
+          autoConfirmed: true,
+          writeReport,
+          parseStatus: "completed",
+        });
+      } catch (confirmErr) {
+        // Auto-confirm failed — extraction is still saved
+        const errMsg =
+          confirmErr instanceof Error
+            ? confirmErr.message
+            : "Unknown auto-confirm error";
+        console.error("Auto-confirm failed:", confirmErr);
+
+        await supabase
+          .from("uploaded_statements")
+          .update({ parse_error: `Auto-confirm failed: ${errMsg}` })
+          .eq("id", id);
+
+        return NextResponse.json({
+          extraction,
+          autoConfirmed: false,
+          autoConfirmError: errMsg,
+          parseStatus: "extracted",
+        });
       }
     }
 
     return NextResponse.json({
       extraction,
-      autoConfirmed,
-      autoConfirmError,
-      parseStatus: autoConfirmed ? "completed" : parseStatus,
+      autoConfirmed: false,
+      parseStatus: hasData ? "extracted" : "partial",
+      summary: {
+        accounts: extraction.accounts.length,
+        totalPositions,
+        totalTransactions,
+        totalBalances,
+        unallocatedPositions: extraction.unallocated_positions.length,
+        confidence: extraction.confidence,
+      },
     });
   } catch (err) {
     const errorMessage =
       err instanceof Error ? err.message : "Unknown processing error";
-    console.error("LLM processing failed:", err);
+    console.error("LLM extraction failed:", err);
 
     await supabase
       .from("uploaded_statements")
@@ -160,6 +202,7 @@ export async function POST(
       })
       .eq("id", id);
 
+    // Log extraction failure on 2nd+ attempt
     if (newProcessCount >= 2) {
       try {
         const settings = await getLLMSettings(supabase, user.id);

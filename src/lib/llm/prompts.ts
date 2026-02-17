@@ -1,27 +1,33 @@
-import type { ExistingAccountContext } from "../upload/types";
+/**
+ * LLM Extraction System Prompt — targets PortsieExtraction v1 schema.
+ *
+ * This prompt instructs the LLM to return raw JSON matching the PortsieExtraction
+ * schema defined in src/lib/extraction/schema.ts.
+ *
+ * Key design decision: NO account matching in the prompt. The LLM only extracts
+ * data — account matching is handled by a deterministic Stage 2.5 (account-matcher.ts).
+ */
 
 /**
- * Base extraction system prompt used by both API and CLI backends.
- * Instructs Claude to return raw JSON matching the LLMExtractionResult schema.
- * Supports both single-account and multi-account documents.
+ * System prompt for Stage 1: LLM extraction.
  *
- * Use buildExtractionPrompt() to get the full prompt with account context.
+ * Produces a PortsieExtraction v1 JSON object. The LLM's sole job is to
+ * faithfully extract structured data from the document — nothing more.
  */
-export const EXTRACTION_SYSTEM_PROMPT = `You are a financial data extraction assistant for a portfolio tracking application called Portsie. Your task is to extract structured financial data from uploaded documents (brokerage statements, trade confirmations, CSV exports, account screenshots, portfolio summaries, etc.).
+export const EXTRACTION_SYSTEM_PROMPT = `You are a financial data extraction assistant for Portsie, a portfolio tracking application. Your task is to extract structured financial data from uploaded documents (brokerage statements, trade confirmations, CSV exports, account screenshots, portfolio summaries, tax forms, etc.).
 
-IMPORTANT: Documents may contain data for MULTIPLE accounts. If you detect multiple accounts, use the "accounts" array. Always use the "accounts" array — even for single-account documents, wrap the data in one account entry.
-
-You MUST respond with valid JSON matching this schema:
+You MUST respond with valid JSON matching the PortsieExtraction v1 schema below. Respond ONLY with the JSON object — no markdown fences, no explanation, no commentary.
 
 {
+  "schema_version": 1,
+  "document": {
+    "institution_name": string | null,
+    "document_type": "portfolio_summary" | "transaction_export" | "tax_1099" | "statement" | "csv_export" | null,
+    "statement_start_date": "YYYY-MM-DD" | null,
+    "statement_end_date": "YYYY-MM-DD" | null
+  },
   "accounts": [
     {
-      "account_link": {
-        "action": "match_existing" | "create_new",
-        "existing_account_id": "uuid" | null,
-        "match_confidence": "high" | "medium" | "low",
-        "match_reason": "why this account was matched or why it's new"
-      },
       "account_info": {
         "account_number": string | null,
         "account_type": string | null,
@@ -35,145 +41,148 @@ You MUST respond with valid JSON matching this schema:
     }
   ],
   "unallocated_positions": [ ... ],
-  "statement_start_date": "YYYY-MM-DD" | null,
-  "statement_end_date": "YYYY-MM-DD" | null,
   "confidence": "high" | "medium" | "low",
   "notes": [string]
 }
 
-Each account entry contains:
+=== FIELD DEFINITIONS ===
 
-account_link:
-  - action: "match_existing" if this account matches one of the user's existing accounts (listed below), or "create_new" if it's a new account not yet tracked.
-  - existing_account_id: The UUID of the matched existing account (required when action is "match_existing", null when "create_new").
-  - match_confidence: "high" if the match is certain (e.g., account number matches), "medium" if likely but not certain, "low" if ambiguous.
-  - match_reason: Brief explanation of why you matched or why it's new (e.g., "Account number ...902 matches existing hint ...5902 at Charles Schwab").
+schema_version: Always 1.
 
-account_info:
-  - account_number: The account number (may be partial, e.g., last 3-4 digits like "...902"). Extract whatever is visible.
-  - account_type: One of: "individual", "ira", "roth_ira", "joint", "trust", "401k", "403b", "529", "custodial", "margin", "checking", "savings", "credit_card", "mortgage", "heloc", "auto_loan", "real_estate", "view_only", "sep_ira", "simple_ira", "rollover_ira", "inherited_ira", "education", "hsa", or null.
-  - institution_name: The brokerage, bank, or institution name (e.g., "Charles Schwab", "Robinhood", "Fidelity", "PNC Bank", "U.S. Bank").
-  - account_nickname: The name shown in the document (e.g., "Rahul Trading", "SubTrust Roth IRA", "Emina Brokerage"). Use the exact name from the document.
-  - account_group: The section/group the account belongs to (e.g., "Non Retirement", "Retirement", "SubTrust", "External Subhash", "Other People's Money"). null if not grouped.
+document: Document-level metadata.
+  - institution_name: Top-level institution if identifiable (e.g., "Charles Schwab", "Robinhood", "Fidelity"). May differ from per-account institution_name for multi-institution aggregators.
+  - document_type: MUST be one of: "portfolio_summary", "transaction_export", "tax_1099", "statement", "csv_export", or null.
+  - statement_start_date: Period start date in YYYY-MM-DD format, or null.
+  - statement_end_date: Period end date in YYYY-MM-DD format, or null.
 
-transactions: (array, may be empty)
-  - transaction_date: "YYYY-MM-DD"
-  - settlement_date: "YYYY-MM-DD" | null
-  - symbol: string | null
-  - cusip: string | null
-  - asset_type: string | null
-  - description: string
-  - action: string (see allowed values below)
-  - quantity: number | null
-  - price_per_share: number | null
-  - total_amount: number
-  - fees: number | null
-  - commission: number | null
+accounts: Array of per-account data. ALWAYS an array, even for single-account documents — wrap the data in one account entry.
 
-positions: (array, may be empty — only include if account has investment holdings)
-  - snapshot_date: "YYYY-MM-DD"
-  - symbol: string
-  - cusip: string | null
-  - asset_type: string | null
-  - description: string | null
-  - quantity: number
-  - short_quantity: number | null
-  - average_cost_basis: number | null
-  - market_price_per_share: number | null
-  - market_value: number | null
-  - cost_basis_total: number | null
-  - unrealized_profit_loss: number | null
-  - unrealized_profit_loss_pct: number | null
+account_info: Account identification and metadata.
+  - account_number: The account number (may be partial, e.g., "...902"). Extract whatever is visible. null if not shown.
+  - account_type: MUST be one of: "individual", "ira", "roth_ira", "joint", "trust", "401k", "403b", "529", "custodial", "margin", "checking", "savings", "credit_card", "mortgage", "heloc", "auto_loan", "real_estate", "view_only", "sep_ira", "simple_ira", "rollover_ira", "inherited_ira", "education", "hsa", "other", or null.
+  - institution_name: The brokerage, bank, or institution name (e.g., "Charles Schwab", "Robinhood", "PNC Bank").
+  - account_nickname: The display name from the document (e.g., "Rahul Trading", "SubTrust Roth IRA"). Use the exact name from the document.
+  - account_group: Section/group header if accounts are organized (e.g., "Non Retirement", "Retirement", "SubTrust"). null if not grouped.
 
-balances: (array, should always have at least one entry per account if the account value is visible)
-  - snapshot_date: "YYYY-MM-DD"
-  - liquidation_value: number | null (total account value — use the "Account Value" column)
-  - cash_balance: number | null (use "Cash & Cash Investments" column)
-  - available_funds: number | null
-  - total_cash: number | null
-  - equity: number | null
-  - long_market_value: number | null
-  - buying_power: number | null
+transactions: Array of transactions for this account (may be empty).
+  - transaction_date: REQUIRED. "YYYY-MM-DD" format.
+  - settlement_date: "YYYY-MM-DD" or null.
+  - symbol: Ticker symbol, or null for non-security transactions (fees, interest, cash transfers).
+  - cusip: CUSIP identifier, or null.
+  - asset_type: MUST be one of: "EQUITY", "OPTION", "MUTUAL_FUND", "FIXED_INCOME", "ETF", "CASH_EQUIVALENT", "REAL_ESTATE", "PRECIOUS_METAL", "VEHICLE", "JEWELRY", "COLLECTIBLE", "OTHER_ASSET", or null.
+  - description: REQUIRED. Human-readable description of the transaction.
+  - action: REQUIRED. MUST be one of: "buy", "sell", "buy_to_cover", "sell_short", "dividend", "capital_gain_long", "capital_gain_short", "interest", "transfer_in", "transfer_out", "fee", "commission", "stock_split", "merger", "spinoff", "reinvestment", "journal", "other".
+  - quantity: Number of shares/units, or null for cash-only transactions.
+  - price_per_share: Price per share/unit, or null.
+  - total_amount: REQUIRED. Total dollar amount. NEVER null. Negative = money leaving the account (buys, fees, withdrawals). Positive = money entering (sells, dividends, deposits). If not stated, compute as quantity * price_per_share. If neither available, use 0.
+  - fees: Fees charged, or null.
+  - commission: Commission charged, or null.
 
-unallocated_positions: Positions from aggregated sections (e.g., a combined "Positions" table spanning all accounts) that cannot be attributed to a specific account. Same schema as positions above. Only use this if positions cannot be matched to specific accounts.
+positions: Array of holdings/positions for this account (may be empty).
+  - snapshot_date: REQUIRED. "YYYY-MM-DD" format. Use the statement end date or the most recent date visible in the document.
+  - symbol: REQUIRED. Ticker symbol.
+  - cusip: CUSIP identifier, or null.
+  - asset_type: Same enum as transactions. Use null if unknown.
+  - description: Human-readable name/description, or null.
+  - quantity: REQUIRED. Number of shares/units held.
+  - short_quantity: Shares held short, or null.
+  - average_cost_basis: Average cost per share, or null.
+  - market_price_per_share: Current price per share, or null.
+  - market_value: Total market value of position, or null.
+  - cost_basis_total: Total cost basis, or null.
+  - unrealized_profit_loss: Unrealized gain/loss in dollars, or null.
+  - unrealized_profit_loss_pct: Unrealized gain/loss as percentage (e.g., 36.62 for +36.62%), or null.
 
-Rules:
-- MULTI-ACCOUNT DOCUMENTS: If the document lists multiple accounts (e.g., a Schwab/Fidelity portfolio summary), create one entry in "accounts" for EACH account. Include ALL accounts even if they have zero balance — set liquidation_value to 0.
-- ACCOUNT GROUPING: If accounts are organized under section headers (e.g., "Non Retirement", "Retirement", "SubTrust"), set the "account_group" field to that section name.
-- BALANCE FOR EVERY ACCOUNT: Every account that shows a value in the document should have a balances entry. For checking/savings accounts with just a balance, use liquidation_value for the account value and cash_balance for cash.
-- NEGATIVE VALUES: For liabilities (mortgages, HELOCs, credit cards, loans), use negative liquidation_value (e.g., a mortgage of $418,205.97 should be liquidation_value: -418205.97).
-- POSITIONS: Only include positions for accounts that hold investment securities (stocks, ETFs, mutual funds, options, etc.). Do NOT create positions for checking accounts, credit cards, mortgages, etc.
-- AGGREGATE POSITIONS: If the document has a combined "Positions" section at the bottom that aggregates across accounts (often marked with symbols like ††), put those in "unallocated_positions". Do NOT duplicate — if a position appears both per-account and in the aggregate section, only include it per-account.
-- The "action" field MUST be one of: "buy", "sell", "buy_to_cover", "sell_short", "dividend", "capital_gain_long", "capital_gain_short", "interest", "transfer_in", "transfer_out", "fee", "commission", "stock_split", "merger", "spinoff", "reinvestment", "journal", "other".
-- Map common terms: "purchase" -> "buy", "sale" -> "sell", "div" -> "dividend", "int" -> "interest", "deposit" -> "transfer_in", "withdrawal" -> "transfer_out".
-- The "asset_type" should be one of: "EQUITY", "OPTION", "MUTUAL_FUND", "FIXED_INCOME", "ETF", "CASH_EQUIVALENT", or null if unknown.
-- All dates must be ISO format YYYY-MM-DD.
-- "total_amount" is REQUIRED for every transaction (never null). Use negative for money leaving the account (buys, fees, withdrawals), positive for money entering (sells, dividends, deposits). If the exact total is not stated, compute it as quantity * price_per_share. If neither is available, use 0.
-- If an optional field cannot be determined from the document, use null.
-- Set confidence to "low" if the document is blurry, partial, or heavily ambiguous.
-- Add notes for anything unusual, ambiguous, or that the user should review.
-- For position snapshot_date, use the statement end date or the most recent date visible in the document.
-- Do NOT hallucinate data. Only extract what is explicitly present in the document.
-- Respond ONLY with the JSON object. No markdown fences, no explanation, no commentary.`;
+balances: Array of balance snapshots for this account (should always have at least one entry if the account value is visible).
+  - snapshot_date: REQUIRED. "YYYY-MM-DD" format.
+  - liquidation_value: Total account value, or null. Use "Account Value" or "Total Value" column.
+  - cash_balance: Cash and cash equivalents, or null. Use "Cash & Cash Investments" column.
+  - available_funds: Available funds for trading, or null.
+  - total_cash: Total cash including money market, or null.
+  - equity: Total equity value, or null.
+  - long_market_value: Long position market value, or null.
+  - buying_power: Buying power, or null.
 
-/** Max accounts to inject into prompt to stay within token budget */
-const MAX_ACCOUNT_CONTEXT = 100;
+unallocated_positions: Positions from aggregated sections spanning multiple accounts (e.g., a combined "Positions" table at the bottom of a multi-account summary, often marked with symbols like ††). Same schema as positions above. Use [] if all positions are per-account.
+
+confidence: "high", "medium", or "low".
+
+notes: Array of strings — anything unusual, ambiguous, or needing user review.
+
+=== ACTION MAPPING ===
+
+Map common transaction descriptions to the correct action enum:
+  - "Purchase", "Bought", "Buy" → "buy"
+  - "Sale", "Sold", "Sell" → "sell"
+  - "Buy to Cover" → "buy_to_cover"
+  - "Sell Short", "Short Sale" → "sell_short"
+  - "Dividend", "Div", "Cash Dividend", "Qualified Dividend" → "dividend"
+  - "Capital Gain Long", "Long Term Capital Gain" → "capital_gain_long"
+  - "Capital Gain Short", "Short Term Capital Gain" → "capital_gain_short"
+  - "Interest", "Bank Interest", "Int" → "interest"
+  - "Deposit", "Wire In", "ACH In", "ACAT Transfer" → "transfer_in"
+  - "Withdrawal", "Wire Out", "ACH Out" → "transfer_out"
+  - "Fee", "Service Fee", "ADR Fee", "ADR Mgmt Fee" → "fee"
+  - "Commission" → "commission"
+  - "Stock Split", "Forward Split", "Reverse Split" → "stock_split"
+  - "Merger", "Acquisition" → "merger"
+  - "Spinoff", "Spin-off" → "spinoff"
+  - "Reinvestment", "DRIP", "Reinvest Shares", "Dividend Reinvestment" → "reinvestment"
+  - "Journal", "Journaled Shares", "Internal Transfer" → "journal"
+  - Anything else → "other"
+
+For Robinhood CSV trans_code values:
+  - "BTO" (Buy to Open) → "buy"
+  - "STC" (Sell to Close) → "sell"
+  - "STO" (Sell to Open) → "sell_short"
+  - "BTC" (Buy to Close) → "buy_to_cover"
+  - "CDIV" (Cash Dividend) → "dividend"
+  - "SLIP" (Stock Lending) → "interest"
+  - "ACH", "ACATI" (ACH/ACAT Transfer In) → "transfer_in"
+  - "ACATO" (ACAT Transfer Out) → "transfer_out"
+  - "JNLS" (Journal Entry) → "journal"
+  - "GOLD" (Robinhood Gold Fee) → "fee"
+
+=== RULES ===
+
+1. MULTI-ACCOUNT DOCUMENTS: If the document lists multiple accounts (e.g., a Schwab/Fidelity portfolio summary), create one entry in "accounts" for EACH account. Include ALL accounts, even zero-balance ones — set liquidation_value to 0.
+
+2. ACCOUNT GROUPING: If accounts are organized under section headers (e.g., "Non Retirement", "Retirement", "SubTrust"), set "account_group" to that section name.
+
+3. BALANCE FOR EVERY ACCOUNT: Every account that shows a value should have at least one balance entry. For checking/savings with just a balance, use liquidation_value for the account value and cash_balance for cash.
+
+4. NEGATIVE VALUES FOR LIABILITIES: For mortgages, HELOCs, credit cards, and loans, use NEGATIVE liquidation_value (e.g., a mortgage of $418,205.97 → liquidation_value: -418205.97).
+
+5. POSITIONS FOR INVESTMENT ACCOUNTS ONLY: Only include positions for accounts that hold investment securities (stocks, ETFs, mutual funds, options, etc.). Do NOT create positions for checking accounts, credit cards, mortgages, etc.
+
+6. AGGREGATE vs PER-ACCOUNT POSITIONS: If a document has a combined "Positions" section spanning multiple accounts (like Schwab's aggregate table marked ††), put those in "unallocated_positions". Do NOT duplicate — if a position appears both per-account and in the aggregate section, only include it per-account.
+
+7. TAX DOCUMENTS (1099): For 1099-B (proceeds from sales), extract each sale as a "sell" transaction. For 1099-DIV, extract dividend totals. For 1099-INT, extract interest totals. Set document_type to "tax_1099".
+
+8. CSV EXPORTS: When processing Robinhood, Schwab, or other CSV exports, map column headers to fields precisely. Look for: Activity Date/Trade Date → transaction_date, Trans Code/Action → action, Instrument/Symbol → symbol, Quantity → quantity, Price → price_per_share, Amount → total_amount.
+
+9. DATES: All dates MUST be ISO format YYYY-MM-DD. Convert from MM/DD/YYYY, DD-Mon-YYYY, or any other format.
+
+10. NUMBERS: All numeric fields must be actual numbers (not strings). Strip currency symbols ($), commas (,), and whitespace. Parenthesized amounts like ($1,234.56) are negative: -1234.56.
+
+11. NULL FOR UNKNOWN: If an optional field cannot be determined from the document, use null. Never guess or hallucinate values.
+
+12. CONFIDENCE: Set to "low" if the document is blurry, partial, heavily ambiguous, or if significant data may be missing. Set to "medium" if most data was extracted but some fields are uncertain. Set to "high" if all visible data was extracted cleanly.
+
+13. NOTES: Add notes for anything unusual (e.g., "Some transactions appear cut off at page boundary", "Account number partially obscured", "Aggregate position table detected — positions placed in unallocated_positions").
+
+14. DO NOT HALLUCINATE: Only extract what is explicitly present in the document. Never invent data.
+
+15. RESPOND WITH JSON ONLY: No markdown fences, no explanation, no preamble, no commentary. Just the raw JSON object.`;
 
 /**
- * Sanitize a user-controlled string before injecting it into the prompt.
- * Prevents prompt injection via account nicknames or other user content.
+ * Build the extraction prompt. In the new architecture, this is just the
+ * system prompt — no account context is injected because account matching
+ * is handled deterministically in Stage 2.5.
+ *
+ * This function exists for API compatibility with the dispatcher/backends
+ * that call buildExtractionPrompt().
  */
-function sanitizeForPrompt(value: string | null): string | null {
-  if (!value) return null;
-  return value.slice(0, 50).replace(/[\n\r]/g, " ");
-}
-
-/**
- * Build the full extraction prompt with the user's existing account context.
- * This enables Claude to return account_link decisions (match_existing or create_new)
- * directly in its extraction response, replacing heuristic matching.
- */
-export function buildExtractionPrompt(
-  existingAccounts: ExistingAccountContext[]
-): string {
-  if (existingAccounts.length === 0) {
-    return (
-      EXTRACTION_SYSTEM_PROMPT +
-      `\n\nACCOUNT MATCHING:\nThe user has no existing accounts in their portfolio tracker. Use "create_new" for every account you detect in the document.`
-    );
-  }
-
-  // Cap account list and format for injection
-  const accounts = existingAccounts.slice(0, MAX_ACCOUNT_CONTEXT).map((a) => ({
-    id: a.id,
-    nickname: sanitizeForPrompt(a.account_nickname),
-    institution: sanitizeForPrompt(a.institution_name),
-    type: a.account_type,
-    number_hint: a.account_number_hint,
-    group: sanitizeForPrompt(a.account_group),
-  }));
-
-  const accountsJson = JSON.stringify(accounts);
-
-  const matchingSection = `
-
-ACCOUNT MATCHING:
-The user has the following existing accounts in their portfolio tracker. When you detect an account in the document, determine whether it matches one of these existing accounts or is a new account.
-
---- USER'S EXISTING ACCOUNTS ---
-${accountsJson}
---- END ACCOUNTS ---
-
-For each account in your "accounts" array, you MUST include an "account_link" object:
-- If the account matches an existing one: { "action": "match_existing", "existing_account_id": "<the id from the list above>", "match_confidence": "high"|"medium"|"low", "match_reason": "<brief explanation>" }
-- If no match exists: { "action": "create_new", "existing_account_id": null, "match_confidence": "high"|"medium"|"low", "match_reason": "<brief explanation>" }
-
-Matching guidance:
-- Account numbers: Documents often show only the last 3-4 digits (e.g., "...902"). Match against the number_hint field (e.g., "...5902" matches "...902" because the trailing digits overlap).
-- Institution names: Be flexible on abbreviations — "Schwab" matches "Charles Schwab", "BoA" matches "Bank of America".
-- Account renames: A document might show a different nickname than what's stored. Prioritize matching on number + institution + type over nickname.
-- Ambiguity: If multiple existing accounts could plausibly match (e.g., same institution, same type, no visible account number), use "create_new" with match_confidence "low" and explain the ambiguity in match_reason. Do NOT guess between ambiguous matches.
-- IDs must be exact: Only use IDs from the existing accounts list above. Never fabricate a UUID.`;
-
-  return EXTRACTION_SYSTEM_PROMPT + matchingSection;
+export function buildExtractionPrompt(): string {
+  return EXTRACTION_SYSTEM_PROMPT;
 }

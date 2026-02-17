@@ -2,20 +2,20 @@ import Anthropic from "@anthropic-ai/sdk";
 import { UPLOAD_CONFIG } from "../upload/config";
 import { buildExtractionPrompt } from "./prompts";
 import type { ProcessedFile } from "../upload/file-processor";
-import type { LLMExtractionResult, UploadFileType, ExistingAccountContext } from "../upload/types";
-import { parseAndValidateExtraction } from "./parse";
+import type { UploadFileType } from "../upload/types";
+import type { PortsieExtraction } from "../extraction/schema";
+import { validateExtraction } from "../extraction/validate";
 
 /**
  * API backend: uses @anthropic-ai/sdk with a per-user API key.
- * Extracted from the original llm-client.ts.
+ * Returns a validated PortsieExtraction and the raw API response.
  */
 export async function extractViaAPI(
   apiKey: string,
   processedFile: ProcessedFile,
   fileType: UploadFileType,
-  filename: string,
-  existingAccounts?: ExistingAccountContext[]
-): Promise<{ result: LLMExtractionResult; rawResponse: unknown }> {
+  filename: string
+): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
   const client = new Anthropic({ apiKey });
 
   // Build content blocks for the user message
@@ -78,7 +78,7 @@ export async function extractViaAPI(
     model: UPLOAD_CONFIG.claudeModel,
     max_tokens: UPLOAD_CONFIG.claudeMaxTokens,
     temperature: 0,
-    system: buildExtractionPrompt(existingAccounts ?? []),
+    system: buildExtractionPrompt(),
     messages: [{ role: "user", content: contentBlocks }],
   });
 
@@ -88,6 +88,16 @@ export async function extractViaAPI(
     throw new Error("No text response from Claude API");
   }
 
-  const result = parseAndValidateExtraction(textBlock.text);
-  return { result, rawResponse: response };
+  // Validate against PortsieExtraction schema (Stage 2)
+  const validationResult = validateExtraction(textBlock.text);
+  if (!validationResult.valid || !validationResult.extraction) {
+    const errorSummary = validationResult.errors
+      .map((e) => `${e.path}: ${e.message}`)
+      .join("; ");
+    throw new Error(
+      `Extraction validation failed: ${errorSummary || "unknown error"}`
+    );
+  }
+
+  return { extraction: validationResult.extraction, rawResponse: response };
 }

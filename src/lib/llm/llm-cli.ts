@@ -5,27 +5,28 @@ import { mkdtemp } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
 import { buildExtractionPrompt } from "./prompts";
-import { parseAndValidateExtraction } from "./parse";
 import type { ProcessedFile } from "../upload/file-processor";
-import type { LLMExtractionResult, UploadFileType, ExistingAccountContext } from "../upload/types";
+import type { UploadFileType } from "../upload/types";
+import type { PortsieExtraction } from "../extraction/schema";
+import { validateExtraction } from "../extraction/validate";
 
 const execFileAsync = promisify(execFile);
 
 /**
  * CLI backend: uses `claude -p` (Claude Code CLI in print mode).
  * Dispatches to local subprocess or remote HTTP endpoint.
+ * Returns a validated PortsieExtraction and the raw CLI response.
  */
 export async function extractViaCLI(
   processedFile: ProcessedFile,
   fileType: UploadFileType,
   filename: string,
-  cliEndpoint: string | null,
-  existingAccounts?: ExistingAccountContext[]
-): Promise<{ result: LLMExtractionResult; rawResponse: unknown }> {
+  cliEndpoint: string | null
+): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
   if (cliEndpoint) {
-    return extractViaCLIRemote(cliEndpoint, processedFile, fileType, filename, existingAccounts);
+    return extractViaCLIRemote(cliEndpoint, processedFile, fileType, filename);
   }
-  return extractViaCLILocal(processedFile, fileType, filename, existingAccounts);
+  return extractViaCLILocal(processedFile, fileType, filename);
 }
 
 /**
@@ -36,9 +37,8 @@ export async function extractViaCLI(
 async function extractViaCLILocal(
   processedFile: ProcessedFile,
   fileType: UploadFileType,
-  filename: string,
-  existingAccounts?: ExistingAccountContext[]
-): Promise<{ result: LLMExtractionResult; rawResponse: unknown }> {
+  filename: string
+): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
   let tempDir: string | null = null;
   let tempFilePath: string | null = null;
 
@@ -51,7 +51,7 @@ async function extractViaCLILocal(
       await writeFile(tempFilePath, buffer);
     }
 
-    const prompt = buildCLIPrompt(processedFile, fileType, filename, tempFilePath, existingAccounts);
+    const prompt = buildCLIPrompt(processedFile, fileType, filename, tempFilePath);
 
     const { stdout } = await execFileAsync(
       "claude",
@@ -76,8 +76,18 @@ async function extractViaCLILocal(
         ? cliResponse.result
         : JSON.stringify(cliResponse.result);
 
-    const result = parseAndValidateExtraction(resultText);
-    return { result, rawResponse: cliResponse };
+    // Validate against PortsieExtraction schema (Stage 2)
+    const validationResult = validateExtraction(resultText);
+    if (!validationResult.valid || !validationResult.extraction) {
+      const errorSummary = validationResult.errors
+        .map((e) => `${e.path}: ${e.message}`)
+        .join("; ");
+      throw new Error(
+        `Extraction validation failed: ${errorSummary || "unknown error"}`
+      );
+    }
+
+    return { extraction: validationResult.extraction, rawResponse: cliResponse };
   } catch (err) {
     if (
       err instanceof Error &&
@@ -103,10 +113,9 @@ async function extractViaCLIRemote(
   endpoint: string,
   processedFile: ProcessedFile,
   fileType: UploadFileType,
-  filename: string,
-  existingAccounts?: ExistingAccountContext[]
-): Promise<{ result: LLMExtractionResult; rawResponse: unknown }> {
-  const prompt = buildCLIPrompt(processedFile, fileType, filename, null, existingAccounts);
+  filename: string
+): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
+  const prompt = buildCLIPrompt(processedFile, fileType, filename, null);
 
   const body: Record<string, unknown> = { prompt };
 
@@ -147,8 +156,18 @@ async function extractViaCLIRemote(
       ? cliResponse.result
       : JSON.stringify(cliResponse.result);
 
-  const result = parseAndValidateExtraction(resultText);
-  return { result, rawResponse: cliResponse };
+  // Validate against PortsieExtraction schema (Stage 2)
+  const validationResult = validateExtraction(resultText);
+  if (!validationResult.valid || !validationResult.extraction) {
+    const errorSummary = validationResult.errors
+      .map((e) => `${e.path}: ${e.message}`)
+      .join("; ");
+    throw new Error(
+      `Extraction validation failed: ${errorSummary || "unknown error"}`
+    );
+  }
+
+  return { extraction: validationResult.extraction, rawResponse: cliResponse };
 }
 
 /**
@@ -160,8 +179,7 @@ function buildCLIPrompt(
   processedFile: ProcessedFile,
   fileType: UploadFileType,
   filename: string,
-  tempFilePath: string | null,
-  existingAccounts?: ExistingAccountContext[]
+  tempFilePath: string | null
 ): string {
   let fileInstruction: string;
 
@@ -190,5 +208,5 @@ function buildCLIPrompt(
     fileInstruction = `Extract financial data from the ${fileType.toUpperCase()} file named "${filename}".`;
   }
 
-  return `${buildExtractionPrompt(existingAccounts ?? [])}\n\n${fileInstruction}\n\nRespond ONLY with the JSON object.`;
+  return `${buildExtractionPrompt()}\n\n${fileInstruction}\n\nRespond ONLY with the JSON object.`;
 }
