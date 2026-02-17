@@ -1,12 +1,12 @@
 {
-  "version": "v260216.28 3:42p",
-  "release": 28,
-  "sha": "a22eff38",
-  "fullSha": "a22eff383de4fbb379c1cd84981b57cd20bc44be",
+  "version": "v260216.29 9:19p",
+  "release": 29,
+  "sha": "258c1ba6",
+  "fullSha": "258c1ba6d655c0d02ed10ecab7beaf2b438b24b6",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000026",
-  "pushedAt": "2026-02-16T21:42:53+00",
-  "commits": [{"sha": "a22eff383de4fbb379c1cd84981b57cd20bc44be", "short_sha": "a22eff38", "author": "rahulio", "message": "Add portfolio analytics dashboard with asset class classification"}]
+  "machine": "GitHub Actions 1000000027",
+  "pushedAt": "2026-02-17T03:19:33+00",
+  "commits": [{"sha": "258c1ba6d655c0d02ed10ecab7beaf2b438b24b6", "short_sha": "258c1ba6", "author": "rahulio", "message": "Ungate portfolio from Schwab, add unified data API and empty state CTAs"}]
 }
