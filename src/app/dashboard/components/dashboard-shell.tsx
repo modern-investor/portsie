@@ -24,9 +24,7 @@ export function DashboardShell({
 }) {
   const [hideValues, setHideValues] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("portfolio");
-  const [overlayView, setOverlayView] = useState<OverlayView>(
-    hasSetup ? null : "brokerage-select"
-  );
+  const [overlayView, setOverlayView] = useState<OverlayView>(null);
   const [selectedBrokerage, setSelectedBrokerage] = useState<string | null>(
     null
   );
@@ -44,6 +42,16 @@ export function DashboardShell({
   function handleTabChange(tab: Tab) {
     setActiveTab(tab);
     setOverlayView(null);
+  }
+
+  function handleNavigateTab(tab: string) {
+    if (tab === "connections") {
+      // "Connect API" button → open brokerage selection overlay
+      setOverlayView("brokerage-select");
+    } else {
+      setActiveTab(tab as Tab);
+      setOverlayView(null);
+    }
   }
 
   const showOverlay = overlayView !== null;
@@ -94,15 +102,10 @@ export function DashboardShell({
       ) : (
         <>
           {activeTab === "portfolio" && (
-            <>
-              <SchwabConnect
-                isConnected={isConnected}
-                hasCredentials={hasCredentials}
-              />
-              {isConnected && (
-                <PortfolioView hideValues={hideValues} />
-              )}
-            </>
+            <PortfolioView
+              hideValues={hideValues}
+              onNavigateTab={handleNavigateTab}
+            />
           )}
 
           {activeTab === "uploads" && <UploadSection />}

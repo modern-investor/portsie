@@ -57,6 +57,29 @@ export interface SubAggregate {
   positions: ClassifiedPosition[];
 }
 
+// ─── Input types (source-agnostic) ──────────────────────────────────────────
+
+/** Normalized position input — works with Schwab API, uploads, or manual entry. */
+export interface PortfolioInputPosition {
+  symbol: string;
+  description?: string;
+  assetType: string;
+  quantity: number;
+  shortQuantity: number;
+  averagePrice: number;
+  marketValue: number;
+  currentDayProfitLoss: number;
+  currentDayProfitLossPercentage: number;
+}
+
+/** Normalized account input — works with any data source. */
+export interface PortfolioInputAccount {
+  id: string;
+  cashBalance: number;
+}
+
+// ─── Output types ───────────────────────────────────────────────────────────
+
 /** Full classified portfolio. */
 export interface ClassifiedPortfolio {
   totalMarketValue: number;

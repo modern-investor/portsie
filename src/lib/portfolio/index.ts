@@ -7,4 +7,6 @@ export type {
   AssetClassSummary,
   ClassifiedPortfolio,
   SubAggregate,
+  PortfolioInputPosition,
+  PortfolioInputAccount,
 } from "./types";

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { classifyPortfolio } from "@/lib/portfolio";
 import type { ClassifiedPortfolio, AssetClassId } from "@/lib/portfolio/types";
-import type { SchwabPosition, SchwabAccount } from "@/lib/schwab/types";
+import type { PortfolioData } from "@/app/api/portfolio/positions/route";
+import { Upload, Link2 } from "lucide-react";
 import { PortfolioSummaryBar } from "./portfolio-summary-bar";
 import { PortfolioDonutChart } from "./portfolio-donut-chart";
 import { AssetClassCards } from "./asset-class-cards";
@@ -23,35 +24,77 @@ const SUB_TABS: { id: PortfolioSubTab; label: string }[] = [
   { id: "positions", label: "Positions" },
 ];
 
+// ─── Empty state ────────────────────────────────────────────────────────────
+
+function PortfolioEmptyState({
+  onGoToUploads,
+  onGoToConnections,
+}: {
+  onGoToUploads?: () => void;
+  onGoToConnections?: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50/50 px-6 py-16 text-center">
+      <div className="mb-6 rounded-full bg-gray-100 p-4">
+        <Upload className="h-8 w-8 text-gray-400" />
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900">
+        No portfolio data yet
+      </h3>
+      <p className="mt-2 max-w-sm text-sm text-gray-500">
+        Get started by uploading your statements and reports, or connecting a brokerage API.
+      </p>
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <button
+          onClick={onGoToUploads}
+          className="inline-flex items-center gap-2 rounded-md bg-black px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+        >
+          <Upload className="h-4 w-4" />
+          Upload Statements &amp; Reports
+        </button>
+        <button
+          onClick={onGoToConnections}
+          className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <Link2 className="h-4 w-4" />
+          Connect API
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 interface Props {
   hideValues: boolean;
+  /** Callback to switch to a different top-level dashboard tab (e.g. "uploads"). */
+  onNavigateTab?: (tab: string) => void;
 }
 
-export function PortfolioView({ hideValues }: Props) {
+export function PortfolioView({ hideValues, onNavigateTab }: Props) {
   const [subTab, setSubTab] = useState<PortfolioSubTab>("assets");
   const [selectedClass, setSelectedClass] = useState<AssetClassId | null>(null);
   const [portfolio, setPortfolio] = useState<ClassifiedPortfolio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isEmpty, setIsEmpty] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
-        const [posRes, accRes] = await Promise.all([
-          fetch("/api/schwab/positions"),
-          fetch("/api/schwab/accounts"),
-        ]);
+        const res = await fetch("/api/portfolio/positions");
+        if (!res.ok) throw new Error("Failed to fetch portfolio data");
 
-        if (!posRes.ok || !accRes.ok) {
-          throw new Error("Failed to fetch portfolio data");
+        const data: PortfolioData = await res.json();
+
+        // No data from any source
+        if (data.positions.length === 0 && data.accounts.every((a) => a.cashBalance === 0)) {
+          setIsEmpty(true);
+          return;
         }
 
-        const positions: SchwabPosition[] = await posRes.json();
-        const accounts: SchwabAccount[] = await accRes.json();
-
-        const classified = classifyPortfolio(positions, accounts);
+        const classified = classifyPortfolio(data.positions, data.accounts);
         setPortfolio(classified);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
@@ -91,7 +134,15 @@ export function PortfolioView({ hideValues }: Props) {
     );
   }
 
-  if (!portfolio) return null;
+  // ── Empty state ──
+  if (isEmpty || !portfolio) {
+    return (
+      <PortfolioEmptyState
+        onGoToUploads={() => onNavigateTab?.("uploads")}
+        onGoToConnections={() => onNavigateTab?.("connections")}
+      />
+    );
+  }
 
   // ── Drill-down into specific asset class ──
   if (selectedClass) {

@@ -1,13 +1,13 @@
-import type { SchwabPosition, SchwabAccount, SchwabBalances } from "@/lib/schwab/types";
 import type {
   AssetClassId,
   ClassifiedPosition,
   AssetClassSummary,
   ClassifiedPortfolio,
   SubAggregate,
+  PortfolioInputPosition,
+  PortfolioInputAccount,
 } from "./types";
 import {
-  ASSET_CLASSES,
   ASSET_CLASS_LIST,
   TECH_SYMBOLS,
   NON_TECH_SYMBOLS,
@@ -36,12 +36,10 @@ function classifySymbol(
 
   // Options → check if underlying is tech
   if (instrumentType === "OPTION") {
-    // Schwab option symbols embed the underlying at the start (e.g. "TSLA  250321C00250000")
     const underlying = sym.replace(/\s.*$/, "").replace(/\d{6}[CP]\d+$/, "");
     if (TECH_SYMBOLS.has(underlying) || TECH_SYMBOLS.has(sym.split(" ")[0])) {
       return { assetClassId: "tech_options", subCategory: `${underlying} Option` };
     }
-    // Non-tech or unresolved options — still classify as tech_options if we can't tell
     return { assetClassId: "tech_options" };
   }
 
@@ -56,7 +54,7 @@ function classifySymbol(
   if (TECH_SYMBOLS.has(sym)) return { assetClassId: "tech_equities" };
   if (NON_TECH_SYMBOLS.has(sym)) return { assetClassId: "non_tech_equities" };
 
-  // Description-based heuristics for ETFs/funds not in our explicit lists
+  // Description-based heuristics
   if (desc.includes("ETHEREUM") || desc.includes("ETHER ETF")) {
     return { assetClassId: "crypto", subCategory: "Ethereum ETF" };
   }
@@ -95,7 +93,6 @@ function classifySymbol(
 
   // Instrument-type fallback
   if (instrumentType === "MUTUAL_FUND" || instrumentType === "COLLECTIVE_INVESTMENT") {
-    // Unknown funds → non-tech by default
     return { assetClassId: "non_tech_equities" };
   }
 
@@ -107,21 +104,18 @@ function classifySymbol(
 
 /**
  * Classify all positions and account cash into a full portfolio breakdown.
+ * Accepts normalized input types — works with Schwab API data, uploaded data, or both.
  */
 export function classifyPortfolio(
-  positions: SchwabPosition[],
-  accounts: SchwabAccount[]
+  positions: PortfolioInputPosition[],
+  accounts: PortfolioInputAccount[]
 ): ClassifiedPortfolio {
   // 1. Calculate total market value (positions + cash)
   const positionsMarketValue = positions.reduce((s, p) => s + p.marketValue, 0);
 
   let totalCash = 0;
   for (const acct of accounts) {
-    const bal: SchwabBalances | undefined = acct.securitiesAccount.currentBalances;
-    if (bal) {
-      // Use cashBalance, not moneyMarketFund (that's a position)
-      totalCash += bal.cashBalance ?? 0;
-    }
+    totalCash += acct.cashBalance ?? 0;
   }
 
   const totalMarketValue = positionsMarketValue + totalCash;
@@ -132,21 +126,21 @@ export function classifyPortfolio(
   // 2. Classify each position
   const classified: ClassifiedPosition[] = positions.map((pos) => {
     const { assetClassId, subCategory } = classifySymbol(
-      pos.instrument.symbol,
-      pos.instrument.assetType,
-      pos.instrument.description
+      pos.symbol,
+      pos.assetType,
+      pos.description
     );
     return {
-      symbol: pos.instrument.symbol,
-      description: pos.instrument.description ?? "",
+      symbol: pos.symbol,
+      description: pos.description ?? "",
       assetClassId,
-      quantity: pos.longQuantity - pos.shortQuantity,
+      quantity: pos.quantity - pos.shortQuantity,
       averagePrice: pos.averagePrice,
       marketValue: pos.marketValue,
       currentDayProfitLoss: pos.currentDayProfitLoss,
       currentDayProfitLossPercentage: pos.currentDayProfitLossPercentage,
       allocationPct: totalMarketValue > 0 ? (pos.marketValue / totalMarketValue) * 100 : 0,
-      instrumentType: pos.instrument.assetType,
+      instrumentType: pos.assetType,
       subCategory,
     };
   });
@@ -163,12 +157,10 @@ export function classifyPortfolio(
     let positions = byClass.get(def.id) ?? [];
     let extraMV = 0;
 
-    // Inject cash as a synthetic entry in the "cash" class
     if (def.id === "cash" && totalCash > 0) {
       extraMV = totalCash;
     }
 
-    // Sort positions by market value descending
     positions = [...positions].sort((a, b) => Math.abs(b.marketValue) - Math.abs(a.marketValue));
 
     const marketValue = positions.reduce((s, p) => s + p.marketValue, 0) + extraMV;
@@ -184,12 +176,8 @@ export function classifyPortfolio(
     };
   }).filter((ac) => ac.marketValue !== 0 || ac.holdingCount > 0);
 
-  // 4. Calculate HHI (Herfindahl-Hirschman Index) on position-level allocations
-  // HHI = sum of squared allocation percentages (0-10000 scale)
+  // 4. Calculate HHI
   const hhi = classified.reduce((sum, pos) => sum + pos.allocationPct ** 2, 0);
-
-  // Map HHI to a 1-10 diversification score (inverse: higher = more diversified)
-  // HHI 10000 (single holding) → 1, HHI < 500 (very diversified) → 10
   const diversificationScore = Math.max(1, Math.min(10, Math.round(10 - (hhi / 10000) * 9)));
 
   const cashPct = totalMarketValue > 0 ? (totalCash / totalMarketValue) * 100 : 0;
@@ -210,9 +198,6 @@ export function classifyPortfolio(
 
 // ─── Sub-aggregation helpers ────────────────────────────────────────────────
 
-/**
- * Get sub-aggregates for the Crypto asset class.
- */
 export function getCryptoSubAggregates(
   positions: ClassifiedPosition[],
   totalMarketValue: number
@@ -249,9 +234,6 @@ export function getCryptoSubAggregates(
     }));
 }
 
-/**
- * Get sub-aggregates for Tech Equities (main holdings + options sub if combined).
- */
 export function getTechSubAggregates(
   techPositions: ClassifiedPosition[],
   optionPositions: ClassifiedPosition[],
