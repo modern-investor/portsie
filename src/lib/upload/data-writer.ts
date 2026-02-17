@@ -195,7 +195,11 @@ export async function writeExtractedData(
       action: t.action,
       quantity: t.quantity ?? null,
       price_per_share: t.price_per_share ?? null,
-      total_amount: t.total_amount,
+      total_amount: t.total_amount ?? (
+        (t.quantity != null && t.price_per_share != null)
+          ? +(t.quantity * t.price_per_share).toFixed(2)
+          : 0
+      ),
       fees: t.fees ?? 0,
       commission: t.commission ?? 0,
       uploaded_statement_id: statementId,

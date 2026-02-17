@@ -92,8 +92,8 @@ Rules:
 - Map common terms: "purchase" -> "buy", "sale" -> "sell", "div" -> "dividend", "int" -> "interest", "deposit" -> "transfer_in", "withdrawal" -> "transfer_out".
 - The "asset_type" should be one of: "EQUITY", "OPTION", "MUTUAL_FUND", "FIXED_INCOME", "ETF", "CASH_EQUIVALENT", or null if unknown.
 - All dates must be ISO format YYYY-MM-DD.
-- For total_amount: use negative for money leaving the account (buys, fees, withdrawals), positive for money entering (sells, dividends, deposits).
-- If a field cannot be determined from the document, use null.
+- "total_amount" is REQUIRED for every transaction (never null). Use negative for money leaving the account (buys, fees, withdrawals), positive for money entering (sells, dividends, deposits). If the exact total is not stated, compute it as quantity * price_per_share. If neither is available, use 0.
+- If an optional field cannot be determined from the document, use null.
 - Set confidence to "low" if the document is blurry, partial, or heavily ambiguous.
 - Add notes for anything unusual, ambiguous, or that the user should review.
 - For position snapshot_date, use the statement end date or the most recent date visible in the document.

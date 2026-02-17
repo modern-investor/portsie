@@ -93,5 +93,15 @@ export function parseAndValidateExtraction(rawText: string): LLMExtractionResult
     result.confidence = "low";
   }
 
+  // Per-transaction field validation: ensure total_amount is never null
+  result.transactions = result.transactions.map((t) => ({
+    ...t,
+    total_amount: t.total_amount ?? (
+      (t.quantity != null && t.price_per_share != null)
+        ? +(t.quantity * t.price_per_share).toFixed(2)
+        : 0
+    ),
+  }));
+
   return result;
 }
