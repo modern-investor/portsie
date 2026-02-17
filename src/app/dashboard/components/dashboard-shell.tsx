@@ -6,11 +6,8 @@ import { SchwabConnect } from "./schwab-connect";
 import { AccountOverview } from "./account-overview";
 import { PositionsTable } from "./positions-table";
 import { HideValuesToggle } from "./hide-values-toggle";
-import { UploadSection } from "./upload-section";
-import { SettingsPanel } from "./settings-panel";
 import { BrokerageSelection } from "./brokerage-selection";
 import { BrokerageSetup } from "./brokerage-setup";
-import { DashboardNav, type Tab } from "./dashboard-nav";
 
 type OverlayView = "brokerage-select" | "brokerage-setup" | null;
 
@@ -24,7 +21,6 @@ export function DashboardShell({
   hasSetup?: boolean;
 }) {
   const [hideValues, setHideValues] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>("portfolio");
   const [overlayView, setOverlayView] = useState<OverlayView>(
     hasSetup ? null : "brokerage-select"
   );
@@ -42,11 +38,6 @@ export function DashboardShell({
     setOverlayView("brokerage-select");
   }
 
-  function handleTabChange(tab: Tab) {
-    setActiveTab(tab);
-    setOverlayView(null);
-  }
-
   const showOverlay = overlayView !== null;
 
   return (
@@ -55,7 +46,7 @@ export function DashboardShell({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold sm:text-xl">Dashboard</h1>
-          {activeTab !== "settings" && !showOverlay && (
+          {!showOverlay && (
             <HideValuesToggle
               hideValues={hideValues}
               onToggle={() => setHideValues(!hideValues)}
@@ -70,13 +61,6 @@ export function DashboardShell({
           <Plus className="h-5 w-5" />
         </button>
       </div>
-
-      {/* Tab navigation */}
-      <DashboardNav
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        disabled={showOverlay}
-      />
 
       {/* Content */}
       {showOverlay ? (
@@ -94,24 +78,16 @@ export function DashboardShell({
         </>
       ) : (
         <>
-          {activeTab === "portfolio" && (
+          <SchwabConnect
+            isConnected={isConnected}
+            hasCredentials={hasCredentials}
+          />
+          {isConnected && (
             <>
-              <SchwabConnect
-                isConnected={isConnected}
-                hasCredentials={hasCredentials}
-              />
-              {isConnected && (
-                <>
-                  <AccountOverview hideValues={hideValues} />
-                  <PositionsTable hideValues={hideValues} />
-                </>
-              )}
+              <AccountOverview hideValues={hideValues} />
+              <PositionsTable hideValues={hideValues} />
             </>
           )}
-
-          {activeTab === "uploads" && <UploadSection />}
-
-          {activeTab === "settings" && <SettingsPanel />}
         </>
       )}
     </div>

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/supabase/admin";
 import { SiteVersion } from "@/components/site-version";
 import { SiteHeaderAuth } from "@/components/site-header-auth";
+import { SiteHeaderNav } from "@/components/site-header-nav";
 
 export async function SiteHeader() {
   const supabase = await createClient();
@@ -39,23 +40,14 @@ export async function SiteHeader() {
 
         {/* Right: Nav + Auth */}
         <div className="flex items-center gap-2 sm:gap-4">
-          {user && (
-            <nav className="flex items-center gap-1">
-              <Link
-                href="/dashboard"
-                className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                Dashboard
-              </Link>
-              {userIsAdmin && (
-                <Link
-                  href="/admin"
-                  className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  Admin
-                </Link>
-              )}
-            </nav>
+          {user && <SiteHeaderNav />}
+          {user && userIsAdmin && (
+            <Link
+              href="/admin"
+              className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Admin
+            </Link>
           )}
           <SiteHeaderAuth user={user ? { email: user.email ?? "" } : null} />
         </div>
