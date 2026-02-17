@@ -14,6 +14,15 @@ const SUB_TABS: { id: ConnectionsSubTab; label: string }[] = [
   { id: "uploads", label: "Uploads" },
 ];
 
+const STORAGE_KEY = "portsie:connections-tab";
+
+function getStoredTab(): ConnectionsSubTab {
+  if (typeof window === "undefined") return "api";
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored === "api" || stored === "uploads") return stored;
+  return "api";
+}
+
 type SetupView = "list" | "setup";
 
 export function ConnectionsView({
@@ -23,7 +32,7 @@ export function ConnectionsView({
   isConnected: boolean;
   hasCredentials: boolean;
 }) {
-  const [subTab, setSubTab] = useState<ConnectionsSubTab>("api");
+  const [subTab, setSubTab] = useState<ConnectionsSubTab>(getStoredTab);
   const [setupView, setSetupView] = useState<SetupView>("list");
   const [selectedBrokerage, setSelectedBrokerage] = useState<string | null>(
     null
@@ -48,6 +57,7 @@ export function ConnectionsView({
             key={tab.id}
             onClick={() => {
               setSubTab(tab.id);
+              localStorage.setItem(STORAGE_KEY, tab.id);
               setSetupView("list");
               setSelectedBrokerage(null);
             }}
