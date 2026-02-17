@@ -1,12 +1,12 @@
 {
-  "version": "v260217.09 5:23a",
-  "release": 40,
-  "sha": "e98efe02",
-  "fullSha": "e98efe02785ece13ef9d8ea2139f05de156305db",
+  "version": "v260217.10 5:47a",
+  "release": 41,
+  "sha": "c1597a9e",
+  "fullSha": "c1597a9ec9c98332506d045b4e0fc659385adea1",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000038",
-  "pushedAt": "2026-02-17T11:23:16+00",
-  "commits": [{"sha": "e98efe02785ece13ef9d8ea2139f05de156305db", "short_sha": "e98efe02", "author": "rahulio", "message": "Merge branch 'claude/wizardly-brahmagupta'"}, {"sha": "aad2a41b6d1003f679569184246ea9f5824f6233", "short_sha": "aad2a41b", "author": "rahulio", "message": "Holdings-as-truth rearchitecture: add holdings table, reconciliation engine, stored account summaries"}]
+  "machine": "GitHub Actions 1000000039",
+  "pushedAt": "2026-02-17T11:47:56+00",
+  "commits": [{"sha": "c1597a9ec9c98332506d045b4e0fc659385adea1", "short_sha": "c1597a9e", "author": "Rahul", "message": "Add loading text indicators to dashboard skeleton states (#10)"}]
 }
