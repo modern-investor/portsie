@@ -1,12 +1,12 @@
 {
-  "version": "v260217.06 2:39a",
-  "release": 37,
-  "sha": "d2fbc2d7",
-  "fullSha": "d2fbc2d7607a48d8e1e971d70eb49f29ed15b7fe",
+  "version": "v260217.07 2:40a",
+  "release": 38,
+  "sha": "825c4d5a",
+  "fullSha": "825c4d5ad1b5c4e0b5679de262766198a173d835",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000035",
-  "pushedAt": "2026-02-17T08:39:24+00",
-  "commits": [{"sha": "d2fbc2d7607a48d8e1e971d70eb49f29ed15b7fe", "short_sha": "d2fbc2d7", "author": "rahulio", "message": "Add extraction failures tracking and Settings \u2192 Failures tab"}, {"sha": "e3815f98d663fef5031e53be2cfcd3948a2b14a3", "short_sha": "e3815f98", "author": "rahulio", "message": "Persist last-used Connections tab via localStorage"}]
+  "machine": "GitHub Actions 1000000036",
+  "pushedAt": "2026-02-17T08:40:30+00",
+  "commits": [{"sha": "825c4d5ad1b5c4e0b5679de262766198a173d835", "short_sha": "825c4d5a", "author": "rahulio", "message": "Fix upload save loop: add manual Save button and make auto-confirm robust"}]
 }
