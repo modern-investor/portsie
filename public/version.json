@@ -1,12 +1,12 @@
 {
-  "version": "v260217.04 1:24a",
-  "release": 35,
-  "sha": "2bdf6b44",
-  "fullSha": "2bdf6b442f042321873e2f861cc95f5852c1741a",
+  "version": "v260217.05 2:07a",
+  "release": 36,
+  "sha": "003f3098",
+  "fullSha": "003f3098dd889fa66618b61e4b2c740ca9d7e9f0",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000033",
-  "pushedAt": "2026-02-17T07:24:25+00",
-  "commits": [{"sha": "2bdf6b442f042321873e2f861cc95f5852c1741a", "short_sha": "2bdf6b44", "author": "rahulio", "message": "Rename Review \u2192 View button and add smooth scroll to review section"}]
+  "machine": "GitHub Actions 1000000034",
+  "pushedAt": "2026-02-17T08:07:17+00",
+  "commits": [{"sha": "003f3098dd889fa66618b61e4b2c740ca9d7e9f0", "short_sha": "003f3098", "author": "rahulio", "message": "Add processing timestamps and compact metadata format in upload list"}]
 }
