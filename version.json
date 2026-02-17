@@ -1,12 +1,12 @@
 {
-  "version": "v260217.07 2:40a",
-  "release": 38,
-  "sha": "825c4d5a",
-  "fullSha": "825c4d5ad1b5c4e0b5679de262766198a173d835",
+  "version": "v260217.08 2:41a",
+  "release": 39,
+  "sha": "c8a7b203",
+  "fullSha": "c8a7b203d59800a7a622e4d91ff1c4e7ece9eae7",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000036",
-  "pushedAt": "2026-02-17T08:40:30+00",
-  "commits": [{"sha": "825c4d5ad1b5c4e0b5679de262766198a173d835", "short_sha": "825c4d5a", "author": "rahulio", "message": "Fix upload save loop: add manual Save button and make auto-confirm robust"}]
+  "machine": "GitHub Actions 1000000037",
+  "pushedAt": "2026-02-17T08:41:03+00",
+  "commits": [{"sha": "c8a7b203d59800a7a622e4d91ff1c4e7ece9eae7", "short_sha": "c8a7b203", "author": "rahulio", "message": "Fix quiltt migration to be idempotent (IF NOT EXISTS)"}]
 }
