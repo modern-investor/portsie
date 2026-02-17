@@ -1,12 +1,12 @@
 {
-  "version": "v260216.31 9:36p",
-  "release": 31,
-  "sha": "a30482f7",
-  "fullSha": "a30482f7864cdc96cd0f15a89e465d9e799037ac",
+  "version": "v260217.01 12:13a",
+  "release": 32,
+  "sha": "04a36a60",
+  "fullSha": "04a36a60cc3457685b4fe1e90675ece5668b4102",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000029",
-  "pushedAt": "2026-02-17T03:36:04+00",
-  "commits": [{"sha": "a30482f7864cdc96cd0f15a89e465d9e799037ac", "short_sha": "a30482f7", "author": "Rahul", "message": "Fix LLM extraction timeouts and grey out stale errors on reprocess (#8)"}]
+  "machine": "GitHub Actions 1000000030",
+  "pushedAt": "2026-02-17T06:13:36+00",
+  "commits": [{"sha": "04a36a60cc3457685b4fe1e90675ece5668b4102", "short_sha": "04a36a60", "author": "rahulio", "message": "Move top-level nav to site header; split Connections and Settings into separate pages"}, {"sha": "def09f88538ac8e74b4aa9c85e9153444a6021ce", "short_sha": "def09f88", "author": "rahulio", "message": "Move top-level nav (Dashboard, Connections, Settings) to site header; add Connections page with API Connections/Upload sub-tabs"}]
 }
