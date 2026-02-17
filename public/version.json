@@ -1,12 +1,12 @@
 {
-  "version": "v260217.17 9:25a",
-  "release": 48,
-  "sha": "e39a147b",
-  "fullSha": "e39a147b7a0fb27db2f8dd34eca9fd607942331a",
+  "version": "v260217.18 9:47a",
+  "release": 49,
+  "sha": "908ba9c9",
+  "fullSha": "908ba9c91b63be34e537d50a53079906e67875d9",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000046",
-  "pushedAt": "2026-02-17T15:25:41+00",
-  "commits": [{"sha": "e39a147b7a0fb27db2f8dd34eca9fd607942331a", "short_sha": "e39a147b", "author": "rahulio", "message": "Merge branch 'claude/confident-cohen'"}, {"sha": "33c367e5aadb7632fcac2da460ce74542fa51d33", "short_sha": "33c367e5", "author": "rahulio", "message": "Add aggregate accounts, account grouping, and expanded account categories"}]
+  "machine": "GitHub Actions 1000000047",
+  "pushedAt": "2026-02-17T15:47:52+00",
+  "commits": [{"sha": "908ba9c91b63be34e537d50a53079906e67875d9", "short_sha": "908ba9c9", "author": "Rahul", "message": "Fix upload button flashing API connections tab before showing uploads (#11)"}]
 }
