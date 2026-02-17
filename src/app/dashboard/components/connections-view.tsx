@@ -16,8 +16,12 @@ const SUB_TABS: { id: ConnectionsSubTab; label: string }[] = [
 
 const STORAGE_KEY = "portsie:connections-tab";
 
-function getStoredTab(): ConnectionsSubTab {
+function getInitialTab(): ConnectionsSubTab {
   if (typeof window === "undefined") return "api";
+  // URL ?tab= param takes priority (e.g. from dashboard empty-state buttons)
+  const urlTab = new URLSearchParams(window.location.search).get("tab");
+  if (urlTab === "api" || urlTab === "uploads") return urlTab;
+  // Fall back to localStorage
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored === "api" || stored === "uploads") return stored;
   return "api";
@@ -32,7 +36,7 @@ export function ConnectionsView({
   isConnected: boolean;
   hasCredentials: boolean;
 }) {
-  const [subTab, setSubTab] = useState<ConnectionsSubTab>(getStoredTab);
+  const [subTab, setSubTab] = useState<ConnectionsSubTab>(getInitialTab);
   const [setupView, setSetupView] = useState<SetupView>("list");
   const [selectedBrokerage, setSelectedBrokerage] = useState<string | null>(
     null
