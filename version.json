@@ -1,12 +1,12 @@
 {
-  "version": "v260217.13 6:10a",
-  "release": 44,
-  "sha": "c73016f4",
-  "fullSha": "c73016f4e9a43880c2805ff67fd27822dd4e502b",
+  "version": "v260217.14 6:12a",
+  "release": 45,
+  "sha": "fdd40088",
+  "fullSha": "fdd40088b9ac0478f297482fddffa95d0bcd856b",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000042",
-  "pushedAt": "2026-02-17T12:11:00+00",
-  "commits": [{"sha": "c73016f4e9a43880c2805ff67fd27822dd4e502b", "short_sha": "c73016f4", "author": "rahulio", "message": "Restyle Connections sub-tabs from buttons to underline tabs"}]
+  "machine": "GitHub Actions 1000000043",
+  "pushedAt": "2026-02-17T12:12:54+00",
+  "commits": [{"sha": "fdd40088b9ac0478f297482fddffa95d0bcd856b", "short_sha": "fdd40088", "author": "rahulio", "message": "Fix null total_amount crashing transaction writes"}]
 }
