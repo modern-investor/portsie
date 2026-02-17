@@ -1,12 +1,12 @@
 {
-  "version": "v260217.05 2:07a",
-  "release": 36,
-  "sha": "003f3098",
-  "fullSha": "003f3098dd889fa66618b61e4b2c740ca9d7e9f0",
+  "version": "v260217.06 2:39a",
+  "release": 37,
+  "sha": "d2fbc2d7",
+  "fullSha": "d2fbc2d7607a48d8e1e971d70eb49f29ed15b7fe",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000034",
-  "pushedAt": "2026-02-17T08:07:17+00",
-  "commits": [{"sha": "003f3098dd889fa66618b61e4b2c740ca9d7e9f0", "short_sha": "003f3098", "author": "rahulio", "message": "Add processing timestamps and compact metadata format in upload list"}]
+  "machine": "GitHub Actions 1000000035",
+  "pushedAt": "2026-02-17T08:39:24+00",
+  "commits": [{"sha": "d2fbc2d7607a48d8e1e971d70eb49f29ed15b7fe", "short_sha": "d2fbc2d7", "author": "rahulio", "message": "Add extraction failures tracking and Settings \u2192 Failures tab"}, {"sha": "e3815f98d663fef5031e53be2cfcd3948a2b14a3", "short_sha": "e3815f98", "author": "rahulio", "message": "Persist last-used Connections tab via localStorage"}]
 }
