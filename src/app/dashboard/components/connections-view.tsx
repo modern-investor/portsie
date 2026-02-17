@@ -49,9 +49,9 @@ export function ConnectionsView({
   }
 
   return (
-    <div className="space-y-4">
-      {/* Sub-tabs */}
-      <nav className="flex gap-1">
+    <div className="space-y-6">
+      {/* Tabs */}
+      <nav className="flex border-b border-gray-200">
         {SUB_TABS.map((tab) => (
           <button
             key={tab.id}
@@ -62,10 +62,10 @@ export function ConnectionsView({
               setSelectedBrokerage(null);
             }}
             className={cn(
-              "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              "px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
               subTab === tab.id
-                ? "bg-gray-900 text-white"
-                : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                ? "border-gray-900 text-gray-900"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             )}
           >
             {tab.label}
