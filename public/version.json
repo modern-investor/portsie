@@ -1,12 +1,12 @@
 {
-  "version": "v260216.30 9:35p",
-  "release": 30,
-  "sha": "1eaee522",
-  "fullSha": "1eaee522294652d225f74ac61a07fbf0832b0518",
+  "version": "v260216.31 9:36p",
+  "release": 31,
+  "sha": "a30482f7",
+  "fullSha": "a30482f7864cdc96cd0f15a89e465d9e799037ac",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000028",
-  "pushedAt": "2026-02-17T03:35:37+00",
-  "commits": [{"sha": "1eaee522294652d225f74ac61a07fbf0832b0518", "short_sha": "1eaee522", "author": "rahulio", "message": "Restructure nav to Dashboard, Connections, Settings"}]
+  "machine": "GitHub Actions 1000000029",
+  "pushedAt": "2026-02-17T03:36:04+00",
+  "commits": [{"sha": "a30482f7864cdc96cd0f15a89e465d9e799037ac", "short_sha": "a30482f7", "author": "Rahul", "message": "Fix LLM extraction timeouts and grey out stale errors on reprocess (#8)"}]
 }
