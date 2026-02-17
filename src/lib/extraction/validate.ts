@@ -212,6 +212,15 @@ class ExtractionValidator {
     this.errors.push({ path, message, value });
   }
 
+  /**
+   * Add a "soft" error — an individual item that failed validation but
+   * will be dropped from the result rather than failing the whole extraction.
+   * Recorded as a warning so the caller can see what was skipped.
+   */
+  private addItemSkipped(path: string, message: string, value: unknown) {
+    this.warnings.push({ path, message: `Skipped: ${message} (value: ${JSON.stringify(value)})` });
+  }
+
   private addWarning(path: string, message: string) {
     this.warnings.push({ path, message });
   }
@@ -421,7 +430,7 @@ class ExtractionValidator {
     path: string
   ): ExtractionAccount | null {
     if (!isPlainObject(raw)) {
-      this.addError(path, "Expected object", typeof raw);
+      this.addItemSkipped(path, "Expected object", typeof raw);
       return null;
     }
 
@@ -488,14 +497,14 @@ class ExtractionValidator {
     path: string
   ): ExtractionTransaction | null {
     if (!isPlainObject(raw)) {
-      this.addError(path, "Expected object", typeof raw);
+      this.addItemSkipped(path, "Expected object", typeof raw);
       return null;
     }
 
     // transaction_date (required)
     const txDate = coerceDate(raw.transaction_date);
     if (!txDate) {
-      this.addError(
+      this.addItemSkipped(
         `${path}.transaction_date`,
         "Required date in YYYY-MM-DD format",
         raw.transaction_date
@@ -509,7 +518,7 @@ class ExtractionValidator {
     // action (required)
     const action = normalizeAction(raw.action);
     if (!action) {
-      this.addError(
+      this.addItemSkipped(
         `${path}.action`,
         `Invalid action — must be one of: ${TRANSACTION_ACTIONS.join(", ")}`,
         raw.action
@@ -570,14 +579,14 @@ class ExtractionValidator {
     path: string
   ): ExtractionPosition | null {
     if (!isPlainObject(raw)) {
-      this.addError(path, "Expected object", typeof raw);
+      this.addItemSkipped(path, "Expected object", typeof raw);
       return null;
     }
 
     // snapshot_date (required)
     const snapDate = coerceDate(raw.snapshot_date);
     if (!snapDate) {
-      this.addError(
+      this.addItemSkipped(
         `${path}.snapshot_date`,
         "Required date in YYYY-MM-DD format",
         raw.snapshot_date
@@ -588,14 +597,14 @@ class ExtractionValidator {
     // symbol (required)
     const symbol = typeof raw.symbol === "string" ? raw.symbol.trim() : null;
     if (!symbol) {
-      this.addError(`${path}.symbol`, "Required string", raw.symbol);
+      this.addItemSkipped(`${path}.symbol`, "Required string", raw.symbol);
       return null;
     }
 
     // quantity (required)
     const quantity = coerceNumber(raw.quantity);
     if (quantity === null) {
-      this.addError(`${path}.quantity`, "Required number", raw.quantity);
+      this.addItemSkipped(`${path}.quantity`, "Required number", raw.quantity);
       return null;
     }
 
@@ -621,14 +630,14 @@ class ExtractionValidator {
     path: string
   ): ExtractionBalance | null {
     if (!isPlainObject(raw)) {
-      this.addError(path, "Expected object", typeof raw);
+      this.addItemSkipped(path, "Expected object", typeof raw);
       return null;
     }
 
     // snapshot_date (required)
     const snapDate = coerceDate(raw.snapshot_date);
     if (!snapDate) {
-      this.addError(
+      this.addItemSkipped(
         `${path}.snapshot_date`,
         "Required date in YYYY-MM-DD format",
         raw.snapshot_date
