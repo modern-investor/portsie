@@ -1,12 +1,12 @@
 {
-  "version": "v260217.12 6:01a",
-  "release": 43,
-  "sha": "680edbad",
-  "fullSha": "680edbad90926f914890b0750296f4dcd1e8748f",
+  "version": "v260217.13 6:10a",
+  "release": 44,
+  "sha": "c73016f4",
+  "fullSha": "c73016f4e9a43880c2805ff67fd27822dd4e502b",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000041",
-  "pushedAt": "2026-02-17T12:01:45+00",
-  "commits": [{"sha": "680edbad90926f914890b0750296f4dcd1e8748f", "short_sha": "680edbad", "author": "rahulio", "message": "Multi-account extraction: support 54+ accounts from a single Schwab summary upload"}]
+  "machine": "GitHub Actions 1000000042",
+  "pushedAt": "2026-02-17T12:11:00+00",
+  "commits": [{"sha": "c73016f4e9a43880c2805ff67fd27822dd4e502b", "short_sha": "c73016f4", "author": "rahulio", "message": "Restyle Connections sub-tabs from buttons to underline tabs"}]
 }
