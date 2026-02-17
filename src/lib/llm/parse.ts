@@ -1,8 +1,8 @@
-import type { LLMExtractionResult } from "../upload/types";
+import type { LLMExtractionResult, ExtractedAccount } from "../upload/types";
 
 /**
  * Parse raw text from Claude (API or CLI) into a validated LLMExtractionResult.
- * Handles markdown fence stripping and structural validation.
+ * Handles markdown fence stripping, structural validation, and multi-account normalization.
  * Shared by both llm-api.ts and llm-cli.ts.
  */
 export function parseAndValidateExtraction(rawText: string): LLMExtractionResult {
@@ -32,7 +32,48 @@ export function parseAndValidateExtraction(rawText: string): LLMExtractionResult
     );
   }
 
-  // Structural validation with defaults
+  // ── Multi-account normalization ──
+  // If the LLM returned an accounts array, validate each entry and synthesize
+  // top-level fields for backward compatibility with single-account code paths.
+  if (Array.isArray(result.accounts) && result.accounts.length > 0) {
+    for (const acct of result.accounts as ExtractedAccount[]) {
+      if (!acct.account_info) {
+        acct.account_info = {};
+      }
+      if (!Array.isArray(acct.transactions)) {
+        acct.transactions = [];
+      }
+      if (!Array.isArray(acct.positions)) {
+        acct.positions = [];
+      }
+      if (!Array.isArray(acct.balances)) {
+        acct.balances = [];
+      }
+    }
+
+    // Synthesize top-level account_info from the first account if missing
+    if (!result.account_info) {
+      result.account_info = result.accounts[0].account_info;
+    }
+
+    // Synthesize top-level flat arrays by merging all per-account data
+    if (!Array.isArray(result.transactions) || result.transactions.length === 0) {
+      result.transactions = result.accounts.flatMap(a => a.transactions);
+    }
+    if (!Array.isArray(result.positions) || result.positions.length === 0) {
+      result.positions = result.accounts.flatMap(a => a.positions);
+    }
+    if (!Array.isArray(result.balances) || result.balances.length === 0) {
+      result.balances = result.accounts.flatMap(a => a.balances);
+    }
+  }
+
+  // Default unallocated_positions
+  if (!Array.isArray(result.unallocated_positions)) {
+    result.unallocated_positions = [];
+  }
+
+  // ── Structural validation with defaults (single-account or synthesized) ──
   if (!result.account_info) {
     throw new Error("Invalid extraction result: missing account_info");
   }

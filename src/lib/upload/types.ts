@@ -75,9 +75,24 @@ export interface DetectedAccountInfo {
   account_type?: string | null;
   institution_name?: string | null;
   account_nickname?: string | null;
+  account_group?: string | null;
+}
+
+/** Per-account container for multi-account extractions */
+export interface ExtractedAccount {
+  account_info: DetectedAccountInfo;
+  transactions: ExtractedTransaction[];
+  positions: ExtractedPosition[];
+  balances: ExtractedBalance[];
 }
 
 export interface LLMExtractionResult {
+  // Multi-account: per-account data (primary structure for multi-account docs)
+  accounts?: ExtractedAccount[];
+  // Positions from aggregate sections that can't be attributed to a specific account
+  unallocated_positions?: ExtractedPosition[];
+
+  // Single-account / backward-compat: always populated (synthesized from accounts[] if needed)
   account_info: DetectedAccountInfo;
   statement_start_date?: string | null;
   statement_end_date?: string | null;

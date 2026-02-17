@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { LLMExtractionResult } from "./types";
+import type { LLMExtractionResult, ExtractedAccount } from "./types";
 import type { ReconciliationResult } from "@/lib/holdings/types";
+import type { AutoLinkResult } from "./account-matcher";
 import { reconcileHoldings } from "@/lib/holdings/reconcile";
 import { updateAccountSummary } from "@/lib/holdings/account-summary";
 
@@ -240,5 +241,123 @@ export async function writeExtractedData(
     holdingsClosed,
     snapshotsWritten,
     transactionsCreated,
+  };
+}
+
+// ── Multi-account result type ──
+
+export interface MultiAccountWriteResult {
+  accountResults: Array<{
+    accountId: string;
+    accountNickname?: string;
+    reconciliation: ReconciliationResult;
+  }>;
+  totalTransactionsCreated: number;
+  totalSnapshotsWritten: number;
+  totalHoldingsCreated: number;
+  totalHoldingsClosed: number;
+  linkedAccountIds: string[];
+}
+
+/**
+ * Writes multi-account extraction results to the canonical database tables.
+ * Loops over each account in the extraction and calls writeExtractedData for each.
+ *
+ * The uploaded_statements record is updated once at the end with aggregate totals
+ * and the list of all linked account IDs.
+ */
+export async function writeMultiAccountData(
+  supabase: SupabaseClient,
+  userId: string,
+  statementId: string,
+  extractedData: LLMExtractionResult,
+  accountMap: Map<number, AutoLinkResult>
+): Promise<MultiAccountWriteResult> {
+  const accounts = extractedData.accounts ?? [];
+  const accountResults: MultiAccountWriteResult["accountResults"] = [];
+  let totalTransactionsCreated = 0;
+  let totalSnapshotsWritten = 0;
+  let totalHoldingsCreated = 0;
+  let totalHoldingsClosed = 0;
+  const linkedAccountIds: string[] = [];
+
+  for (let i = 0; i < accounts.length; i++) {
+    const acct: ExtractedAccount = accounts[i];
+    const linkResult = accountMap.get(i);
+    if (!linkResult) continue;
+
+    const accountId = linkResult.accountId;
+    linkedAccountIds.push(accountId);
+
+    // Build a single-account LLMExtractionResult for the existing writeExtractedData
+    const singleAccountData: LLMExtractionResult = {
+      account_info: acct.account_info,
+      statement_start_date: extractedData.statement_start_date,
+      statement_end_date: extractedData.statement_end_date,
+      transactions: acct.transactions,
+      positions: acct.positions,
+      balances: acct.balances,
+      confidence: extractedData.confidence,
+      notes: [],
+    };
+
+    // Only write if this account has actual data (positions, transactions, or balances)
+    const hasData =
+      acct.positions.length > 0 ||
+      acct.transactions.length > 0 ||
+      acct.balances.length > 0;
+
+    if (hasData) {
+      try {
+        const result = await writeExtractedData(
+          supabase,
+          userId,
+          accountId,
+          statementId,
+          singleAccountData
+        );
+
+        accountResults.push({
+          accountId,
+          accountNickname: linkResult.accountNickname,
+          reconciliation: result,
+        });
+
+        totalTransactionsCreated += result.transactionsCreated;
+        totalSnapshotsWritten += result.snapshotsWritten;
+        totalHoldingsCreated += result.holdingsCreated;
+        totalHoldingsClosed += result.holdingsClosed;
+      } catch (err) {
+        console.error(
+          `Failed to write data for account ${accountId} (${linkResult.accountNickname}):`,
+          err
+        );
+        // Continue with other accounts even if one fails
+      }
+    }
+  }
+
+  // Update uploaded_statements with aggregate info
+  await supabase
+    .from("uploaded_statements")
+    .update({
+      account_id: linkedAccountIds[0] ?? null,
+      linked_account_ids: linkedAccountIds,
+      parse_status: "completed",
+      confirmed_at: new Date().toISOString(),
+      transactions_created: totalTransactionsCreated,
+      positions_created: totalSnapshotsWritten,
+      statement_start_date: extractedData.statement_start_date ?? null,
+      statement_end_date: extractedData.statement_end_date ?? null,
+    })
+    .eq("id", statementId);
+
+  return {
+    accountResults,
+    totalTransactionsCreated,
+    totalSnapshotsWritten,
+    totalHoldingsCreated,
+    totalHoldingsClosed,
+    linkedAccountIds,
   };
 }

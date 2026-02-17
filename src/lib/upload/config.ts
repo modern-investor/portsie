@@ -25,6 +25,6 @@ export const UPLOAD_CONFIG = {
   /** Claude model used for extraction (Sonnet for cost/quality balance) */
   claudeModel: "claude-sonnet-4-20250514" as const,
 
-  /** Max tokens for Claude response */
-  claudeMaxTokens: 16384,
+  /** Max tokens for Claude response (32K for multi-account summaries with many positions) */
+  claudeMaxTokens: 32768,
 } as const;

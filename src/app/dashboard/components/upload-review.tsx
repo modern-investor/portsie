@@ -4,6 +4,7 @@ import { useState } from "react";
 import type {
   UploadedStatement,
   LLMExtractionResult,
+  ExtractedAccount,
 } from "@/lib/upload/types";
 
 const CONFIDENCE_STYLES = {
@@ -14,6 +15,97 @@ const CONFIDENCE_STYLES = {
   },
   low: { label: "Low confidence", className: "text-red-700 bg-red-100" },
 };
+
+function formatCurrency(value: number): string {
+  const abs = Math.abs(value);
+  const formatted = abs.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return value < 0 ? `-$${formatted}` : `$${formatted}`;
+}
+
+/** Summarize accounts for the multi-account header card */
+function AccountsSummary({ accounts }: { accounts: ExtractedAccount[] }) {
+  // Group by account_group
+  const groups = new Map<string, ExtractedAccount[]>();
+  for (const acct of accounts) {
+    const group = acct.account_info.account_group || "Other";
+    const list = groups.get(group) ?? [];
+    list.push(acct);
+    groups.set(group, list);
+  }
+
+  return (
+    <div className="space-y-3">
+      <h4 className="text-sm font-semibold text-gray-700">
+        {accounts.length} Accounts Detected
+      </h4>
+      <div className="max-h-64 overflow-auto rounded-md border">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="sticky top-0 border-b bg-gray-50 text-left text-gray-500">
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Account</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Type</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Institution</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Value</th>
+              <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2 text-right">Positions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...groups.entries()].map(([group, accts]) => (
+              <AccountGroupRows key={group} group={group} accounts={accts} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function AccountGroupRows({ group, accounts }: { group: string; accounts: ExtractedAccount[] }) {
+  return (
+    <>
+      <tr className="bg-gray-100">
+        <td colSpan={5} className="px-2 py-1 text-xs font-semibold text-gray-600 sm:px-3">
+          {group}
+        </td>
+      </tr>
+      {accounts.map((acct, i) => {
+        const balance = acct.balances[0];
+        const value = balance?.liquidation_value ?? null;
+        return (
+          <tr key={i} className="border-b last:border-b-0">
+            <td className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">
+              {acct.account_info.account_nickname || "—"}
+              {acct.account_info.account_number && (
+                <span className="ml-1 text-gray-400">
+                  ...{acct.account_info.account_number.replace(/^\.+/, "").slice(-3)}
+                </span>
+              )}
+            </td>
+            <td className="px-2 py-1.5 sm:px-3 sm:py-2">
+              <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-gray-600">
+                {acct.account_info.account_type || "—"}
+              </span>
+            </td>
+            <td className="px-2 py-1.5 text-gray-500 sm:px-3 sm:py-2">
+              {acct.account_info.institution_name || "—"}
+            </td>
+            <td className={`px-2 py-1.5 text-right font-medium sm:px-3 sm:py-2 ${
+              value !== null && value < 0 ? "text-red-600" : ""
+            }`}>
+              {value !== null ? formatCurrency(value) : "—"}
+            </td>
+            <td className="px-2 py-1.5 text-right text-gray-500 sm:px-3 sm:py-2">
+              {acct.positions.length || "—"}
+            </td>
+          </tr>
+        );
+      })}
+    </>
+  );
+}
 
 export function UploadReview({
   upload,
@@ -68,9 +160,12 @@ export function UploadReview({
   if (!extraction) return null;
 
   const confidence = CONFIDENCE_STYLES[extraction.confidence];
+  const isMultiAccount =
+    Array.isArray(extraction.accounts) && extraction.accounts.length > 1;
   const totalTransactions = extraction.transactions.length;
   const totalPositions = extraction.positions.length;
   const totalBalances = extraction.balances.length;
+  const totalAccounts = extraction.accounts?.length ?? 1;
 
   return (
     <div className="space-y-4 rounded-lg border bg-white p-4 sm:p-6">
@@ -113,8 +208,13 @@ export function UploadReview({
         </button>
       </div>
 
-      {/* Account info detected */}
-      {extraction.account_info && (
+      {/* Multi-account summary */}
+      {isMultiAccount && extraction.accounts && (
+        <AccountsSummary accounts={extraction.accounts} />
+      )}
+
+      {/* Single-account info detected */}
+      {!isMultiAccount && extraction.account_info && (
         <div className="rounded-md bg-gray-50 p-3 text-sm">
           <span className="font-medium text-gray-700">Detected account: </span>
           <span className="text-gray-600">
@@ -145,6 +245,11 @@ export function UploadReview({
 
       {/* Summary counts */}
       <div className="flex flex-wrap gap-2 text-sm sm:gap-4">
+        {isMultiAccount && (
+          <span className="rounded-md bg-indigo-50 px-3 py-1 text-indigo-700">
+            {totalAccounts} account{totalAccounts !== 1 ? "s" : ""}
+          </span>
+        )}
         <span className="rounded-md bg-blue-50 px-3 py-1 text-blue-700">
           {totalTransactions} transaction{totalTransactions !== 1 ? "s" : ""}
         </span>
@@ -286,8 +391,8 @@ export function UploadReview({
         </div>
       )}
 
-      {/* Balance snapshots */}
-      {totalBalances > 0 && (
+      {/* Balance snapshots (only for single-account; multi-account shows balances in the accounts table) */}
+      {totalBalances > 0 && !isMultiAccount && (
         <div className="space-y-2">
           <h4 className="text-sm font-semibold text-gray-700">
             Balance Snapshots
@@ -300,27 +405,20 @@ export function UploadReview({
                   <p>
                     <span className="text-gray-500">Total: </span>
                     <span className="font-medium">
-                      $
-                      {b.liquidation_value.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                      })}
+                      {formatCurrency(b.liquidation_value)}
                     </span>
                   </p>
                 )}
                 {b.cash_balance != null && (
                   <p>
-                    <span className="text-gray-500">Cash: </span>$
-                    {b.cash_balance.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                    })}
+                    <span className="text-gray-500">Cash: </span>
+                    {formatCurrency(b.cash_balance)}
                   </p>
                 )}
                 {b.buying_power != null && (
                   <p>
-                    <span className="text-gray-500">Buying power: </span>$
-                    {b.buying_power.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                    })}
+                    <span className="text-gray-500">Buying power: </span>
+                    {formatCurrency(b.buying_power)}
                   </p>
                 )}
               </div>
@@ -333,7 +431,7 @@ export function UploadReview({
       <div className="flex flex-wrap items-center gap-2 border-t pt-4 sm:gap-3">
         {upload.confirmed_at ? (
           <span className="rounded-md bg-green-100 px-3 py-2 text-sm font-medium text-green-700">
-            Saved to account
+            Saved to {isMultiAccount ? `${totalAccounts} accounts` : "account"}
           </span>
         ) : (
           <button

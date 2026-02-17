@@ -1,5 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AccountMatch, DetectedAccountInfo } from "./types";
+import type { AccountMatch, DetectedAccountInfo, ExtractedAccount } from "./types";
+
+/**
+ * Map account_type to the broader account_category for the DB constraint.
+ */
+function accountTypeToCategory(accountType: string | null | undefined): string {
+  if (!accountType) return "brokerage";
+  const t = accountType.toLowerCase();
+  if (["checking", "savings"].includes(t)) return "banking";
+  if (["credit_card"].includes(t)) return "credit";
+  if (["mortgage", "heloc", "auto_loan"].includes(t)) return "loan";
+  if (["real_estate"].includes(t)) return "real_estate";
+  return "brokerage";
+}
 
 /**
  * Finds existing user accounts that match the LLM-detected account info.
@@ -38,6 +51,16 @@ export async function findMatchingAccounts(
         )
       ) {
         matchReason = "Partial account number match (last 4 digits)";
+      } else if (
+        // Also match on last 3 digits (Schwab summaries often show ...XXX)
+        account.schwab_account_number.endsWith(
+          detectedInfo.account_number.slice(-3)
+        ) ||
+        detectedInfo.account_number.endsWith(
+          account.schwab_account_number.slice(-3)
+        )
+      ) {
+        matchReason = "Partial account number match (last 3 digits)";
       }
     }
 
@@ -114,6 +137,8 @@ export async function createManualAccount(
         accountInfo.account_nickname ||
         `${accountInfo.institution_name || "Unknown"} Account`,
       institution_name: accountInfo.institution_name || "Unknown",
+      account_group: accountInfo.account_group ?? null,
+      account_category: accountTypeToCategory(accountInfo.account_type),
       is_active: true,
     })
     .select("id")
@@ -194,4 +219,26 @@ export async function autoLinkOrCreateAccount(
       detectedInfo.account_nickname ||
       `${detectedInfo.institution_name || "Unknown"} Account`,
   };
+}
+
+/**
+ * Process multiple accounts from a multi-account extraction.
+ * Fetches existing accounts once, then matches or creates each extracted account.
+ * Returns a map from account index → AutoLinkResult.
+ */
+export async function autoLinkOrCreateMultipleAccounts(
+  supabase: SupabaseClient,
+  userId: string,
+  extractedAccounts: ExtractedAccount[]
+): Promise<Map<number, AutoLinkResult>> {
+  const results = new Map<number, AutoLinkResult>();
+
+  // Process each account sequentially to avoid race conditions on account creation
+  for (let i = 0; i < extractedAccounts.length; i++) {
+    const acctInfo = extractedAccounts[i].account_info;
+    const result = await autoLinkOrCreateAccount(supabase, userId, acctInfo);
+    results.set(i, result);
+  }
+
+  return results;
 }

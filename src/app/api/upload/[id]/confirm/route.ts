@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { writeExtractedData } from "@/lib/upload/data-writer";
-import { createManualAccount } from "@/lib/upload/account-matcher";
-import type { DetectedAccountInfo } from "@/lib/upload/types";
+import { writeExtractedData, writeMultiAccountData } from "@/lib/upload/data-writer";
+import { createManualAccount, autoLinkOrCreateMultipleAccounts } from "@/lib/upload/account-matcher";
+import type { DetectedAccountInfo, LLMExtractionResult } from "@/lib/upload/types";
 
 /** POST /api/upload/[id]/confirm — Confirm extracted data and write to canonical tables */
 export async function POST(
@@ -45,48 +45,82 @@ export async function POST(
     );
   }
 
+  const extractedData = statement.extracted_data as LLMExtractionResult;
+
   // Allow re-confirmation (e.g. after re-processing)
 
-  // Determine the target account
-  let targetAccountId = accountId || statement.account_id;
-
-  if (!targetAccountId && createNewAccount) {
-    try {
-      targetAccountId = await createManualAccount(supabase, user.id, {
-        account_type:
-          accountInfo?.account_type ??
-          statement.detected_account_info?.account_type,
-        institution_name:
-          accountInfo?.institution_name ??
-          statement.detected_account_info?.institution_name,
-        account_nickname:
-          accountInfo?.account_nickname ??
-          statement.detected_account_info?.account_nickname,
-      });
-    } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "Failed to create account";
-      return NextResponse.json({ error: msg }, { status: 500 });
-    }
-  }
-
-  if (!targetAccountId) {
-    return NextResponse.json(
-      {
-        error:
-          "No account selected. Choose an existing account or create a new one.",
-      },
-      { status: 400 }
-    );
-  }
+  // Detect multi-account extraction
+  const isMultiAccount =
+    Array.isArray(extractedData.accounts) &&
+    extractedData.accounts.length > 1;
 
   try {
+    if (isMultiAccount) {
+      // ── Multi-account re-confirmation ──
+      const accountMap = await autoLinkOrCreateMultipleAccounts(
+        supabase,
+        user.id,
+        extractedData.accounts!
+      );
+
+      const writeResult = await writeMultiAccountData(
+        supabase,
+        user.id,
+        id,
+        extractedData,
+        accountMap
+      );
+
+      return NextResponse.json({
+        success: true,
+        accountsCreated: extractedData.accounts!.length,
+        linkedAccountIds: writeResult.linkedAccountIds,
+        transactionsCreated: writeResult.totalTransactionsCreated,
+        positionsCreated: writeResult.totalSnapshotsWritten,
+        holdingsCreated: writeResult.totalHoldingsCreated,
+        holdingsClosed: writeResult.totalHoldingsClosed,
+      });
+    }
+
+    // ── Single-account path (existing logic) ──
+    let targetAccountId = accountId || statement.account_id;
+
+    if (!targetAccountId && createNewAccount) {
+      try {
+        targetAccountId = await createManualAccount(supabase, user.id, {
+          account_type:
+            accountInfo?.account_type ??
+            statement.detected_account_info?.account_type,
+          institution_name:
+            accountInfo?.institution_name ??
+            statement.detected_account_info?.institution_name,
+          account_nickname:
+            accountInfo?.account_nickname ??
+            statement.detected_account_info?.account_nickname,
+        });
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "Failed to create account";
+        return NextResponse.json({ error: msg }, { status: 500 });
+      }
+    }
+
+    if (!targetAccountId) {
+      return NextResponse.json(
+        {
+          error:
+            "No account selected. Choose an existing account or create a new one.",
+        },
+        { status: 400 }
+      );
+    }
+
     const result = await writeExtractedData(
       supabase,
       user.id,
       targetAccountId,
       id,
-      statement.extracted_data
+      extractedData
     );
 
     return NextResponse.json({

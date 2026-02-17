@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { processFileForLLM } from "@/lib/upload/file-processor";
 import { extractFinancialData } from "@/lib/llm/dispatcher";
-import { autoLinkOrCreateAccount } from "@/lib/upload/account-matcher";
-import { writeExtractedData } from "@/lib/upload/data-writer";
+import { autoLinkOrCreateAccount, autoLinkOrCreateMultipleAccounts } from "@/lib/upload/account-matcher";
+import { writeExtractedData, writeMultiAccountData } from "@/lib/upload/data-writer";
 import { getLLMSettings } from "@/lib/llm/settings";
 import type { UploadFileType } from "@/lib/upload/types";
 import type { AutoLinkResult } from "@/lib/upload/account-matcher";
@@ -89,65 +89,108 @@ export async function POST(
 
     const parseStatus = hasData ? "completed" : "partial";
 
-    // Auto-link/create account and auto-confirm
+    // Detect multi-account extraction
+    const isMultiAccount =
+      Array.isArray(extractionResult.accounts) &&
+      extractionResult.accounts.length > 1;
+
+    // Auto-link/create account(s) and auto-confirm
     let autoLinkResult: AutoLinkResult | null = null;
     let autoConfirmed = false;
     let autoConfirmError: string | null = null;
     let transactionsCreated = 0;
     let positionsCreated = 0;
+    let accountsCreated = 0;
+    let linkedAccountIds: string[] = [];
 
     if (hasData) {
       try {
-        // If re-processing an already-confirmed upload, reuse the existing account
-        let accountId: string | null = null;
-
-        if (statement.account_id && statement.confirmed_at) {
-          const { data: existingAccount } = await supabase
-            .from("accounts")
-            .select("id")
-            .eq("id", statement.account_id)
-            .eq("is_active", true)
-            .single();
-
-          if (existingAccount) {
-            const existingId: string = existingAccount.id;
-            accountId = existingId;
-            autoLinkResult = {
-              accountId: existingId,
-              action: "matched",
-              matchReason: "Previously linked account",
-            };
-          }
-        }
-
-        // No existing link — auto-match or create
-        if (!accountId) {
-          // Use detected account info, or fall back to filename-based info
-          const accountInfo = extractionResult.account_info ?? {
-            institution_name: "Unknown",
-            account_type: null,
-            account_number: null,
-            account_nickname: statement.filename,
-          };
-          autoLinkResult = await autoLinkOrCreateAccount(
+        if (isMultiAccount) {
+          // ── Multi-account path ──
+          const accountMap = await autoLinkOrCreateMultipleAccounts(
             supabase,
             user.id,
-            accountInfo
+            extractionResult.accounts!
           );
-          accountId = autoLinkResult.accountId;
-        }
 
-        // Write data to canonical tables
-        const writeResult = await writeExtractedData(
-          supabase,
-          user.id,
-          accountId,
-          id,
-          extractionResult
-        );
-        transactionsCreated = writeResult.transactionsCreated;
-        positionsCreated = writeResult.snapshotsWritten;
-        autoConfirmed = true;
+          const writeResult = await writeMultiAccountData(
+            supabase,
+            user.id,
+            id,
+            extractionResult,
+            accountMap
+          );
+
+          transactionsCreated = writeResult.totalTransactionsCreated;
+          positionsCreated = writeResult.totalSnapshotsWritten;
+          accountsCreated = extractionResult.accounts!.length;
+          linkedAccountIds = writeResult.linkedAccountIds;
+          autoConfirmed = true;
+
+          // Set autoLinkResult to the first account for backward compat
+          const firstLink = accountMap.get(0);
+          if (firstLink) {
+            autoLinkResult = {
+              accountId: firstLink.accountId,
+              action: firstLink.action,
+              matchReason: `Multi-account: ${accountsCreated} accounts processed`,
+              accountNickname: firstLink.accountNickname,
+            };
+          }
+        } else {
+          // ── Single-account path (existing logic) ──
+          let accountId: string | null = null;
+
+          // If re-processing an already-confirmed upload, reuse the existing account
+          if (statement.account_id && statement.confirmed_at) {
+            const { data: existingAccount } = await supabase
+              .from("accounts")
+              .select("id")
+              .eq("id", statement.account_id)
+              .eq("is_active", true)
+              .single();
+
+            if (existingAccount) {
+              const existingId: string = existingAccount.id;
+              accountId = existingId;
+              autoLinkResult = {
+                accountId: existingId,
+                action: "matched",
+                matchReason: "Previously linked account",
+              };
+            }
+          }
+
+          // No existing link — auto-match or create
+          if (!accountId) {
+            const accountInfo = extractionResult.account_info ?? {
+              institution_name: "Unknown",
+              account_type: null,
+              account_number: null,
+              account_nickname: statement.filename,
+            };
+            autoLinkResult = await autoLinkOrCreateAccount(
+              supabase,
+              user.id,
+              accountInfo
+            );
+            accountId = autoLinkResult.accountId;
+          }
+
+          // Write data to canonical tables
+          const writeResult = await writeExtractedData(
+            supabase,
+            user.id,
+            accountId,
+            id,
+            extractionResult
+          );
+          transactionsCreated = writeResult.transactionsCreated;
+          positionsCreated = writeResult.snapshotsWritten;
+          linkedAccountIds = [accountId];
+          accountsCreated = 1;
+          autoConfirmed = true;
+        }
       } catch (linkErr) {
         // Auto-link/confirm failed — save extraction results anyway
         autoConfirmError =
@@ -157,9 +200,9 @@ export async function POST(
     }
 
     // Save extraction results to the database
-    // Note: writeExtractedData already sets confirmed_at, account_id, and
-    // parse_status if auto-confirm succeeded. This update ensures extraction
-    // metadata is saved regardless.
+    // Note: writeExtractedData/writeMultiAccountData already set confirmed_at,
+    // account_id, and parse_status if auto-confirm succeeded. This update ensures
+    // extraction metadata is saved regardless.
     await supabase
       .from("uploaded_statements")
       .update({
@@ -169,6 +212,7 @@ export async function POST(
         raw_llm_response: rawResponse,
         detected_account_info: extractionResult.account_info,
         account_id: autoLinkResult?.accountId ?? null,
+        linked_account_ids: linkedAccountIds,
         statement_start_date: extractionResult.statement_start_date,
         statement_end_date: extractionResult.statement_end_date,
         parse_error: autoConfirmError,
@@ -184,6 +228,8 @@ export async function POST(
       autoConfirmError,
       transactionsCreated,
       positionsCreated,
+      accountsCreated,
+      linkedAccountIds,
       parseStatus,
     });
   } catch (err) {
