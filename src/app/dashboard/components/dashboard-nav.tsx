@@ -1,13 +1,13 @@
 "use client";
 
-import { BarChart3, Upload, Settings } from "lucide-react";
+import { BarChart3, Link2, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type Tab = "portfolio" | "uploads" | "settings";
+export type Tab = "dashboard" | "connections" | "settings";
 
 const tabs: { id: Tab; label: string; icon: typeof BarChart3 }[] = [
-  { id: "portfolio", label: "Portfolio", icon: BarChart3 },
-  { id: "uploads", label: "Uploads", icon: Upload },
+  { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+  { id: "connections", label: "Connections", icon: Link2 },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
