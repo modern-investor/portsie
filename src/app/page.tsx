@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fetchStyleGuide } from "@/lib/style-guide/server";
+import { WaitlistForm } from "@/components/waitlist-form";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -38,15 +39,23 @@ export default async function Home() {
           />
         </div>
 
+        {/* Tagline */}
+        <p className="text-muted-foreground text-base whitespace-pre-line">
+          {branding.tagline}
+        </p>
+
         {/* Slogan */}
-        <h1 className="text-2xl font-semibold leading-snug tracking-tight text-foreground">
+        <h1 className="text-2xl font-semibold leading-snug tracking-tight text-foreground whitespace-pre-line">
           {branding.slogan}
         </h1>
 
-        {/* Tagline */}
-        <p className="text-muted-foreground text-base">
-          {branding.tagline}
-        </p>
+        {/* Waiting list signup */}
+        <div className="space-y-2 pt-2">
+          <p className="text-muted-foreground text-sm">
+            Get on the waiting list
+          </p>
+          <WaitlistForm />
+        </div>
 
         {/* Auth actions */}
         <div className="flex flex-col gap-3 pt-2">
