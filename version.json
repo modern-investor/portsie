@@ -1,12 +1,12 @@
 {
-  "version": "v260217.10 5:47a",
-  "release": 41,
-  "sha": "c1597a9e",
-  "fullSha": "c1597a9ec9c98332506d045b4e0fc659385adea1",
+  "version": "v260217.11 6:00a",
+  "release": 42,
+  "sha": "5ae6a50c",
+  "fullSha": "5ae6a50c4a737e05485ea9da59d35372973ae01a",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000039",
-  "pushedAt": "2026-02-17T11:47:56+00",
-  "commits": [{"sha": "c1597a9ec9c98332506d045b4e0fc659385adea1", "short_sha": "c1597a9e", "author": "Rahul", "message": "Add loading text indicators to dashboard skeleton states (#10)"}]
+  "machine": "GitHub Actions 1000000040",
+  "pushedAt": "2026-02-17T12:00:41+00",
+  "commits": [{"sha": "5ae6a50c4a737e05485ea9da59d35372973ae01a", "short_sha": "5ae6a50c", "author": "rahulio", "message": "Auto-process uploads: trigger LLM extraction immediately after file upload"}]
 }
