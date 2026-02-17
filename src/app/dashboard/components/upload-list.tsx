@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { UploadedStatement } from "@/lib/upload/types";
 
 const STATUS_STYLES: Record<
@@ -11,7 +11,7 @@ const STATUS_STYLES: Record<
   queued: { label: "Queued", className: "bg-yellow-100 text-yellow-700" },
   processing: {
     label: "Processing",
-    className: "bg-blue-100 text-blue-700 animate-pulse",
+    className: "bg-blue-100 text-blue-700",
   },
   completed: { label: "Extracted", className: "bg-green-100 text-green-700" },
   partial: {
@@ -83,6 +83,52 @@ function describeContent(upload: UploadedStatement): string | null {
   if (data.balances.length > 0)
     parts.push(`${data.balances.length} bal`);
   return parts.length > 0 ? parts.join(", ") : null;
+}
+
+/** Spinner icon for active processing */
+function Spinner({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      className={`animate-spin ${className}`}
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <circle
+        cx="8"
+        cy="8"
+        r="6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeOpacity="0.25"
+      />
+      <path
+        d="M14 8a6 6 0 00-6-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** Live elapsed timer that ticks every second */
+function ElapsedTimer({ since }: { since: string }) {
+  const [elapsed, setElapsed] = useState(() =>
+    Math.floor((Date.now() - new Date(since).getTime()) / 1000)
+  );
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - new Date(since).getTime()) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [since]);
+
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  const display = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+
+  return <span className="tabular-nums">{display}</span>;
 }
 
 export function UploadList({
@@ -322,9 +368,13 @@ export function UploadList({
 
             {/* Status badge */}
             <span
-              className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}
             >
+              {isProcessing && <Spinner className="h-3 w-3" />}
               {isConfirmed ? "Saved" : status.label}
+              {isProcessing && timestamps[upload.id]?.s && (
+                <ElapsedTimer since={timestamps[upload.id].s!} />
+              )}
             </span>
 
             {/* Actions — fixed width to prevent layout shift */}
