@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { PortfolioView } from "./portfolio-view";
 import { HideValuesToggle } from "./hide-values-toggle";
 
@@ -12,6 +13,7 @@ export function DashboardShell({
   hasCredentials: boolean;
 }) {
   const [hideValues, setHideValues] = useState(false);
+  const router = useRouter();
 
   function handleNavigateTab(tab: string) {
     if (tab.startsWith("connections")) {
@@ -19,7 +21,7 @@ export function DashboardShell({
       const url = subTab
         ? `/dashboard/connections?tab=${subTab}`
         : "/dashboard/connections";
-      window.location.href = url;
+      router.push(url);
     }
   }
 

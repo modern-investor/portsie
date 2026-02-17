@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SchwabConnect } from "./schwab-connect";
 import { BrokerageSelection } from "./brokerage-selection";
@@ -16,17 +17,6 @@ const SUB_TABS: { id: ConnectionsSubTab; label: string }[] = [
 
 const STORAGE_KEY = "portsie:connections-tab";
 
-function getInitialTab(): ConnectionsSubTab {
-  if (typeof window === "undefined") return "api";
-  // URL ?tab= param takes priority (e.g. from dashboard empty-state buttons)
-  const urlTab = new URLSearchParams(window.location.search).get("tab");
-  if (urlTab === "api" || urlTab === "uploads") return urlTab;
-  // Fall back to localStorage
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === "api" || stored === "uploads") return stored;
-  return "api";
-}
-
 type SetupView = "list" | "setup";
 
 export function ConnectionsView({
@@ -36,8 +26,23 @@ export function ConnectionsView({
   isConnected: boolean;
   hasCredentials: boolean;
 }) {
-  const [subTab, setSubTab] = useState<ConnectionsSubTab>(getInitialTab);
+  const searchParams = useSearchParams();
+  const urlTab = searchParams.get("tab");
+  const initialTab: ConnectionsSubTab =
+    urlTab === "api" || urlTab === "uploads"
+      ? urlTab
+      : typeof window !== "undefined"
+        ? ((localStorage.getItem(STORAGE_KEY) as ConnectionsSubTab) ?? "api")
+        : "api";
+  const [subTab, setSubTab] = useState<ConnectionsSubTab>(initialTab);
   const [setupView, setSetupView] = useState<SetupView>("list");
+
+  // Sync tab when URL search params change (e.g. client-side navigation)
+  useEffect(() => {
+    if (urlTab === "api" || urlTab === "uploads") {
+      setSubTab(urlTab);
+    }
+  }, [urlTab]);
   const [selectedBrokerage, setSelectedBrokerage] = useState<string | null>(
     null
   );
