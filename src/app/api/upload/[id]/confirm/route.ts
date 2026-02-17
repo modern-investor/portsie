@@ -93,7 +93,11 @@ export async function POST(
       success: true,
       accountId: targetAccountId,
       transactionsCreated: result.transactionsCreated,
-      positionsCreated: result.positionsCreated,
+      positionsCreated: result.snapshotsWritten,
+      holdingsCreated: result.holdingsCreated,
+      holdingsUpdated: result.holdingsUpdated,
+      holdingsClosed: result.holdingsClosed,
+      changes: result.changes,
     });
   } catch (err) {
     const errorMessage =

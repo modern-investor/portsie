@@ -1,24 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { SchwabAccount } from "@/lib/schwab/types";
+import type { UnifiedAccount } from "@/app/api/portfolio/positions/route";
 
-export function AccountOverview({ hideValues }: { hideValues: boolean }) {
-  const [accounts, setAccounts] = useState<SchwabAccount[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+interface Props {
+  accounts: UnifiedAccount[];
+  hideValues: boolean;
+}
 
-  useEffect(() => {
-    fetch("/api/schwab/accounts")
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to fetch accounts");
-        return res.json();
-      })
-      .then(setAccounts)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
-
+export function AccountOverview({ accounts, hideValues }: Props) {
   function formatDollar(value: number, fractionDigits = 2) {
     if (hideValues) {
       return <span className="text-gray-300 select-none">$*****</span>;
@@ -34,67 +23,56 @@ export function AccountOverview({ hideValues }: { hideValues: boolean }) {
     );
   }
 
-  if (loading) {
+  if (accounts.length === 0) {
     return (
-      <div className="rounded-lg border p-4 sm:p-6">
-        <div className="animate-pulse space-y-3">
-          <div className="h-4 w-32 rounded bg-gray-200" />
-          <div className="h-8 w-48 rounded bg-gray-200" />
-          <div className="flex flex-col gap-2 sm:flex-row sm:gap-8">
-            <div className="h-4 w-24 rounded bg-gray-200" />
-            <div className="h-4 w-24 rounded bg-gray-200" />
-          </div>
-        </div>
+      <div className="rounded-lg border p-4 text-sm text-gray-500">
+        No accounts found.
       </div>
     );
   }
-
-  if (error) {
-    return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-        {error}
-      </div>
-    );
-  }
-
-  if (accounts.length === 0) return null;
 
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Accounts</h2>
-      {accounts.map((account) => {
-        const sec = account.securitiesAccount;
-        const balances = sec.currentBalances;
-        return (
-          <div key={sec.accountNumber} className="rounded-lg border p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">
-                  {sec.type} &middot; ****
-                  {sec.accountNumber.slice(-4)}
-                </p>
-                <p className="text-2xl font-bold">
-                  {formatDollar(
-                    balances?.liquidationValue ??
-                      account.aggregatedBalance?.liquidationValue ??
-                      0
-                  )}
-                </p>
-              </div>
+      {accounts.map((account) => (
+        <div key={account.id} className="rounded-lg border p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">
+                {account.institution} &middot; {account.type}
+              </p>
+              <p className="text-2xl font-bold">
+                {formatDollar(account.liquidationValue)}
+              </p>
             </div>
-            {balances && (
-              <div className="mt-3 flex flex-col gap-1 text-sm text-gray-500 sm:flex-row sm:gap-6">
-                {balances.cashBalance !== undefined && (
-                  <span>Cash: {formatDollar(balances.cashBalance)}</span>
-                )}
-                {balances.buyingPower !== undefined && (
-                  <span>Buying Power: {formatDollar(balances.buyingPower)}</span>
-                )}
-              </div>
+            <div className="text-right">
+              <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                {account.source === "schwab_api"
+                  ? "Schwab API"
+                  : account.source === "manual_upload"
+                    ? "Upload"
+                    : account.source === "quiltt"
+                      ? "Quiltt"
+                      : account.source === "offline"
+                        ? "Manual"
+                        : "Manual"}
+              </span>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-col gap-1 text-sm text-gray-500 sm:flex-row sm:gap-6">
+            <span>{account.name}</span>
+            {account.cashBalance > 0 && (
+              <span>Cash: {formatDollar(account.cashBalance)}</span>
+            )}
+            <span>Holdings: {account.holdingsCount}</span>
+            {account.lastSyncedAt && (
+              <span className="text-xs text-gray-400">
+                Last synced: {new Date(account.lastSyncedAt).toLocaleDateString()}
+              </span>
             )}
           </div>
-        );
-      })}
+        </div>
+      ))}
     </div>
   );
 }
