@@ -132,6 +132,15 @@ function ElapsedTimer({ since }: { since: string }) {
   return <span className="tabular-nums">{display}</span>;
 }
 
+/** Static elapsed time between two timestamps (no ticking) */
+function StaticElapsed({ start, end }: { start: string; end: string }) {
+  const secs = Math.max(0, Math.floor((new Date(end).getTime() - new Date(start).getTime()) / 1000));
+  const mins = Math.floor(secs / 60);
+  const rem = secs % 60;
+  const display = mins > 0 ? `${mins}m ${rem}s` : `${rem}s`;
+  return <span className="tabular-nums">{display}</span>;
+}
+
 export function UploadList({
   uploads,
   processingIds,
@@ -295,10 +304,14 @@ export function UploadList({
 
       {sortedUploads.map((upload) => {
         const isQueued = queuedIds.has(upload.id);
+        const ts = timestamps[upload.id];
+        const hasEnded = !!ts?.e;
         const isProcessing =
           processingIds.has(upload.id) ||
           upload.parse_status === "processing";
-        const status = isProcessing
+        // Once the extraction call has returned (end timestamp set),
+        // show the DB status instead of "Processing" while the refresh fetch is in-flight
+        const status = (isProcessing && !hasEnded)
           ? STATUS_STYLES.processing
           : isQueued
             ? STATUS_STYLES.queued
@@ -407,10 +420,13 @@ export function UploadList({
               <span
                 className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}
               >
-                {isProcessing && <Spinner className="h-3 w-3" />}
+                {isProcessing && !hasEnded && <Spinner className="h-3 w-3" />}
                 {isConfirmed ? "Saved" : status.label}
-                {isProcessing && timestamps[upload.id]?.s && (
-                  <ElapsedTimer since={timestamps[upload.id].s!} />
+                {isProcessing && !hasEnded && ts?.s && (
+                  <ElapsedTimer since={ts.s} />
+                )}
+                {hasEnded && ts?.s && (
+                  <StaticElapsed start={ts.s} end={ts.e!} />
                 )}
               </span>
 
