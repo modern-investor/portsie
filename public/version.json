@@ -1,12 +1,12 @@
 {
-  "version": "v260217.24 11:07a",
-  "release": 56,
-  "sha": "36fed3d2",
-  "fullSha": "36fed3d24944f996422e565294d8da8b2f88b625",
+  "version": "v260217.25 2:17p",
+  "release": 57,
+  "sha": "154ac5b5",
+  "fullSha": "154ac5b59d810fa0b58f3a6b474a3760752555aa",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000054",
-  "pushedAt": "2026-02-17T17:07:56+00",
-  "commits": [{"sha": "36fed3d24944f996422e565294d8da8b2f88b625", "short_sha": "36fed3d2", "author": "rahulio", "message": "Fix tagline caching, update to ultra-mega-max intelligence\u2122"}]
+  "machine": "GitHub Actions 1000000055",
+  "pushedAt": "2026-02-17T20:17:24+00",
+  "commits": [{"sha": "154ac5b59d810fa0b58f3a6b474a3760752555aa", "short_sha": "154ac5b5", "author": "rahulio", "message": "3-stage extraction pipeline: PortsieExtraction v1 schema"}]
 }
