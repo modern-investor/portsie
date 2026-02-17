@@ -1,12 +1,12 @@
 {
-  "version": "v260217.16 9:21a",
-  "release": 47,
-  "sha": "7156bc78",
-  "fullSha": "7156bc7899443adb911b1dbda2edcfd7d9366018",
+  "version": "v260217.17 9:25a",
+  "release": 48,
+  "sha": "e39a147b",
+  "fullSha": "e39a147b7a0fb27db2f8dd34eca9fd607942331a",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000045",
-  "pushedAt": "2026-02-17T15:21:03+00",
-  "commits": [{"sha": "7156bc7899443adb911b1dbda2edcfd7d9366018", "short_sha": "7156bc78", "author": "rahulio", "message": "Merge branch 'claude/mystifying-mccarthy'"}, {"sha": "acc070f5ad4f9e1ee65fba3d43ef9562cd550711", "short_sha": "acc070f5", "author": "rahulio", "message": "Fix dashboard empty-state buttons navigating to wrong Connections tab"}]
+  "machine": "GitHub Actions 1000000046",
+  "pushedAt": "2026-02-17T15:25:41+00",
+  "commits": [{"sha": "e39a147b7a0fb27db2f8dd34eca9fd607942331a", "short_sha": "e39a147b", "author": "rahulio", "message": "Merge branch 'claude/confident-cohen'"}, {"sha": "33c367e5aadb7632fcac2da460ce74542fa51d33", "short_sha": "33c367e5", "author": "rahulio", "message": "Add aggregate accounts, account grouping, and expanded account categories"}]
 }
