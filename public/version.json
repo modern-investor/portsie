@@ -1,12 +1,12 @@
 {
-  "version": "v260217.25 2:17p",
-  "release": 57,
-  "sha": "154ac5b5",
-  "fullSha": "154ac5b59d810fa0b58f3a6b474a3760752555aa",
+  "version": "v260217.26 3:30p",
+  "release": 58,
+  "sha": "629a8c01",
+  "fullSha": "629a8c01e12b9cd952067d7d1e32e151c7f770f3",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000055",
-  "pushedAt": "2026-02-17T20:17:24+00",
-  "commits": [{"sha": "154ac5b59d810fa0b58f3a6b474a3760752555aa", "short_sha": "154ac5b5", "author": "rahulio", "message": "3-stage extraction pipeline: PortsieExtraction v1 schema"}]
+  "machine": "GitHub Actions 1000000056",
+  "pushedAt": "2026-02-17T21:30:45+00",
+  "commits": [{"sha": "629a8c01e12b9cd952067d7d1e32e151c7f770f3", "short_sha": "629a8c01", "author": "rahulio", "message": "Fix processing badge showing infinite timer after extraction completes"}]
 }
