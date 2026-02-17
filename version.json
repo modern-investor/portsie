@@ -1,12 +1,12 @@
 {
-  "version": "v260217.26 3:30p",
-  "release": 58,
-  "sha": "629a8c01",
-  "fullSha": "629a8c01e12b9cd952067d7d1e32e151c7f770f3",
+  "version": "v260217.27 3:33p",
+  "release": 59,
+  "sha": "81db1dfd",
+  "fullSha": "81db1dfd29c1cc8321e4e2402d0c53f9046cce46",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000056",
-  "pushedAt": "2026-02-17T21:30:45+00",
-  "commits": [{"sha": "629a8c01e12b9cd952067d7d1e32e151c7f770f3", "short_sha": "629a8c01", "author": "rahulio", "message": "Fix processing badge showing infinite timer after extraction completes"}]
+  "machine": "GitHub Actions 1000000057",
+  "pushedAt": "2026-02-17T21:33:52+00",
+  "commits": [{"sha": "81db1dfd29c1cc8321e4e2402d0c53f9046cce46", "short_sha": "81db1dfd", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/claude/festive-shamir'"}, {"sha": "b80e283bd775a92d4c9fe0e090a05765c713c911", "short_sha": "b80e283b", "author": "rahulio", "message": "Fix extraction failing when individual positions have missing symbols"}]
 }
