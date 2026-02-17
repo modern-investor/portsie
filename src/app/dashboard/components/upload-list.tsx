@@ -40,32 +40,48 @@ function formatFileSize(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+const SHORT_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+/** Format as DD-Mon-YY, e.g. 01-Jan-25 */
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const mon = SHORT_MONTHS[d.getUTCMonth()];
+  const yr = String(d.getUTCFullYear()).slice(-2);
+  return `${day}-${mon}-${yr}`;
 }
 
 function formatDateRange(start: string | null, end: string | null): string | null {
   if (!start && !end) return null;
   if (start && end) {
-    // Same date = snapshot; different dates = range
     if (start === end) return formatDate(start);
-    return `${formatDate(start)} – ${formatDate(end)}`;
+    return `${formatDate(start)} to ${formatDate(end)}`;
   }
   return formatDate(start || end!);
 }
 
-/** Describe what kind of data was extracted */
+/** Format an ISO timestamp as h:mm:ssa, e.g. 2:05:30p */
+function formatTime(isoStr: string): string {
+  const d = new Date(isoStr);
+  let h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
+  const ampm = h >= 12 ? "p" : "a";
+  h = h % 12 || 12;
+  return `${h}:${m}:${s}${ampm}`;
+}
+
+/** Describe what kind of data was extracted (compact) */
 function describeContent(upload: UploadedStatement): string | null {
   const data = upload.extracted_data;
   if (!data) return null;
   const parts: string[] = [];
   if (data.transactions.length > 0)
-    parts.push(`${data.transactions.length} transaction${data.transactions.length !== 1 ? "s" : ""}`);
+    parts.push(`${data.transactions.length} trans`);
   if (data.positions.length > 0)
-    parts.push(`${data.positions.length} position${data.positions.length !== 1 ? "s" : ""}`);
+    parts.push(`${data.positions.length} pos`);
   if (data.balances.length > 0)
-    parts.push(`${data.balances.length} balance${data.balances.length !== 1 ? "s" : ""}`);
+    parts.push(`${data.balances.length} bal`);
   return parts.length > 0 ? parts.join(", ") : null;
 }
 
@@ -75,6 +91,7 @@ export function UploadList({
   queuedIds,
   batchTotal,
   batchDone,
+  timestamps,
   onBatchProcess,
   onReview,
   onDelete,
@@ -84,6 +101,7 @@ export function UploadList({
   queuedIds: Set<string>;
   batchTotal: number;
   batchDone: number;
+  timestamps: Record<string, { q?: string; s?: string; e?: string }>;
   onBatchProcess: (ids: string[]) => void;
   onReview: (id: string) => void;
   onDelete: (id: string) => void;
@@ -270,8 +288,23 @@ export function UploadList({
                 <span>{formatFileSize(upload.file_size_bytes)}</span>
                 <span aria-hidden>&middot;</span>
                 <span title={upload.created_at}>
-                  Uploaded {formatDate(upload.created_at)}
+                  &#x2191;{formatDate(upload.created_at)}
                 </span>
+                {(() => {
+                  const ts = timestamps[upload.id];
+                  if (!ts) return null;
+                  const parts: string[] = [];
+                  if (ts.q) parts.push(`q:${formatTime(ts.q)}`);
+                  if (ts.s) parts.push(`s:${formatTime(ts.s)}`);
+                  if (ts.e) parts.push(`e:${formatTime(ts.e)}`);
+                  if (parts.length === 0) return null;
+                  return (
+                    <>
+                      <span aria-hidden>&middot;</span>
+                      <span className="font-mono text-blue-500">{parts.join(" ")}</span>
+                    </>
+                  );
+                })()}
                 {upload.parse_error && (
                   <span
                     className={`truncate ${isProcessing || isQueued ? "text-gray-300 line-through" : "text-red-500"}`}
@@ -290,8 +323,8 @@ export function UploadList({
               {isConfirmed ? "Saved" : status.label}
             </span>
 
-            {/* Actions */}
-            <div className="flex shrink-0 items-center gap-1">
+            {/* Actions — fixed width to prevent layout shift */}
+            <div className="flex shrink-0 items-center justify-end gap-1 w-[120px]">
               {(upload.parse_status === "completed" ||
                 upload.parse_status === "partial") && (
                   <button

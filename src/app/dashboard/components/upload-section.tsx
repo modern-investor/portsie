@@ -13,6 +13,8 @@ export function UploadSection() {
   const [queuedIds, setQueuedIds] = useState<Set<string>>(new Set());
   const [batchTotal, setBatchTotal] = useState(0);
   const [batchDone, setBatchDone] = useState(0);
+  // Timestamps: q = queued, s = processing started, e = ended
+  const [timestamps, setTimestamps] = useState<Record<string, { q?: string; s?: string; e?: string }>>({});
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const reviewRef = useRef<HTMLDivElement>(null);
 
@@ -43,12 +45,22 @@ export function UploadSection() {
   // Trigger LLM processing for a single upload (auto-links account and saves data)
   async function handleProcess(uploadId: string) {
     setProcessingIds((prev) => new Set(prev).add(uploadId));
+    // Record processing start timestamp (keep existing q timestamp)
+    setTimestamps((prev) => ({
+      ...prev,
+      [uploadId]: { ...prev[uploadId], s: new Date().toISOString() },
+    }));
 
     try {
       await fetch(`/api/upload/${uploadId}/process`, { method: "POST" });
     } catch {
       // Error status will be reflected in the refreshed upload record
     } finally {
+      // Record end timestamp
+      setTimestamps((prev) => ({
+        ...prev,
+        [uploadId]: { ...prev[uploadId], e: new Date().toISOString() },
+      }));
       // Always refresh the upload record to get latest status
       try {
         const detailRes = await fetch(`/api/upload/${uploadId}`);
@@ -71,9 +83,16 @@ export function UploadSection() {
 
   // Batch process: fire all concurrently — server queues and runs up to 3 at a time
   function handleBatchProcess(ids: string[]) {
+    const now = new Date().toISOString();
     setQueuedIds(new Set(ids));
     setBatchTotal(ids.length);
     setBatchDone(0);
+    // Record queue timestamp for all items
+    setTimestamps((prev) => {
+      const next = { ...prev };
+      for (const id of ids) next[id] = { q: now };
+      return next;
+    });
 
     for (const id of ids) {
       setQueuedIds((prev) => {
@@ -117,6 +136,11 @@ export function UploadSection() {
   // Re-process a file
   async function handleReprocess() {
     if (reviewingId) {
+      const now = new Date().toISOString();
+      setTimestamps((prev) => ({
+        ...prev,
+        [reviewingId]: { q: now },
+      }));
       setReviewingId(null);
       await handleProcess(reviewingId);
     }
@@ -145,6 +169,7 @@ export function UploadSection() {
           queuedIds={queuedIds}
           batchTotal={batchTotal}
           batchDone={batchDone}
+          timestamps={timestamps}
           onBatchProcess={handleBatchProcess}
           onReview={handleReview}
           onDelete={handleDelete}
