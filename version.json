@@ -1,12 +1,12 @@
 {
-  "version": "v260217.01 12:13a",
-  "release": 32,
-  "sha": "04a36a60",
-  "fullSha": "04a36a60cc3457685b4fe1e90675ece5668b4102",
+  "version": "v260217.02 12:56a",
+  "release": 33,
+  "sha": "e39f0b82",
+  "fullSha": "e39f0b82fcaa3822b7e2db843fa1415173919d53",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000030",
-  "pushedAt": "2026-02-17T06:13:36+00",
-  "commits": [{"sha": "04a36a60cc3457685b4fe1e90675ece5668b4102", "short_sha": "04a36a60", "author": "rahulio", "message": "Move top-level nav to site header; split Connections and Settings into separate pages"}, {"sha": "def09f88538ac8e74b4aa9c85e9153444a6021ce", "short_sha": "def09f88", "author": "rahulio", "message": "Move top-level nav (Dashboard, Connections, Settings) to site header; add Connections page with API Connections/Upload sub-tabs"}]
+  "machine": "GitHub Actions 1000000031",
+  "pushedAt": "2026-02-17T06:56:06+00",
+  "commits": [{"sha": "e39f0b82fcaa3822b7e2db843fa1415173919d53", "short_sha": "e39f0b82", "author": "rahulio", "message": "Auto-create and auto-link accounts during upload processing"}]
 }
