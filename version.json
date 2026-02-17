@@ -1,12 +1,12 @@
 {
-  "version": "v260216.29 9:19p",
-  "release": 29,
-  "sha": "258c1ba6",
-  "fullSha": "258c1ba6d655c0d02ed10ecab7beaf2b438b24b6",
+  "version": "v260216.30 9:35p",
+  "release": 30,
+  "sha": "1eaee522",
+  "fullSha": "1eaee522294652d225f74ac61a07fbf0832b0518",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000027",
-  "pushedAt": "2026-02-17T03:19:33+00",
-  "commits": [{"sha": "258c1ba6d655c0d02ed10ecab7beaf2b438b24b6", "short_sha": "258c1ba6", "author": "rahulio", "message": "Ungate portfolio from Schwab, add unified data API and empty state CTAs"}]
+  "machine": "GitHub Actions 1000000028",
+  "pushedAt": "2026-02-17T03:35:37+00",
+  "commits": [{"sha": "1eaee522294652d225f74ac61a07fbf0832b0518", "short_sha": "1eaee522", "author": "rahulio", "message": "Restructure nav to Dashboard, Connections, Settings"}]
 }
