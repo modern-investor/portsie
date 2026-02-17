@@ -89,8 +89,15 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
 
         const data: PortfolioData = await res.json();
 
-        // No data from any source
-        if (data.positions.length === 0 && data.accounts.every((a) => a.cashBalance === 0)) {
+        // No data from any source (check both regular and aggregate)
+        const hasRegularData =
+          data.positions.length > 0 ||
+          data.accounts.some((a) => a.cashBalance > 0 || a.liquidationValue > 0);
+        const hasAggregateData =
+          (data.aggregatePositions?.length ?? 0) > 0 ||
+          (data.aggregateAccounts?.length ?? 0) > 0;
+
+        if (!hasRegularData && !hasAggregateData) {
           setIsEmpty(true);
           return;
         }
@@ -211,7 +218,11 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
 
       {/* Accounts tab — pass fetched data as props */}
       {subTab === "accounts" && (
-        <AccountOverview accounts={portfolioData.accounts} hideValues={hideValues} />
+        <AccountOverview
+          accounts={portfolioData.accounts}
+          aggregateAccounts={portfolioData.aggregateAccounts}
+          hideValues={hideValues}
+        />
       )}
 
       {/* Positions tab — pass fetched data as props */}

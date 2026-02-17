@@ -226,6 +226,99 @@ export async function autoLinkOrCreateAccount(
  * Fetches existing accounts once, then matches or creates each extracted account.
  * Returns a map from account index → AutoLinkResult.
  */
+/**
+ * Find or create an aggregate account for a given institution.
+ * Aggregate accounts hold positions that span multiple real accounts
+ * (e.g. Schwab summary "Positions" section marked with ††).
+ *
+ * Returns the account ID.
+ */
+export async function findOrCreateAggregateAccount(
+  supabase: SupabaseClient,
+  userId: string,
+  institutionName: string
+): Promise<string> {
+  // Look for existing aggregate account for this institution
+  const { data: existing } = await supabase
+    .from("accounts")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("is_aggregate", true)
+    .eq("institution_name", institutionName)
+    .single();
+
+  if (existing) return existing.id;
+
+  // Create a new aggregate account
+  const { data, error } = await supabase
+    .from("accounts")
+    .insert({
+      user_id: userId,
+      data_source: "manual_upload",
+      account_type: "aggregate",
+      account_nickname: `${institutionName} (Aggregate)`,
+      institution_name: institutionName,
+      account_category: "brokerage",
+      is_active: true,
+      is_aggregate: true,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to create aggregate account: ${error.message}`);
+  }
+  return data!.id;
+}
+
+/**
+ * Find or create an "unknown" account for positions whose
+ * originating account can't be determined.
+ *
+ * Returns the account ID.
+ */
+export async function findOrCreateUnknownAccount(
+  supabase: SupabaseClient,
+  userId: string,
+  institutionName?: string
+): Promise<string> {
+  const instName = institutionName ?? "Unknown";
+  const nickname = institutionName
+    ? `${institutionName} (Unknown Account)`
+    : "Unknown Account";
+
+  // Look for existing unknown account for this institution
+  const { data: existing } = await supabase
+    .from("accounts")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("account_type", "unknown")
+    .eq("institution_name", instName)
+    .single();
+
+  if (existing) return existing.id;
+
+  const { data, error } = await supabase
+    .from("accounts")
+    .insert({
+      user_id: userId,
+      data_source: "manual_upload",
+      account_type: "unknown",
+      account_nickname: nickname,
+      institution_name: instName,
+      account_category: "brokerage",
+      is_active: true,
+      is_aggregate: false,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to create unknown account: ${error.message}`);
+  }
+  return data!.id;
+}
+
 export async function autoLinkOrCreateMultipleAccounts(
   supabase: SupabaseClient,
   userId: string,

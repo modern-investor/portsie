@@ -12,6 +12,8 @@ import type { Holding } from "@/lib/holdings/types";
  * 2. holdings table + accounts table (stored truth)
  *
  * Returns normalized arrays of positions and accounts.
+ * Aggregate accounts (is_aggregate=true) are returned separately
+ * so the frontend can display them without double-counting.
  */
 
 export interface UnifiedPosition {
@@ -39,11 +41,15 @@ export interface UnifiedAccount {
   liquidationValue: number;
   holdingsCount: number;
   lastSyncedAt: string | null;
+  accountGroup: string | null;
+  isAggregate: boolean;
 }
 
 export interface PortfolioData {
   positions: UnifiedPosition[];
   accounts: UnifiedAccount[];
+  aggregatePositions: UnifiedPosition[];
+  aggregateAccounts: UnifiedAccount[];
   hasSchwab: boolean;
   hasUploads: boolean;
 }
@@ -60,6 +66,8 @@ export async function GET() {
 
   const positions: UnifiedPosition[] = [];
   const accounts: UnifiedAccount[] = [];
+  const aggregatePositions: UnifiedPosition[] = [];
+  const aggregateAccounts: UnifiedAccount[] = [];
   let hasSchwab = false;
   let hasUploads = false;
 
@@ -89,6 +97,8 @@ export async function GET() {
             0,
           holdingsCount: sec.positions?.length ?? 0,
           lastSyncedAt: new Date().toISOString(),
+          accountGroup: null,
+          isAggregate: false,
         });
 
         for (const pos of sec.positions ?? []) {
@@ -115,7 +125,7 @@ export async function GET() {
       .select(
         "id, account_nickname, institution_name, account_type, data_source, " +
         "total_market_value, cash_balance, equity_value, buying_power, " +
-        "holdings_count, last_synced_at, account_category"
+        "holdings_count, last_synced_at, account_category, account_group, is_aggregate"
       )
       .eq("user_id", user.id)
       .neq("data_source", "schwab_api") as { data: Array<{
@@ -131,28 +141,47 @@ export async function GET() {
         holdings_count: number | null;
         last_synced_at: string | null;
         account_category: string;
+        account_group: string | null;
+        is_aggregate: boolean;
       }> | null };
 
     if (dbAccounts && dbAccounts.length > 0) {
       hasUploads = true;
 
-      // Fetch all active holdings for these accounts in one query
-      const accountIds = dbAccounts.map((a) => a.id);
-      const { data: allHoldings } = await supabase
-        .from("holdings")
-        .select("*")
-        .in("account_id", accountIds)
-        .gt("quantity", 0) as { data: Holding[] | null };
+      // Split accounts into regular and aggregate
+      const regularAccounts = dbAccounts.filter((a) => !a.is_aggregate);
+      const aggAccounts = dbAccounts.filter((a) => a.is_aggregate);
+
+      // Fetch all active holdings for regular accounts in one query
+      const regularIds = regularAccounts.map((a) => a.id);
+      const { data: regularHoldings } = regularIds.length > 0
+        ? await supabase
+            .from("holdings")
+            .select("*")
+            .in("account_id", regularIds)
+            .gt("quantity", 0) as { data: Holding[] | null }
+        : { data: [] as Holding[] };
+
+      // Fetch aggregate account holdings separately
+      const aggIds = aggAccounts.map((a) => a.id);
+      const { data: aggHoldings } = aggIds.length > 0
+        ? await supabase
+            .from("holdings")
+            .select("*")
+            .in("account_id", aggIds)
+            .gt("quantity", 0) as { data: Holding[] | null }
+        : { data: [] as Holding[] };
 
       // Group holdings by account
       const holdingsByAccount = new Map<string, Holding[]>();
-      for (const h of allHoldings ?? []) {
+      for (const h of [...(regularHoldings ?? []), ...(aggHoldings ?? [])]) {
         const list = holdingsByAccount.get(h.account_id) ?? [];
         list.push(h);
         holdingsByAccount.set(h.account_id, list);
       }
 
-      for (const acct of dbAccounts) {
+      // Process regular accounts
+      for (const acct of regularAccounts) {
         const accountLabel =
           acct.account_nickname ?? acct.institution_name ?? "Uploaded Account";
 
@@ -166,6 +195,8 @@ export async function GET() {
           liquidationValue: Number(acct.total_market_value) || 0,
           holdingsCount: acct.holdings_count ?? 0,
           lastSyncedAt: acct.last_synced_at ?? null,
+          accountGroup: acct.account_group ?? null,
+          isAggregate: false,
         });
 
         const acctHoldings = holdingsByAccount.get(acct.id) ?? [];
@@ -186,12 +217,71 @@ export async function GET() {
           });
         }
       }
+
+      // Process aggregate accounts
+      for (const acct of aggAccounts) {
+        const accountLabel =
+          acct.account_nickname ?? acct.institution_name ?? "Aggregate";
+
+        aggregateAccounts.push({
+          id: acct.id,
+          name: accountLabel,
+          institution: acct.institution_name ?? "Unknown",
+          type: acct.account_type ?? "aggregate",
+          source: acct.data_source as UnifiedAccount["source"],
+          cashBalance: Number(acct.cash_balance) || 0,
+          liquidationValue: Number(acct.total_market_value) || 0,
+          holdingsCount: acct.holdings_count ?? 0,
+          lastSyncedAt: acct.last_synced_at ?? null,
+          accountGroup: acct.account_group ?? null,
+          isAggregate: true,
+        });
+
+        const acctHoldings = holdingsByAccount.get(acct.id) ?? [];
+        for (const h of acctHoldings) {
+          aggregatePositions.push({
+            symbol: h.symbol ?? h.name,
+            description: h.description ?? "",
+            assetType: h.asset_type ?? "EQUITY",
+            quantity: Number(h.quantity) || 0,
+            shortQuantity: Number(h.short_quantity) || 0,
+            averagePrice: Number(h.purchase_price) || 0,
+            marketValue: Number(h.market_value) || 0,
+            currentDayProfitLoss: Number(h.day_profit_loss) || 0,
+            currentDayProfitLossPercentage: Number(h.day_profit_loss_pct) || 0,
+            source: acct.data_source as UnifiedPosition["source"],
+            accountId: acct.id,
+            accountName: accountLabel,
+          });
+        }
+      }
     }
   } catch (err) {
     console.error("Holdings data fetch failed:", err);
   }
 
-  const body: PortfolioData = { positions, accounts, hasSchwab, hasUploads };
+  // Fallback: if no real positions but aggregate exists, use aggregate as primary
+  // This prevents an empty dashboard when only aggregate data is available
+  const useAggregateAsPrimary =
+    positions.length === 0 &&
+    accounts.every((a) => a.cashBalance === 0 && a.liquidationValue === 0) &&
+    aggregatePositions.length > 0;
+
+  if (useAggregateAsPrimary) {
+    positions.push(...aggregatePositions);
+    accounts.push(...aggregateAccounts);
+    aggregatePositions.length = 0;
+    aggregateAccounts.length = 0;
+  }
+
+  const body: PortfolioData = {
+    positions,
+    accounts,
+    aggregatePositions,
+    aggregateAccounts,
+    hasSchwab,
+    hasUploads,
+  };
   return NextResponse.json(body);
 }
 
