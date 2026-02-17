@@ -76,6 +76,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
   const [subTab, setSubTab] = useState<PortfolioSubTab>("assets");
   const [selectedClass, setSelectedClass] = useState<AssetClassId | null>(null);
   const [portfolio, setPortfolio] = useState<ClassifiedPortfolio | null>(null);
+  const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isEmpty, setIsEmpty] = useState(false);
@@ -94,6 +95,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
           return;
         }
 
+        setPortfolioData(data);
         const classified = classifyPortfolio(data.positions, data.accounts);
         setPortfolio(classified);
       } catch (err) {
@@ -135,7 +137,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
   }
 
   // ── Empty state ──
-  if (isEmpty || !portfolio) {
+  if (isEmpty || !portfolio || !portfolioData) {
     return (
       <PortfolioEmptyState
         onGoToUploads={() => onNavigateTab?.("connections")}
@@ -206,11 +208,15 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
         </div>
       )}
 
-      {/* Accounts tab */}
-      {subTab === "accounts" && <AccountOverview hideValues={hideValues} />}
+      {/* Accounts tab — pass fetched data as props */}
+      {subTab === "accounts" && (
+        <AccountOverview accounts={portfolioData.accounts} hideValues={hideValues} />
+      )}
 
-      {/* Positions tab */}
-      {subTab === "positions" && <PositionsTable hideValues={hideValues} />}
+      {/* Positions tab — pass fetched data as props */}
+      {subTab === "positions" && (
+        <PositionsTable positions={portfolioData.positions} hideValues={hideValues} />
+      )}
     </div>
   );
 }

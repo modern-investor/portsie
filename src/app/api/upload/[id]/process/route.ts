@@ -146,7 +146,7 @@ export async function POST(
           extractionResult
         );
         transactionsCreated = writeResult.transactionsCreated;
-        positionsCreated = writeResult.positionsCreated;
+        positionsCreated = writeResult.snapshotsWritten;
         autoConfirmed = true;
       } catch (linkErr) {
         // Auto-link/confirm failed — save extraction results anyway
