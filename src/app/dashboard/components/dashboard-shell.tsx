@@ -17,7 +17,12 @@ export function DashboardShell({
 
   function handleNavigateTab(tab: string) {
     if (tab.startsWith("connections")) {
-      const subTab = tab.split(":")[1];
+      const rawSubTab = tab.split(":")[1];
+      // Map old subtab names to new ones
+      const subTab =
+        rawSubTab === "api" || rawSubTab === "institutions"
+          ? "datalinks"
+          : rawSubTab;
       const url = subTab
         ? `/dashboard/connections?tab=${subTab}`
         : "/dashboard/connections";
