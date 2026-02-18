@@ -22,15 +22,21 @@ Each stage has a single responsibility and its output is stored for auditability
 
 ### Prompt Design
 
-A single static system prompt (`EXTRACTION_SYSTEM_PROMPT`, ~176 lines) instructs Claude to produce a v1 schema JSON. The prompt is **extraction-only** — it has no knowledge of the user's existing accounts, IDs, or any application state.
+The extraction prompt has two layers:
 
-**Why not inject user context into the prompt?** We considered having the LLM match extracted accounts to existing DB accounts in a single pass. We rejected this because:
-- It couples extraction quality to matching quality — a bad match could cause the LLM to distort what it extracts to fit an existing account.
-- It makes the extraction non-reproducible — running the same file twice with different DB state produces different results.
-- It makes debugging harder — you can't tell whether an error came from extraction or matching.
-- Account matching is a business-logic decision that users should be able to review and override. Burying it inside an LLM call removes that control.
+1. **Base prompt** (~176 lines) — instructs the LLM to produce a PortsieExtraction v1 JSON. This is the extraction-only core: faithfully transcribe what's in the document.
+2. **Dynamic account-matching section** — appended at runtime by `buildExtractionPrompt()`. Injects the user's existing accounts (up to 100) and instructs the LLM to return an `account_link` decision per extracted account: `match_existing` (with the existing account's UUID) or `create_new`.
 
-Separation of concerns: the LLM's only job is to faithfully transcribe what's in the document.
+The LLM returns both extraction data and account matching decisions in a single response, at zero extra cost.
+
+**Design evolution.** We originally kept the prompt extraction-only with no user context, arguing that injecting account state would couple extraction to matching, make results non-reproducible, and make debugging harder. We reversed this after observing that:
+- LLM semantic matching (institution abbreviations, account renames, partial number overlap) consistently outperforms heuristic fuzzy matching.
+- Extraction quality is unaffected — the `account_link` field is orthogonal to the data fields. The LLM still faithfully extracts; it just also returns a matching opinion.
+- A deterministic heuristic validator catches the cases where the LLM might hallucinate (see Stage 2.5 below).
+- The user can still override any match via the confirm UI before data is written.
+- As models improve, matching accuracy improves automatically — no code changes needed.
+
+**Prompt injection defense.** Account data injected into the prompt is sanitized: nicknames and institution names are truncated to 50 characters with newlines stripped. The account list is wrapped in structured JSON between `--- USER'S EXISTING ACCOUNTS ---` / `--- END ACCOUNTS ---` delimiters. UUIDs returned by the LLM are validated against the injected list (regex + DB ownership check).
 
 ### Target Schema: PortsieExtraction v1
 
@@ -42,6 +48,12 @@ Separation of concerns: the LLM's only job is to faithfully transcribe what's in
   },
   accounts: [
     {
+      account_link: {
+        action: "match_existing" | "create_new",
+        existing_account_id: uuid | null,
+        match_confidence: "high" | "medium" | "low",
+        match_reason: string
+      },
       account_info: { account_number, account_type, institution_name, account_nickname, account_group },
       transactions: [...],
       positions: [...],
@@ -95,7 +107,25 @@ Three pluggable backends, selected per-user via the `llm_settings` table:
 
 **Why Gemini as default?** Gemini 3 Flash has a generous free tier, handles large PDFs well via SSE streaming (avoids Vercel timeout on large files), and its extraction quality is comparable to Claude for structured data. Claude CLI is the automatic fallback if Gemini fails. The API mode exists for users who want to use their own Anthropic key for maximum quality control.
 
-**Why temperature 0?** Financial extraction must be deterministic. The same document should always produce the same output. Temperature > 0 introduces randomness that could cause a $10,000 position to become $1,000 on a re-run.
+**Why temperature 0?** Financial extraction must be deterministic. The same document should always produce the same output. Temperature > 0 introduces randomness that could cause a $10,000 position to become $1,000 on a re-run. Note: the Anthropic API backend uses `temperature: 0`, but Gemini 3 Flash omits it because `temperature: 0` causes response looping in that model — Gemini 2.5 Flash still uses `temperature: 0`.
+
+### Prompt Management
+
+The base extraction prompt is stored in the `prompts` database table (name: `'extract_financial_data'`), not hardcoded in source. This enables prompt iteration without code deploys.
+
+| Component | Details |
+|-----------|---------|
+| DB table | `prompts` — versioned rows with `name`, `version`, `content`, `is_active`, `metadata` |
+| Versioning | `create_prompt_version()` RPC creates a new version and deactivates the previous one |
+| Fetch | `get_prompt(name)` RPC returns the active version's content |
+| Cache | 5-minute in-memory TTL cache (module-level `Map`). Each serverless cold start gets a fresh cache. |
+| Fallback | Hardcoded `EXTRACTION_SYSTEM_PROMPT` constant in `prompts.ts` — used if DB is unreachable or returns no row |
+| Dynamic section | `buildExtractionPrompt()` fetches the base from DB, then appends the account-matching context at runtime |
+| Metadata | `metadata` jsonb stores: `model_hint`, `estimated_tokens`, `schema_version`, `dynamic_sections` |
+
+**Why DB-backed instead of hardcoded?** The extraction prompt is the highest-leverage piece of the pipeline — a single word change can fix a class of extraction errors across all documents. Deploying code to change a prompt is unnecessarily slow. The DB approach lets us iterate in minutes via the Supabase dashboard while keeping a hardcoded fallback for resilience. Versioning preserves history so we can roll back or A/B test prompts.
+
+**Why cache?** The prompt is ~2KB and changes rarely. Hitting the DB on every extraction is wasteful. A 5-minute TTL balances freshness (prompt changes take effect within minutes) against performance (one DB call per 5 minutes per serverless instance).
 
 ### File Pre-Processing
 
@@ -164,9 +194,35 @@ The validator strips ` ```json ... ``` ` fences and extracts the outermost `{ ..
 
 **Goal:** Map each extracted account to an existing user account (or flag for creation).
 
-### Matching Algorithm
+### Hybrid Approach: LLM Decides, Heuristic Validates
 
-Fully deterministic — no LLM involved. Priority order (first match wins):
+Account matching uses a two-layer system:
+
+1. **LLM decision (primary):** During extraction, the LLM receives the user's existing accounts and returns an `account_link` per detected account — either `match_existing` (with the existing account's UUID) or `create_new`, along with confidence and reasoning.
+2. **Heuristic validator (safety net):** A deterministic heuristic checks the LLM's decision against number-based matching. When the heuristic has an exact or partial number match that points to a *different* account than the LLM chose, the heuristic wins. When only semantic matching is available (institution + type, no numbers), the LLM wins.
+3. **Fallback (backward compat):** Old stored extractions without `account_link` (pre-dating this feature) fall through to full heuristic matching.
+
+The entry point is `resolveAccountLinks()`, which handles all three paths in a single function.
+
+### Heuristic Validation Rules
+
+| LLM says | Heuristic says | Winner | Why |
+|----------|---------------|--------|-----|
+| match_existing (UUID A) | Number match → UUID A | LLM | Agreement — proceed |
+| match_existing (UUID A) | Number match → UUID B | Heuristic | Numbers don't lie — the LLM hallucinated a UUID |
+| match_existing (UUID A) | No number match | LLM | Semantic matching (institution, type, nickname) is the LLM's strength |
+| create_new | Number match → UUID B | Heuristic | The LLM missed an obvious match |
+| create_new | No match | LLM | Agreement — create new account |
+
+### Safety Checks
+
+- **UUID regex validation** in the parser — malformed UUIDs are downgraded to `create_new`
+- **DB ownership verification** — every `existing_account_id` is verified against the user's actual accounts
+- **Hallucination protection** — if the UUID doesn't exist or belongs to another user, falls back to heuristic matching or `create_new`
+
+### Heuristic Matching Priority (Fallback)
+
+When the LLM doesn't provide `account_link` (old extractions) or fails validation, the full heuristic runs:
 
 | Priority | Method | Confidence |
 |----------|--------|------------|
@@ -178,13 +234,7 @@ Fully deterministic — no LLM involved. Priority order (first match wins):
 | 6 | Institution + nickname substring match | MEDIUM |
 | 7 | No match → create new account | HIGH |
 
-**Why deterministic instead of LLM-based?** We considered having the LLM match accounts as part of extraction. Problems:
-- **Non-deterministic:** Same input, different matches on each run.
-- **Expensive:** Every upload pays LLM cost for a task that simple heuristics handle well.
-- **Opaque:** If the LLM matches wrong, the user can't understand why.
-- **Hard to override:** The match is baked into the extraction output.
-
-Deterministic matching solves all of these: it's free, reproducible, and produces a confidence score the user can review. The user can override any match via the confirm UI before data is written. The only downside is that it can't handle truly ambiguous cases (two accounts at the same institution with the same type and no account number), but that's what the "create new" fallback and user override are for.
+**Why hybrid instead of pure heuristic or pure LLM?** Pure heuristic fails on semantic reasoning — "Schwab" vs "Charles Schwab & Co., Inc." requires normalization heuristics, and account renames defeat nickname matching entirely. The LLM handles these naturally. But pure LLM matching risks hallucinated UUIDs or missed obvious digit matches. The hybrid approach gives us the LLM's semantic intelligence with deterministic safety rails on the cases where numbers provide certainty.
 
 ### Institution Normalization
 
@@ -445,9 +495,10 @@ Every stage's output is preserved:
 
 | Decision | Choice | Why |
 |----------|--------|-----|
-| LLM sees no user context | Extraction-only prompt | Decouples extraction from matching. Extraction is reproducible regardless of DB state. Matching is a separate, auditable, overridable step. |
+| LLM-driven account matching | Inject user accounts into prompt | LLM returns `account_link` decisions alongside extraction data in a single call — zero extra cost. Semantic matching (institution abbreviations, account renames) outperforms heuristics. Heuristic validator catches number-based mismatches. User can still override via confirm UI. |
 | Hand-written validator | Not AJV/Zod | Financial data needs per-field coercions ($ stripping, parens-to-negative, date normalization, 40+ action aliases) that schema validators can't express cleanly. Custom validator tracks coercions separately from errors. |
-| Deterministic account matching | No LLM in Stage 2.5 | Reproducible, free, auditable. User can review and override. LLM matching would be non-deterministic, expensive, and opaque. Simple heuristics (account number, institution+type) handle 95% of cases. |
+| Hybrid account matching | LLM + heuristic validation | LLM handles semantic reasoning (abbreviations, renames, type matching). Heuristic validates on number-based matches where digits provide certainty. Fallback to pure heuristic for old extractions without `account_link`. |
+| DB-backed versioned prompts | `prompts` table with `get_prompt()` RPC | Iterate on prompts via Supabase dashboard without code deploys. 5-minute cache, hardcoded fallback for resilience. Versioning preserves history for rollback and A/B testing. |
 | Hardcoded symbol sets | ~130 tickers | O(1) classification, deterministic, version-controlled. Covers the actual portfolio. Unknown tickers fall through to description heuristics then default to non_tech_equities. Avoids external API dependency. |
 | Negative values for liabilities | Same `accounts` table | `SUM(total_market_value)` gives net worth in one query. Liabilities use the same schema fields as assets. Separate table would duplicate schema for no benefit. |
 | `quantity = 0` for closed positions | Soft-close, not delete | Preserves provenance (when closed, by which upload). Dashboard filters on `quantity > 0`. History preserved for debugging and future features (portfolio history timeline). |
