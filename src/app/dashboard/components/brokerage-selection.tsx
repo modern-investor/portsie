@@ -129,22 +129,22 @@ export function BrokerageSelection({
     <div className="space-y-8">
       {/* Brokerages — collapsible */}
       <div className="space-y-4">
-        <button
-          onClick={() => setShowBrokerages((prev) => !prev)}
-          className="flex w-full items-center gap-4"
-        >
-          <SectionToggle
-            expanded={showBrokerages}
-            count={brokerages.length}
-            label="brokerages"
-          />
-          <div className="text-left">
-            <h2 className="text-xl font-bold text-gray-900">Brokerages</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Connect your brokerage via API, account linking, or file upload.
-            </p>
-          </div>
-        </button>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Brokerages</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Connect your brokerage via API, account linking, or file upload.
+          </p>
+          <button
+            onClick={() => setShowBrokerages((prev) => !prev)}
+            className="mt-2"
+          >
+            <SectionToggle
+              expanded={showBrokerages}
+              count={brokerages.length}
+              label="brokerages"
+            />
+          </button>
+        </div>
 
         {showBrokerages && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -162,22 +162,22 @@ export function BrokerageSelection({
 
       {/* Banks — collapsible */}
       <div className="space-y-4">
-        <button
-          onClick={() => setShowBanks((prev) => !prev)}
-          className="flex w-full items-center gap-4"
-        >
-          <SectionToggle
-            expanded={showBanks}
-            count={banks.length}
-            label="banks"
-          />
-          <div className="text-left">
-            <h2 className="text-xl font-bold text-gray-900">Banks</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Link your bank accounts to track cash, deposits, and balances.
-            </p>
-          </div>
-        </button>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Banks</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Link your bank accounts to track cash, deposits, and balances.
+          </p>
+          <button
+            onClick={() => setShowBanks((prev) => !prev)}
+            className="mt-2"
+          >
+            <SectionToggle
+              expanded={showBanks}
+              count={banks.length}
+              label="banks"
+            />
+          </button>
+        </div>
 
         {showBanks && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
