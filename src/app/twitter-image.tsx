@@ -3,7 +3,7 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 
 export const runtime = "nodejs";
-export const alt = "Portsie - Your portfolio investment tracker";
+export const alt = "Portsie - The AI Agent for your Portfolio";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -42,7 +42,7 @@ export default async function Image() {
             fontFamily: "sans-serif",
           }}
         >
-          Your portfolio investment tracker
+          The AI Agent for your Portfolio
         </p>
       </div>
     ),

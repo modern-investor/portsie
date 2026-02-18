@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Portsie",
-  description: "Your portfolio investment tracker",
+  description: "The AI Agent for your Portfolio",
   metadataBase: new URL("https://portsie.vercel.app"),
   icons: {
     icon: "/brand/portsie-icon-dark.png",
@@ -24,14 +24,14 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Portsie",
-    description: "Your portfolio investment tracker",
+    description: "The AI Agent for your Portfolio",
     siteName: "Portsie",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Portsie",
-    description: "Your portfolio investment tracker",
+    description: "The AI Agent for your Portfolio",
   },
 };
 
