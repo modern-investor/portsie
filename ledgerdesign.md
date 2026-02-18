@@ -12,7 +12,7 @@ A 3-stage pipeline processes uploaded documents into portfolio data:
 Upload → [Stage 1: LLM Extraction] → [Stage 2: Validation] → [Stage 2.5: Account Matching] → [Stage 3: DB Write]
 ```
 
-Each stage has a single responsibility and its output is stored for auditability.
+Each stage has a single responsibility and its output is stored for auditability. Stages are decoupled so that any one can be re-run independently — e.g., a failed write can be retried without re-extracting, or a new validator can be applied to existing raw LLM output.
 
 ---
 
@@ -24,7 +24,13 @@ Each stage has a single responsibility and its output is stored for auditability
 
 A single static system prompt (`EXTRACTION_SYSTEM_PROMPT`, ~176 lines) instructs Claude to produce a v1 schema JSON. The prompt is **extraction-only** — it has no knowledge of the user's existing accounts, IDs, or any application state.
 
-**Rationale:** Separation of concerns. The LLM's job is to faithfully extract what's in the document. Account matching is a business-logic decision handled deterministically in Stage 2.5, where it can be audited and overridden by the user.
+**Why not inject user context into the prompt?** We considered having the LLM match extracted accounts to existing DB accounts in a single pass. We rejected this because:
+- It couples extraction quality to matching quality — a bad match could cause the LLM to distort what it extracts to fit an existing account.
+- It makes the extraction non-reproducible — running the same file twice with different DB state produces different results.
+- It makes debugging harder — you can't tell whether an error came from extraction or matching.
+- Account matching is a business-logic decision that users should be able to review and override. Burying it inside an LLM call removes that control.
+
+Separation of concerns: the LLM's only job is to faithfully transcribe what's in the document.
 
 ### Target Schema: PortsieExtraction v1
 
@@ -60,6 +66,8 @@ Every categorical field uses a closed enum to prevent hallucination:
 | `document_type` (5) | `portfolio_summary`, `transaction_export`, `tax_1099`, `statement`, `csv_export` |
 | `confidence` (3) | `high`, `medium`, `low` |
 
+**Why closed enums instead of free text?** LLMs hallucinate creative category names (`"Long-Term Equity Investment"` instead of `"EQUITY"`). Closed enums force the output into known values that downstream code can switch on without string-matching heuristics. The validator maps common synonyms back to canonical values (40+ aliases for `action` alone), so the LLM doesn't need to guess the exact token.
+
 ### Required Fields
 
 - `total_amount` on transactions is **never null** (default 0 if uncomputable).
@@ -67,20 +75,27 @@ Every categorical field uses a closed enum to prevent hallucination:
 - Every account that shows a value gets a `balances[]` entry.
 - Multi-account documents produce one `accounts[]` entry per account.
 
+**Why require `total_amount`?** Transactions with null amounts are useless for portfolio accounting. By forcing the LLM to always provide a value (even 0), we avoid downstream null-handling complexity. The validator computes `quantity * price_per_share` as a fallback if the LLM omits it.
+
 ### Unallocated Positions
 
-When a document has a cross-account summary section (e.g., Schwab's "Positions" view that lists holdings by symbol across all accounts), the LLM places those positions in `unallocated_positions[]` rather than guessing which account they belong to. The data writer creates an aggregate account for them.
+When a document has a cross-account summary section (e.g., Schwab's "Positions" view that lists holdings by symbol across all accounts), the LLM places those positions in `unallocated_positions[]` rather than guessing which account they belong to.
+
+**Why not force the LLM to assign positions to accounts?** The Schwab expanded positions view shows holdings grouped by ticker, then broken down by sub-account. But the summary section lists accounts separately from positions, and the LLM would need to cross-reference account numbers between sections — a fragile heuristic that's wrong more often than it's right. Instead, we let the LLM honestly report what it sees (positions with no clear account assignment) and handle the mapping deterministically in the data writer via aggregate accounts.
 
 ### LLM Backend
 
-Two pluggable backends, selected per-user via the `llm_settings` table:
+Three pluggable backends, selected per-user via the `llm_settings` table:
 
 | Mode | Backend | Cost | Default |
 |------|---------|------|---------|
-| CLI | Claude Code Max plan via HTTP wrapper on DO droplet | Free (included in Max) | Yes |
-| API | `@anthropic-ai/sdk` with per-user encrypted key | Per-token | No |
+| Gemini | Google Gemini 3 Flash via REST API | Server-side API key (free tier) | Yes |
+| CLI | Claude Sonnet 4.6 via HTTP wrapper on DO droplet | Free (Max plan) | Fallback |
+| API | Anthropic SDK with per-user encrypted key | Per-token | User override |
 
-**Model:** `claude-opus-4-6`, temperature `0`, max tokens `4096`.
+**Why Gemini as default?** Gemini 3 Flash has a generous free tier, handles large PDFs well via SSE streaming (avoids Vercel timeout on large files), and its extraction quality is comparable to Claude for structured data. Claude CLI is the automatic fallback if Gemini fails. The API mode exists for users who want to use their own Anthropic key for maximum quality control.
+
+**Why temperature 0?** Financial extraction must be deterministic. The same document should always produce the same output. Temperature > 0 introduces randomness that could cause a $10,000 position to become $1,000 on a re-run.
 
 ### File Pre-Processing
 
@@ -93,7 +108,9 @@ Two pluggable backends, selected per-user via the `llm_settings` table:
 | OFX/QFX | UTF-8 decode | Text |
 | TXT/JSON | UTF-8 decode | Text |
 
-For CSV files, the first 5 rows are pre-parsed to JSON and appended to the prompt to help the LLM understand column structure.
+**Why convert XLSX to CSV before sending?** LLMs can't read binary Excel files natively. Converting to CSV preserves all data while making it text-readable. Multi-sheet workbooks are concatenated with `=== Sheet: Name ===` separators so the LLM knows which data came from which sheet.
+
+**Why pre-parse CSV rows?** Sending the first 5 rows as parsed JSON alongside raw CSV text gives the LLM a structural hint — it sees both the raw format and the parsed interpretation, reducing column-mapping errors.
 
 ---
 
@@ -105,7 +122,10 @@ For CSV files, the first 5 rows are pre-parsed to JSON and appended to the promp
 
 A hand-written validator (not AJV/Zod) walks the object tree and applies per-field coercions.
 
-**Rationale:** Financial data needs intelligent coercions that schema validators can't express — e.g., stripping `$` and `,` from numbers, converting `($1,234.56)` to `-1234.56`, normalizing date formats, mapping action aliases.
+**Why not use AJV or Zod?** We evaluated both:
+- **AJV:** Can validate structure but can't express coercions like "strip $ and , from numbers" or "convert `($1,234.56)` to `-1234.56`." Custom keywords exist but are clunky for financial data.
+- **Zod:** Better for TypeScript integration but `z.transform()` chains get unwieldy for 40+ action aliases, date format normalization, and conditional defaults.
+- **Hand-written:** More code to maintain, but each field gets exactly the coercion it needs. Error messages are specific ("Transaction 3: invalid action 'purchase', coerced to 'buy'" vs. AJV's generic "enum mismatch"). The validator also tracks coercions separately from errors, so we know when the LLM output was "close but not exact" vs. "completely wrong."
 
 ### Type Coercions
 
@@ -118,17 +138,25 @@ A hand-written validator (not AJV/Zod) walks the object tree and applies per-fie
 | `account_type` | Case-normalize + aliases: `"brokerage"` → `"individual"`, `"solo_401k"` → `"401k"` |
 | `total_amount` | If null, compute from `quantity * price_per_share` or default to `0` |
 
+**Why coerce instead of reject?** LLMs are close-but-not-exact. Claude might return `"purchase"` instead of `"buy"`, or `"$1,234.56"` instead of `1234.56`. Rejecting these would throw away valid data over cosmetic differences. Coercion recovers the intent while logging what was changed. Only truly invalid data (wrong types, impossible dates) causes rejection.
+
 ### Filtering Strategy
 
 Invalid items are **dropped** (not fatal). Each drop is recorded as a warning. The extraction only fails if the `accounts[]` array is empty after filtering.
+
+**Why drop instead of fail?** A 12-page PDF might extract 50 accounts and 73 positions perfectly but have one malformed transaction. Failing the entire extraction over one bad row wastes the user's time and LLM cost. Dropping the bad row and recording a warning lets the user see 99% of their data while knowing about the 1% that needs attention.
 
 ### Backward Compatibility
 
 If the LLM returns a flat structure (no `accounts[]` array but top-level `transactions`/`positions`/`balances`), the validator wraps it into a single-account structure automatically.
 
+**Why?** Early prompt iterations didn't require the `accounts[]` wrapper. Some cached extractions or edge-case LLM outputs still produce flat structures. Auto-wrapping handles this gracefully without breaking.
+
 ### Markdown Fence Stripping
 
 The validator strips ` ```json ... ``` ` fences and extracts the outermost `{ ... }` if JSON is embedded in surrounding text.
+
+**Why?** Claude naturally wraps JSON in markdown fences. Gemini sometimes adds explanatory text before/after the JSON. Rather than fighting this tendency in the prompt, we handle it in the validator — simple, reliable, and works across all LLM backends.
 
 ---
 
@@ -150,7 +178,13 @@ Fully deterministic — no LLM involved. Priority order (first match wins):
 | 6 | Institution + nickname substring match | MEDIUM |
 | 7 | No match → create new account | HIGH |
 
-**Rationale:** Deterministic matching is reproducible, auditable, and costs nothing. The user can review and override any match before confirming. An LLM-based matcher would be non-deterministic and expensive for a low-stakes decision.
+**Why deterministic instead of LLM-based?** We considered having the LLM match accounts as part of extraction. Problems:
+- **Non-deterministic:** Same input, different matches on each run.
+- **Expensive:** Every upload pays LLM cost for a task that simple heuristics handle well.
+- **Opaque:** If the LLM matches wrong, the user can't understand why.
+- **Hard to override:** The match is baked into the extraction output.
+
+Deterministic matching solves all of these: it's free, reproducible, and produces a confidence score the user can review. The user can override any match via the confirm UI before data is written. The only downside is that it can't handle truly ambiguous cases (two accounts at the same institution with the same type and no account number), but that's what the "create new" fallback and user override are for.
 
 ### Institution Normalization
 
@@ -161,13 +195,19 @@ Fully deterministic — no LLM involved. Priority order (first match wins):
 
 Strips: `&`, `,`, `.`, `inc`, `llc`, `corp`, `co` (word boundary).
 
+**Why?** The same institution appears as "Charles Schwab", "Charles Schwab & Co., Inc.", "Schwab", etc. across different documents. Stripping legal suffixes and punctuation makes fuzzy matching work without a lookup table of institution aliases.
+
 ### Aggregate Account Handling
 
 `unallocated_positions` are assigned to an aggregate account (searched by institution, created if not found). Aggregate accounts are flagged `is_aggregate = true` and excluded from regular matching candidates.
 
+**Why a separate aggregate account?** When a Schwab PDF lists positions by ticker across all sub-accounts, we can't reliably split them back into individual accounts. Instead of guessing wrong (and corrupting per-account data), we put them in a clearly-labeled aggregate. The dashboard knows to merge aggregate positions into the display when individual accounts don't have their own holdings (see Dashboard Data Flow below).
+
 ### User Override
 
 The confirm endpoint accepts optional `accountMapOverrides` to let the user correct any mapping before data is written.
+
+**Why?** No matcher is perfect with partial account numbers. The user knows their own accounts — letting them correct a wrong match before it hits the DB is cheaper than fixing bad data after the fact.
 
 ---
 
@@ -185,6 +225,12 @@ The confirm endpoint accepts optional `accountMapOverrides` to let the user corr
 | `balance_snapshots` | Historical account balances | Immutable (append-only) |
 | `transactions` | Buy/sell/dividend history | Append-only |
 
+**Why two tables for positions (`holdings` vs `position_snapshots`)?** They serve different purposes:
+- `holdings` = "what do I own right now?" — mutable, reconciled on every upload, drives the dashboard. One row per account-symbol pair.
+- `position_snapshots` = "what did I own on Feb 17, 2026?" — immutable, append-only, used for historical portfolio reconstruction and performance tracking. Multiple rows per symbol over time.
+
+Without this split, you'd either lose history (mutable only) or have expensive queries to reconstruct current state from snapshots (immutable only).
+
 ### Holdings Reconciliation
 
 The `holdings` table is the **current state** of what a user owns. On each extraction:
@@ -200,32 +246,38 @@ The `holdings` table is the **current state** of what a user owns. On each extra
 
 Change types tracked: `new_position`, `closed_position`, `quantity_change`, `value_update`.
 
+**Why set `quantity = 0` instead of deleting?** Deletion loses provenance. A holding with `quantity = 0` still shows when it was last seen, what upload closed it, and what its final value was. Dashboard queries filter on `quantity > 0` for current state, so closed holdings are invisible to the user but preserved for debugging and historical analysis.
+
 ### Position Deduplication
 
 Key: `(snapshot_date, symbol)`. If the same symbol appears twice for the same date (common in aggregate sections), quantities and values are summed. This happens **before** writing to either `holdings` or `position_snapshots`.
 
+**Why sum instead of reject duplicates?** Aggregate positions in Schwab PDFs list the same ticker multiple times (once per sub-account holding). When these land in `unallocated_positions`, we need to combine them into a single aggregate holding. Summing is the financially correct operation — if you hold 100 shares of TSLA in IRA A and 200 in IRA B, your aggregate position is 300 shares.
+
 ### Balance Deduplication
 
 Key: `snapshot_date`. If multiple balance entries exist for the same date, non-null fields are merged (keep most complete).
+
+**Why merge instead of overwrite?** Different sections of a statement may provide different balance fields. The summary might show `liquidation_value` while a detail section shows `cash_balance` and `buying_power`. Merging non-null fields produces the most complete picture.
 
 ### Account Summary Recomputation
 
 After writing holdings, the `accounts` row is recomputed:
 
 ```
-equity_value   = sum(holdings.market_value) where quantity > 0
+equity_value       = sum(holdings.market_value) where quantity > 0
 total_market_value = liquidation_value  (if available from balance)
                    | equity_value + cash_balance  (fallback)
-holdings_count = count(holdings) where quantity > 0
+holdings_count     = count(holdings) where quantity > 0
 ```
 
-**Decision:** Prefer `liquidation_value` from the statement over computed `equity + cash`, because the statement's stated total is more trustworthy than a recomputation.
+**Why prefer `liquidation_value` over computed total?** The statement says an account is worth $549,993.84. We compute equity ($549,099.34) + cash ($894.50) = $549,993.84. They agree here, but rounding differences across 73 positions can cause disagreement. The statement's stated total is the source of truth — it's what the brokerage reports and what the user sees on their brokerage website. We only fall back to the computed sum when the statement doesn't provide a total.
 
 ### Liability Representation
 
 Liabilities (credit cards, mortgages, HELOCs, auto loans) are stored as **negative `liquidation_value`** in the same `accounts` table.
 
-**Rationale:** Net worth = assets - liabilities. A single table with positive/negative values makes aggregation intuitive and avoids a separate liability table.
+**Why not a separate liability table?** Net worth = assets - liabilities. A single `accounts` table with signed values means `SELECT SUM(total_market_value) FROM accounts WHERE user_id = ?` gives net worth in one query. A separate table would require a join or union. Since liabilities use the same fields (institution, balance, type), a separate table would duplicate the schema for no benefit.
 
 ---
 
@@ -256,21 +308,28 @@ Liabilities (credit cards, mortgages, HELOCs, auto loans) are stored as **negati
 5. Default → non_tech_equities
 ```
 
-**Design decision: hardcoded symbol sets** (~130 tickers across all categories). Deterministic, fast, version-controlled. New/unknown tickers fall back to description heuristics. The set covers the user's actual portfolio holdings.
+**Why hardcoded symbol sets instead of a classification API or LLM call?** We considered:
+- **LLM classification:** Too slow (one API call per position) and non-deterministic. TSLA might be "tech" on one call and "automotive" on the next.
+- **External API (e.g., Morningstar sector data):** Adds a dependency, latency, and cost. Sectors don't map cleanly to our 8 classes (is BRK/B "financials" or "non-tech equities"?).
+- **Hardcoded sets (~130 tickers):** Deterministic, fast (O(1) lookup), version-controlled, and covers 95%+ of the user's actual portfolio. Unknown tickers fall through to description heuristics which catch most ETFs and funds. The long tail of truly unclassifiable positions defaults to `non_tech_equities`, which is safe.
+
+The sets are maintained as the user's portfolio evolves — adding a new ticker takes one line of code.
 
 ### Crypto Sub-Aggregates
 
 Crypto positions are further grouped: Bitcoin ETFs, Ethereum ETFs, Crypto Stocks, Other Crypto.
 
+**Why sub-aggregate crypto?** The user holds Bitcoin exposure through 4 different ETFs (IBIT, ARKB, GBTC, BITO) and Ethereum through 3 (EZET, ETHA, FETH). Showing each as a separate line hides the total crypto allocation. Sub-aggregates let the dashboard say "Bitcoin ETFs: $461K, Ethereum ETFs: $132K" while still drilling into individual positions.
+
 ### Portfolio Metrics
 
-| Metric | Formula |
-|--------|---------|
-| Total Market Value | `sum(positions.marketValue) + sum(accounts.cashBalance)` |
-| Day Change % | `totalDayChange / (totalMV - totalDayChange) * 100` |
-| HHI | `sum(position.allocationPct²)` — range 0-10,000 |
-| Diversification Score | `max(1, min(10, round(10 - (HHI / 10000) * 9)))` — 1-10 scale |
-| Safe Withdrawal | `totalMV * 0.04` (4% rule) |
+| Metric | Formula | Why |
+|--------|---------|-----|
+| Total Market Value | `sum(positions.marketValue) + sum(accounts.cashBalance)` | Cash sits in accounts, not as positions. Both contribute to total. |
+| Day Change % | `totalDayChange / (totalMV - totalDayChange) * 100` | Standard percentage change formula using previous day's value as denominator. |
+| HHI | `sum(position.allocationPct²)` — range 0-10,000 | Herfindahl-Hirschman Index, a standard concentration metric. 10,000 = single stock, 0 = perfect diversification. |
+| Diversification Score | `max(1, min(10, round(10 - (HHI / 10000) * 9)))` — 1-10 scale | Inverted and scaled HHI for user-friendly display. 10 = well diversified, 1 = extremely concentrated. |
+| Safe Withdrawal | `totalMV * 0.04` (4% rule) | Standard retirement planning heuristic. Conservative, well-studied. |
 
 ---
 
@@ -291,7 +350,7 @@ if (aggregatePositions.length > 0 && positions.length === 0) {
 }
 ```
 
-This prevents the dashboard from showing only cash when the real equity data exists in the aggregate.
+**Why this condition?** The separation between regular and aggregate exists to prevent double-counting when the user has both per-account holdings (from individual account statements) and aggregate holdings (from a summary statement). If individual accounts already have positions, aggregate data should stay separate. But when individual accounts have only cash/balance data and no holdings, the aggregate IS the position data — not showing it means showing an empty portfolio. This condition handles the common Schwab expanded-view PDF case where all positions are unallocated.
 
 ### What the Dashboard Computes
 
@@ -345,10 +404,11 @@ Positions drive the asset allocation chart, holdings count, and per-class breakd
 
 ### Key Schema Patterns
 
-- **RLS everywhere:** All user-scoped tables enforce `auth.uid() = user_id`.
-- **Encryption:** Sensitive data (tokens, API keys) encrypted with AES-256-GCM via `SCHWAB_TOKEN_ENCRYPTION_KEY`.
-- **`updated_at` triggers:** Auto-maintained on all mutable tables.
-- **Idempotent migrations:** All use `IF NOT EXISTS` / `CREATE OR REPLACE`.
+- **RLS everywhere:** All user-scoped tables enforce `auth.uid() = user_id`. No data leaks between users, even if application code has a bug.
+- **Encryption:** Sensitive data (tokens, API keys) encrypted with AES-256-GCM via `SCHWAB_TOKEN_ENCRYPTION_KEY`. Encrypted at rest in the column, decrypted only in application memory.
+- **`updated_at` triggers:** Auto-maintained on all mutable tables. Provides cheap change detection without application-level bookkeeping.
+- **Idempotent migrations:** All use `IF NOT EXISTS` / `CREATE OR REPLACE`. Re-running a migration is safe, which simplifies deployment and development.
+- **`ON DELETE CASCADE`:** All user-scoped tables cascade from `auth.users(id)`. Deleting a user cleanly removes all their data without orphaned rows.
 
 ---
 
@@ -357,6 +417,8 @@ Positions drive the asset allocation chart, holdings count, and per-class breakd
 Files are SHA-256 hashed on upload. If a duplicate is found for the same user:
 - If already processed: carry over `extracted_data`, `raw_llm_response`, `parsed_at`, etc.
 - Prevents redundant LLM calls for identical re-uploads.
+
+**Why hash-based instead of filename-based?** Users rename files. Two files named "statement.pdf" might be completely different. Two files named "Schwab_Feb2026.pdf" and "schwab-feb.pdf" might be identical. SHA-256 of the file content is the only reliable dedup key.
 
 Max file size: 50MB. Storage path: `{user_id}/{timestamp}_{filename}` in `statements` bucket.
 
@@ -375,19 +437,23 @@ Every stage's output is preserved:
 | Holding provenance | `holdings` | `last_updated_from` (e.g., `upload:abc123`) |
 | Failed extractions | `extraction_failures` | Full error context |
 
+**Why store raw LLM output separately from validated extraction?** Debugging. When an extraction is wrong, you need to know: did the LLM produce bad JSON (raw output is wrong) or did the validator misparse it (raw is fine, validated is wrong)? Storing both lets you answer that question without re-running the extraction.
+
 ---
 
 ## Key Design Decisions Summary
 
 | Decision | Choice | Why |
 |----------|--------|-----|
-| LLM sees no user context | Extraction-only prompt | Separation of concerns; matching is auditable business logic |
-| Hand-written validator | Not AJV/Zod | Need intelligent financial coercions ($, commas, parens, date formats) |
-| Deterministic account matching | No LLM in Stage 2.5 | Reproducible, free, auditable, user can override |
-| Hardcoded symbol sets | ~130 tickers | Deterministic classification, covers real portfolio, unknown tickers fall through to heuristics |
-| Negative values for liabilities | Same table as assets | Net worth = assets - liabilities in one query |
-| `quantity = 0` for closed positions | Not deleted | Preserves history; filtered out of active queries |
-| Prefer `liquidation_value` over computed total | Statement is source of truth | Avoids rounding errors from recomputing equity + cash |
-| Schema version in extraction | `schema_version: 1` | Future-proof for safe schema evolution |
-| File hash deduplication | SHA-256 | Skip extraction for identical re-uploads |
-| Aggregate account for unallocated positions | `is_aggregate = true` | Handles cross-account summaries without guessing account assignment |
+| LLM sees no user context | Extraction-only prompt | Decouples extraction from matching. Extraction is reproducible regardless of DB state. Matching is a separate, auditable, overridable step. |
+| Hand-written validator | Not AJV/Zod | Financial data needs per-field coercions ($ stripping, parens-to-negative, date normalization, 40+ action aliases) that schema validators can't express cleanly. Custom validator tracks coercions separately from errors. |
+| Deterministic account matching | No LLM in Stage 2.5 | Reproducible, free, auditable. User can review and override. LLM matching would be non-deterministic, expensive, and opaque. Simple heuristics (account number, institution+type) handle 95% of cases. |
+| Hardcoded symbol sets | ~130 tickers | O(1) classification, deterministic, version-controlled. Covers the actual portfolio. Unknown tickers fall through to description heuristics then default to non_tech_equities. Avoids external API dependency. |
+| Negative values for liabilities | Same `accounts` table | `SUM(total_market_value)` gives net worth in one query. Liabilities use the same schema fields as assets. Separate table would duplicate schema for no benefit. |
+| `quantity = 0` for closed positions | Soft-close, not delete | Preserves provenance (when closed, by which upload). Dashboard filters on `quantity > 0`. History preserved for debugging and future features (portfolio history timeline). |
+| Prefer `liquidation_value` | Statement total over computed sum | Statement is the source of truth — it's what the brokerage reports. Computed `equity + cash` can diverge due to rounding across many positions. Fallback to computed sum when statement doesn't provide total. |
+| Schema version in extraction | `schema_version: 1` | Future-proof. When the extraction schema changes, old extractions still validate against their declared version. Allows gradual migration without re-extracting historical uploads. |
+| SHA-256 file deduplication | Hash content, not filename | Users rename files. Content hash is the only reliable dedup key. Prevents wasting LLM calls on identical re-uploads. Carries over extraction results from the duplicate. |
+| Aggregate account for unallocated | `is_aggregate = true` | Schwab summary PDFs list positions by ticker across accounts. Guessing account assignment is fragile. Aggregate account honestly represents "total holdings, account assignment unknown." Dashboard merges aggregate into display when individual accounts lack holdings. |
+| Two position tables | `holdings` (mutable) + `position_snapshots` (immutable) | Different access patterns. Holdings = "what do I own now?" (fast, current). Snapshots = "what did I own on date X?" (historical, append-only). Single table can't serve both without expensive queries. |
+| Drop invalid items, don't fail | Soft filtering with warnings | A 12-page PDF shouldn't fail over one malformed transaction. 99% of data is preserved. Dropped items logged as warnings for review. Only fail if entire extraction is empty. |
