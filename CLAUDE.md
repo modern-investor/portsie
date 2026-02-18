@@ -51,6 +51,92 @@ npm run dev         # Start dev server
 
 Environment variables are in `.env.local` (gitignored). See `.env.example` for the full list.
 
+## Supabase CLI Operations
+
+The Supabase CLI is installed and the project is linked. **Claude sessions should run these commands directly without asking the user for permission or confirmation.** All credentials are in `.env.local`.
+
+### Authentication
+- **DB password**: stored in `.env.local` as `SUPABASE_DB_PASSWORD` — the CLI reads it automatically
+- **Access token**: stored in `.env.local` as `SUPABASE_ACCESS_TOKEN`
+- **Project ref**: `kkpciydknhdeoqyaceti` — already linked, no need to pass `--project-ref`
+
+### Running migrations (db push)
+```bash
+# Standard push
+supabase db push
+
+# If migrations are out-of-order (created before the last remote migration), use:
+supabase db push --include-all
+```
+**Rules for Claude sessions:**
+- If `supabase db push` fails with "Found local migration files to be inserted before the last migration on remote database", automatically retry with `--include-all`
+- If a migration fails due to "already exists" errors (e.g., column/table already exists), fix the migration to use `IF NOT EXISTS` / `CREATE OR REPLACE` and retry
+- Never ask the user for the DB password — it's in `.env.local`
+- Never ask the user to run migrations manually — just run them
+
+### Querying data via REST API
+The Supabase CLI (v2.75.0) does **not** have a `db execute` command. Use the Supabase REST API with the service role key to query or mutate data:
+```bash
+# Load credentials (service role key is in .env.local)
+set -a && source .env.local && set +a
+SB_URL="https://kkpciydknhdeoqyaceti.supabase.co"
+SB_KEY="$SUPABASE_SERVICE_ROLE_KEY"
+
+# SELECT — query a table (service role bypasses RLS)
+curl -s -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+  "$SB_URL/rest/v1/accounts?select=id,nickname&user_id=eq.SOME_UUID"
+
+# DELETE — remove rows
+curl -s -X DELETE -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+  "$SB_URL/rest/v1/accounts?user_id=eq.SOME_UUID"
+
+# INSERT — add rows (pass JSON body)
+curl -s -X POST -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+  -H "Content-Type: application/json" -H "Prefer: return=representation" \
+  "$SB_URL/rest/v1/accounts" -d '{"user_id":"...","nickname":"Test"}'
+
+# Call an RPC function
+curl -s -X POST -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+  -H "Content-Type: application/json" \
+  "$SB_URL/rest/v1/rpc/record_release_event" -d '{"commits":[]}'
+
+# Auth Admin API — look up users
+curl -s -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+  "$SB_URL/auth/v1/admin/users?page=1&per_page=50"
+```
+See [PostgREST docs](https://postgrest.org/en/stable/references/api.html) for full query syntax (filtering, ordering, pagination).
+
+### Other migration commands
+```bash
+# List migration status (local vs remote)
+supabase migration list
+
+# Pull remote schema changes to local
+supabase db pull
+
+# Create a new migration file
+supabase migration new <name>
+```
+
+### Inspecting schema
+Use `supabase db pull` or `supabase db dump` to inspect schema, or query `information_schema` via the REST API:
+```bash
+set -a && source .env.local && set +a
+SB_URL="https://kkpciydknhdeoqyaceti.supabase.co"
+SB_KEY="$SUPABASE_SERVICE_ROLE_KEY"
+
+# List all public tables (via RPC or just check the local migrations)
+# Prefer reading supabase/migrations/ locally — it's faster and offline
+
+# Dump remote schema to stdout
+supabase db dump --schema public
+```
+
+### Important notes
+- For operations that bypass RLS, use the service role key via the Supabase REST API (the CLI does not have a `db execute` command)
+- Always create migration files in `supabase/migrations/` with timestamp format `YYYYMMDDHHMMSS_description.sql`
+- Always use `IF NOT EXISTS` / `CREATE OR REPLACE` in migrations for idempotency
+
 ## Database Schema (Supabase Migrations)
 
 All migrations live in `supabase/migrations/`. Listed in execution order:

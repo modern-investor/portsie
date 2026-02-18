@@ -51,6 +51,18 @@ export default async function Home() {
           {branding.slogan}
         </h1>
 
+        {/* Hero illustration */}
+        <div className="w-full overflow-hidden rounded-xl border border-border shadow-sm">
+          <Image
+            src="/brand/portsie-hero.jpeg"
+            alt="Portsie — nautical illustration with orca and port scene"
+            width={1478}
+            height={788}
+            className="w-full h-auto"
+            priority
+          />
+        </div>
+
         {/* Waiting list signup */}
         <div className="space-y-2 pt-2">
           <p className="text-muted-foreground text-sm">

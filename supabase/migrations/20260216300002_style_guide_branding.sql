@@ -1,7 +1,7 @@
 -- Add branding column to style_guide for slogan, tagline, and logo paths
 
 ALTER TABLE style_guide
-  ADD COLUMN branding JSONB NOT NULL DEFAULT '{}'::jsonb;
+  ADD COLUMN IF NOT EXISTS branding JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 UPDATE style_guide
 SET branding = jsonb_build_object(
