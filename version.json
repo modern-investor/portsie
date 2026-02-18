@@ -1,12 +1,12 @@
 {
-  "version": "v260218.04 2:11a",
-  "release": 69,
-  "sha": "f431ce9d",
-  "fullSha": "f431ce9dba981c928e6830c986032990087a2cfa",
+  "version": "v260218.05 2:32a",
+  "release": 70,
+  "sha": "f9727138",
+  "fullSha": "f97271387253674966163e6dcce97e6e8a3ac36a",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000067",
-  "pushedAt": "2026-02-18T08:11:41+00",
-  "commits": [{"sha": "f431ce9dba981c928e6830c986032990087a2cfa", "short_sha": "f431ce9d", "author": "rahulio", "message": "Fix tagline: add \u2122 before period"}]
+  "machine": "GitHub Actions 1000000068",
+  "pushedAt": "2026-02-18T08:32:48+00",
+  "commits": [{"sha": "f97271387253674966163e6dcce97e6e8a3ac36a", "short_sha": "f9727138", "author": "rahulio", "message": "Homepage: two-column layout to fit above the fold on desktop"}]
 }
