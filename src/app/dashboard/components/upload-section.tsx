@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { UploadDropzone } from "./upload-dropzone";
 import { UploadList } from "./upload-list";
 import type { UploadedStatement } from "@/lib/upload/types";
+
+const QC_POLL_STATUSES = new Set(["qc_running", "qc_fixing"]);
 
 export function UploadSection() {
   const [uploads, setUploads] = useState<UploadedStatement[]>([]);
@@ -37,6 +39,34 @@ export function UploadSection() {
   function cancelRedirect() {
     setRedirectCountdown(null);
   }
+
+  // Poll uploads in QC states (qc_running, qc_fixing) every 3 seconds
+  const uploadsRef = useRef(uploads);
+  uploadsRef.current = uploads;
+  useEffect(() => {
+    const qcIds = uploads
+      .filter((u) => QC_POLL_STATUSES.has(u.parse_status))
+      .map((u) => u.id);
+    if (qcIds.length === 0) return;
+
+    const interval = setInterval(async () => {
+      for (const id of qcIds) {
+        try {
+          const res = await fetch(`/api/upload/${id}`);
+          if (res.ok) {
+            const updated = await res.json();
+            setUploads((prev) =>
+              prev.map((u) => (u.id === id ? updated : u))
+            );
+          }
+        } catch {
+          // Silently fail — will retry on next poll
+        }
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [uploads.map((u) => `${u.id}:${u.parse_status}`).join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch existing uploads on mount
   const fetchUploads = useCallback(async () => {
@@ -105,6 +135,13 @@ export function UploadSection() {
         next.delete(uploadId);
         return next;
       });
+
+      // Fire quality check in background after auto-confirm
+      if (autoConfirmed) {
+        fetch(`/api/upload/${uploadId}/quality-check`, { method: "POST" }).catch(
+          () => {} // QC errors are non-blocking; status tracked via polling
+        );
+      }
     }
     return autoConfirmed;
   }

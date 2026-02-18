@@ -252,6 +252,7 @@ async function writeAccountData(
       unrealized_profit_loss: p.unrealized_profit_loss ?? null,
       unrealized_profit_loss_pct: p.unrealized_profit_loss_pct ?? null,
       valuation_source: "statement",
+      uploaded_statement_id: statementId,
     }));
 
     const { data, error } = await supabase
@@ -283,6 +284,7 @@ async function writeAccountData(
       equity: b.equity ?? null,
       long_market_value: b.long_market_value ?? null,
       buying_power: b.buying_power ?? null,
+      uploaded_statement_id: statementId,
     }));
 
     const { data, error } = await supabase
