@@ -41,6 +41,11 @@ You MUST respond with valid JSON matching the PortsieExtraction v1 schema below.
     }
   ],
   "unallocated_positions": [ ... ],
+  "document_totals": {
+    "total_value": number | null,
+    "total_day_change": number | null,
+    "total_day_change_pct": number | null
+  },
   "confidence": "high" | "medium" | "low",
   "notes": [string]
 }
@@ -92,6 +97,8 @@ positions: Array of holdings/positions for this account (may be empty).
   - cost_basis_total: Total cost basis, or null.
   - unrealized_profit_loss: Unrealized gain/loss in dollars, or null.
   - unrealized_profit_loss_pct: Unrealized gain/loss as percentage (e.g., 36.62 for +36.62%), or null.
+  - day_change_amount: Day change in dollars for this position (from "Day Change $" or "Price Change $" column). This is the single-day price movement, NOT the same as unrealized gain/loss. null if not shown.
+  - day_change_pct: Day change as percentage (from "Day Change %" or "Price Change %" column, e.g., -0.88 for -0.88%). null if not shown.
 
 balances: Array of balance snapshots for this account (should always have at least one entry if the account value is visible).
   - snapshot_date: REQUIRED. "YYYY-MM-DD" format.
@@ -104,6 +111,11 @@ balances: Array of balance snapshots for this account (should always have at lea
   - buying_power: Buying power, or null.
 
 unallocated_positions: Positions from aggregated sections spanning multiple accounts (e.g., a combined "Positions" table at the bottom of a multi-account summary, often marked with symbols like ††). Same schema as positions above. Use [] if all positions are per-account.
+
+document_totals: Grand total values shown on the document (often at the top or in a summary section).
+  - total_value: The document's stated total portfolio/net worth value. For multi-account documents, this is the sum across ALL accounts (including liabilities as negatives). null if not visible.
+  - total_day_change: Total day change amount as shown. null if not visible.
+  - total_day_change_pct: Total day change percentage as shown. null if not visible.
 
 confidence: "high", "medium", or "low".
 
@@ -173,7 +185,11 @@ For Robinhood CSV trans_code values:
 
 14. DO NOT HALLUCINATE: Only extract what is explicitly present in the document. Never invent data.
 
-15. RESPOND WITH JSON ONLY: No markdown fences, no explanation, no preamble, no commentary. Just the raw JSON object.`;
+15. RESPOND WITH JSON ONLY: No markdown fences, no explanation, no preamble, no commentary. Just the raw JSON object.
+
+16. DAY CHANGE DATA: If the document shows day change columns (Day Change $, Day Change %, Price Change, etc.), extract them into day_change_amount and day_change_pct for each position. These track the single-day price movement and are separate from unrealized gain/loss. Also extract the document-level total into document_totals.
+
+17. DOCUMENT TOTALS: If the document shows a grand total value (e.g., "Total Value: $14,953,761.34"), extract it into document_totals.total_value. Similarly extract total day change if shown. This enables integrity validation against per-account sums.`;
 
 /**
  * Build the extraction prompt. In the new architecture, this is just the

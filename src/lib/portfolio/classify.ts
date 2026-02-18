@@ -106,19 +106,28 @@ function classifySymbol(
  * Classify all positions and account cash into a full portfolio breakdown.
  * Accepts normalized input types — works with Schwab API data, uploaded data, or both.
  */
+/** Account categories that represent liabilities (negative value). */
+const LIABILITY_CATEGORIES = new Set(["credit", "loan"]);
+
 export function classifyPortfolio(
   positions: PortfolioInputPosition[],
   accounts: PortfolioInputAccount[]
 ): ClassifiedPortfolio {
-  // 1. Calculate total market value (positions + cash)
+  // 1. Calculate total market value (positions + cash - liabilities)
   const positionsMarketValue = positions.reduce((s, p) => s + p.marketValue, 0);
 
   let totalCash = 0;
+  let liabilityTotal = 0;
   for (const acct of accounts) {
-    totalCash += acct.cashBalance ?? 0;
+    if (LIABILITY_CATEGORIES.has(acct.accountCategory)) {
+      // Liability accounts: use liquidationValue (already negative in DB)
+      liabilityTotal += acct.liquidationValue ?? 0;
+    } else {
+      totalCash += acct.cashBalance ?? 0;
+    }
   }
 
-  const totalMarketValue = positionsMarketValue + totalCash;
+  const totalMarketValue = positionsMarketValue + totalCash + liabilityTotal;
   const totalDayChange = positions.reduce((s, p) => s + p.currentDayProfitLoss, 0);
   const totalDayChangePct =
     totalMarketValue > 0 ? (totalDayChange / (totalMarketValue - totalDayChange)) * 100 : 0;
@@ -161,6 +170,11 @@ export function classifyPortfolio(
       extraMV = totalCash;
     }
 
+    // Include liability total in the debt asset class
+    if (def.id === "debt" && liabilityTotal !== 0) {
+      extraMV = liabilityTotal;
+    }
+
     positions = [...positions].sort((a, b) => Math.abs(b.marketValue) - Math.abs(a.marketValue));
 
     const marketValue = positions.reduce((s, p) => s + p.marketValue, 0) + extraMV;
@@ -171,7 +185,7 @@ export function classifyPortfolio(
       marketValue,
       dayChange,
       allocationPct: totalMarketValue > 0 ? (marketValue / totalMarketValue) * 100 : 0,
-      holdingCount: positions.length + (extraMV > 0 ? 1 : 0),
+      holdingCount: positions.length + (extraMV !== 0 ? 1 : 0),
       positions,
     };
   }).filter((ac) => ac.marketValue !== 0 || ac.holdingCount > 0);
@@ -181,6 +195,7 @@ export function classifyPortfolio(
   const diversificationScore = Math.max(1, Math.min(10, Math.round(10 - (hhi / 10000) * 9)));
 
   const cashPct = totalMarketValue > 0 ? (totalCash / totalMarketValue) * 100 : 0;
+  const liabilityPct = totalMarketValue > 0 ? (liabilityTotal / totalMarketValue) * 100 : 0;
 
   return {
     totalMarketValue,
@@ -189,6 +204,8 @@ export function classifyPortfolio(
     holdingCount: classified.length,
     cashValue: totalCash,
     cashPct,
+    liabilityValue: liabilityTotal,
+    liabilityPct,
     assetClasses,
     hhi,
     diversificationScore,

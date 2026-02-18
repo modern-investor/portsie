@@ -13,6 +13,7 @@ import { PortfolioInsightsCard } from "./portfolio-insights-card";
 import { AssetClassDetail } from "./asset-class-detail";
 import { PositionsTable } from "./positions-table";
 import { AccountOverview } from "./account-overview";
+import { IntegrityWarning } from "./integrity-warning";
 
 // ─── Sub-tab types ──────────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
         // No data from any source (check both regular and aggregate)
         const hasRegularData =
           data.positions.length > 0 ||
-          data.accounts.some((a) => a.cashBalance > 0 || a.liquidationValue > 0);
+          data.accounts.some((a) => a.cashBalance > 0 || a.liquidationValue !== 0);
         const hasAggregateData =
           (data.aggregatePositions?.length ?? 0) > 0 ||
           (data.aggregateAccounts?.length ?? 0) > 0;
@@ -182,6 +183,9 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
   if (selectedClass) {
     return (
       <div className="space-y-4">
+        {portfolioData.discrepancies && portfolioData.discrepancies.length > 0 && (
+          <IntegrityWarning discrepancies={portfolioData.discrepancies} hideValues={hideValues} />
+        )}
         <PortfolioSummaryBar portfolio={portfolio} hideValues={hideValues} priceDate={priceDate} />
         <AssetClassDetail
           classId={selectedClass}
@@ -195,6 +199,11 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Integrity warning (if discrepancies exist) */}
+      {portfolioData.discrepancies && portfolioData.discrepancies.length > 0 && (
+        <IntegrityWarning discrepancies={portfolioData.discrepancies} hideValues={hideValues} />
+      )}
+
       {/* Executive summary */}
       <PortfolioSummaryBar portfolio={portfolio} hideValues={hideValues} priceDate={priceDate} />
 

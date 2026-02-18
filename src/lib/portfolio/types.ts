@@ -76,6 +76,10 @@ export interface PortfolioInputPosition {
 export interface PortfolioInputAccount {
   id: string;
   cashBalance: number;
+  /** Full account value (negative for liabilities like mortgages, credit cards). */
+  liquidationValue: number;
+  /** Account category from DB: "brokerage", "banking", "credit", "loan", "real_estate", "offline". */
+  accountCategory: string;
 }
 
 // ─── Output types ───────────────────────────────────────────────────────────
@@ -88,6 +92,9 @@ export interface ClassifiedPortfolio {
   holdingCount: number;
   cashValue: number;
   cashPct: number;
+  /** Total liability value (negative number — mortgages, credit cards, loans). */
+  liabilityValue: number;
+  liabilityPct: number;
   assetClasses: AssetClassSummary[];
   /** HHI score (0-10000; lower = more diversified). */
   hhi: number;

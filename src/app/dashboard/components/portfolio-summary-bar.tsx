@@ -18,7 +18,7 @@ function formatPriceDate(dateStr: string): string {
 }
 
 export function PortfolioSummaryBar({ portfolio, hideValues, priceDate }: Props) {
-  const { totalMarketValue, totalDayChange, totalDayChangePct, holdingCount, cashValue, cashPct } =
+  const { totalMarketValue, totalDayChange, totalDayChangePct, holdingCount, cashValue, cashPct, liabilityValue, liabilityPct } =
     portfolio;
 
   const dayColor = totalDayChange >= 0 ? "text-green-600" : "text-red-600";
@@ -80,6 +80,23 @@ export function PortfolioSummaryBar({ portfolio, hideValues, priceDate }: Props)
             )}
           </p>
         </div>
+
+        {/* Debt/Liabilities (only shown if there are liabilities) */}
+        {liabilityValue < 0 && (
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Debt</p>
+            <p className="text-lg font-semibold tabular-nums text-red-600">
+              {hideValues ? (
+                <span className="text-gray-300 select-none">$*****</span>
+              ) : (
+                <>
+                  -${Math.abs(liabilityValue).toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                  <span className="text-sm text-gray-500 ml-1">({Math.abs(liabilityPct).toFixed(1)}%)</span>
+                </>
+              )}
+            </p>
+          </div>
+        )}
 
         {/* Price date */}
         {priceDate && (

@@ -46,6 +46,17 @@ export interface UnifiedAccount {
   lastSyncedAt: string | null;
   accountGroup: string | null;
   isAggregate: boolean;
+  /** Account category: "brokerage", "banking", "credit", "loan", "real_estate", "offline". */
+  accountCategory: string;
+}
+
+export interface PortfolioDiscrepancy {
+  accountId: string;
+  accountName: string;
+  documentTotal: number;
+  computedTotal: number;
+  difference: number;
+  differencePct: number;
 }
 
 export interface PortfolioData {
@@ -55,6 +66,8 @@ export interface PortfolioData {
   aggregateAccounts: UnifiedAccount[];
   hasSchwab: boolean;
   hasUploads: boolean;
+  /** Discrepancies between document-reported and computed account totals. */
+  discrepancies?: PortfolioDiscrepancy[];
 }
 
 export async function GET() {
@@ -102,6 +115,7 @@ export async function GET() {
           lastSyncedAt: new Date().toISOString(),
           accountGroup: null,
           isAggregate: false,
+          accountCategory: "brokerage",
         });
 
         const maskedNumber = `****${sec.accountNumber.slice(-4)}`;
@@ -131,7 +145,8 @@ export async function GET() {
       .select(
         "id, account_nickname, institution_name, account_type, data_source, " +
         "total_market_value, cash_balance, equity_value, buying_power, " +
-        "holdings_count, last_synced_at, account_category, account_group, is_aggregate"
+        "holdings_count, last_synced_at, account_category, account_group, is_aggregate, " +
+        "document_reported_total"
       )
       .eq("user_id", user.id)
       .neq("data_source", "schwab_api") as { data: Array<{
@@ -149,6 +164,7 @@ export async function GET() {
         account_category: string;
         account_group: string | null;
         is_aggregate: boolean;
+        document_reported_total: number | null;
       }> | null };
 
     if (dbAccounts && dbAccounts.length > 0) {
@@ -191,6 +207,8 @@ export async function GET() {
         const accountLabel =
           acct.account_nickname ?? acct.institution_name ?? "Uploaded Account";
 
+        // Use Number() without || 0 for liquidationValue so negatives are preserved
+        const liqVal = Number(acct.total_market_value);
         accounts.push({
           id: acct.id,
           name: accountLabel,
@@ -198,11 +216,12 @@ export async function GET() {
           type: acct.account_type ?? "Unknown",
           source: acct.data_source as UnifiedAccount["source"],
           cashBalance: Number(acct.cash_balance) || 0,
-          liquidationValue: Number(acct.total_market_value) || 0,
+          liquidationValue: isNaN(liqVal) ? 0 : liqVal,
           holdingsCount: acct.holdings_count ?? 0,
           lastSyncedAt: acct.last_synced_at ?? null,
           accountGroup: acct.account_group ?? null,
           isAggregate: false,
+          accountCategory: acct.account_category ?? "brokerage",
         });
 
         const acctHoldings = holdingsByAccount.get(acct.id) ?? [];
@@ -232,6 +251,7 @@ export async function GET() {
         const accountLabel =
           acct.account_nickname ?? acct.institution_name ?? "Aggregate";
 
+        const aggLiqVal = Number(acct.total_market_value);
         aggregateAccounts.push({
           id: acct.id,
           name: accountLabel,
@@ -239,11 +259,12 @@ export async function GET() {
           type: acct.account_type ?? "aggregate",
           source: acct.data_source as UnifiedAccount["source"],
           cashBalance: Number(acct.cash_balance) || 0,
-          liquidationValue: Number(acct.total_market_value) || 0,
+          liquidationValue: isNaN(aggLiqVal) ? 0 : aggLiqVal,
           holdingsCount: acct.holdings_count ?? 0,
           lastSyncedAt: acct.last_synced_at ?? null,
           accountGroup: acct.account_group ?? null,
           isAggregate: true,
+          accountCategory: acct.account_category ?? "brokerage",
         });
 
         const acctHoldings = holdingsByAccount.get(acct.id) ?? [];
@@ -295,6 +316,50 @@ export async function GET() {
     aggregateAccounts.length = 0;
   }
 
+  // ── Compute integrity discrepancies ──
+  const discrepancies: PortfolioDiscrepancy[] = [];
+  // Re-read accounts with document_reported_total (we already have them in the accounts array
+  // but need the doc total which was queried above). Match by ID.
+  if (hasUploads) {
+    // Build a lookup from our already-fetched DB data
+    // We need to check the dbAccounts from the stored data query
+    // The accounts array already has the computed liquidationValue,
+    // so we compare document_reported_total against it.
+    try {
+      const { data: acctTotals } = await supabase
+        .from("accounts")
+        .select("id, account_nickname, document_reported_total, total_market_value")
+        .eq("user_id", user.id)
+        .not("document_reported_total", "is", null) as { data: Array<{
+          id: string;
+          account_nickname: string | null;
+          document_reported_total: number;
+          total_market_value: number | null;
+        }> | null };
+
+      for (const acct of acctTotals ?? []) {
+        const docTotal = Number(acct.document_reported_total);
+        const computed = Number(acct.total_market_value) || 0;
+        const diff = docTotal - computed;
+        const absDiff = Math.abs(diff);
+        const pctDiff = docTotal !== 0 ? (absDiff / Math.abs(docTotal)) * 100 : 0;
+
+        if (absDiff > 100 && pctDiff > 1) {
+          discrepancies.push({
+            accountId: acct.id,
+            accountName: acct.account_nickname ?? "Unknown Account",
+            documentTotal: docTotal,
+            computedTotal: computed,
+            difference: diff,
+            differencePct: pctDiff,
+          });
+        }
+      }
+    } catch {
+      // Ignore discrepancy check failures
+    }
+  }
+
   const body: PortfolioData = {
     positions,
     accounts,
@@ -302,6 +367,7 @@ export async function GET() {
     aggregateAccounts,
     hasSchwab,
     hasUploads,
+    ...(discrepancies.length > 0 ? { discrepancies } : {}),
   };
   return NextResponse.json(body);
 }
