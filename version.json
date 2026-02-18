@@ -1,12 +1,12 @@
 {
-  "version": "v260217.31 11:52p",
-  "release": 63,
-  "sha": "7fe330e8",
-  "fullSha": "7fe330e8e55933cbae33098841bab6bcffdc1d4d",
+  "version": "v260217.32 11:56p",
+  "release": 64,
+  "sha": "83257600",
+  "fullSha": "8325760054b9891f1af68cc6be14fcaf56af8bd1",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000061",
-  "pushedAt": "2026-02-18T05:52:39+00",
-  "commits": [{"sha": "7fe330e8e55933cbae33098841bab6bcffdc1d4d", "short_sha": "7fe330e8", "author": "rahulio", "message": "Switch default extraction engine to Gemini 3 Flash with Claude CLI fallback"}]
+  "machine": "GitHub Actions 1000000062",
+  "pushedAt": "2026-02-18T05:56:04+00",
+  "commits": [{"sha": "8325760054b9891f1af68cc6be14fcaf56af8bd1", "short_sha": "83257600", "author": "rahulio", "message": "Merge branch 'claude/tender-bouman'"}, {"sha": "d4e1590300a78bd51829bc05687ea3e562a97dc3", "short_sha": "d4e15903", "author": "rahulio", "message": "Add ledger design doc covering extraction, labeling, and storage decisions"}]
 }
