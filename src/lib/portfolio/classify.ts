@@ -113,21 +113,33 @@ export function classifyPortfolio(
   positions: PortfolioInputPosition[],
   accounts: PortfolioInputAccount[]
 ): ClassifiedPortfolio {
-  // 1. Calculate total market value (positions + cash - liabilities)
+  // 1. Calculate total market value (positions + cash + non-position accounts - liabilities)
   const positionsMarketValue = positions.reduce((s, p) => s + p.marketValue, 0);
+
+  // Categories where value comes from holdings (positions) — cash is separate.
+  const POSITION_BACKED_CATEGORIES = new Set(["brokerage"]);
 
   let totalCash = 0;
   let liabilityTotal = 0;
+  let bankingValue = 0;
+  let realEstateAccountValue = 0;
   for (const acct of accounts) {
     if (LIABILITY_CATEGORIES.has(acct.accountCategory)) {
       // Liability accounts: use liquidationValue (already negative in DB)
       liabilityTotal += acct.liquidationValue ?? 0;
-    } else {
+    } else if (POSITION_BACKED_CATEGORIES.has(acct.accountCategory)) {
+      // Brokerage accounts: positions are already counted; only add cash
       totalCash += acct.cashBalance ?? 0;
+    } else if (acct.accountCategory === "real_estate") {
+      // Real estate accounts: not backed by positions, shown in real_estate class
+      realEstateAccountValue += acct.liquidationValue ?? 0;
+    } else {
+      // Banking/offline/other non-brokerage: treated as cash
+      bankingValue += acct.liquidationValue ?? 0;
     }
   }
 
-  const totalMarketValue = positionsMarketValue + totalCash + liabilityTotal;
+  const totalMarketValue = positionsMarketValue + totalCash + bankingValue + realEstateAccountValue + liabilityTotal;
   const totalDayChange = positions.reduce((s, p) => s + p.currentDayProfitLoss, 0);
   const totalDayChangePct =
     totalMarketValue > 0 ? (totalDayChange / (totalMarketValue - totalDayChange)) * 100 : 0;
@@ -166,8 +178,14 @@ export function classifyPortfolio(
     let positions = byClass.get(def.id) ?? [];
     let extraMV = 0;
 
-    if (def.id === "cash" && totalCash > 0) {
-      extraMV = totalCash;
+    if (def.id === "cash") {
+      // Include brokerage cash + banking/offline account values
+      extraMV = totalCash + bankingValue;
+    }
+
+    // Include real estate account values (not backed by positions)
+    if (def.id === "real_estate") {
+      extraMV = realEstateAccountValue;
     }
 
     // Include liability total in the debt asset class
@@ -194,7 +212,8 @@ export function classifyPortfolio(
   const hhi = classified.reduce((sum, pos) => sum + pos.allocationPct ** 2, 0);
   const diversificationScore = Math.max(1, Math.min(10, Math.round(10 - (hhi / 10000) * 9)));
 
-  const cashPct = totalMarketValue > 0 ? (totalCash / totalMarketValue) * 100 : 0;
+  const totalCashValue = totalCash + bankingValue;
+  const cashPct = totalMarketValue > 0 ? (totalCashValue / totalMarketValue) * 100 : 0;
   const liabilityPct = totalMarketValue > 0 ? (liabilityTotal / totalMarketValue) * 100 : 0;
 
   return {
@@ -202,7 +221,7 @@ export function classifyPortfolio(
     totalDayChange,
     totalDayChangePct,
     holdingCount: classified.length,
-    cashValue: totalCash,
+    cashValue: totalCashValue,
     cashPct,
     liabilityValue: liabilityTotal,
     liabilityPct,
