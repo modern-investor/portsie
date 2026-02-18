@@ -5,8 +5,36 @@ import { useRouter } from "next/navigation";
 import { UploadDropzone } from "./upload-dropzone";
 import { UploadList } from "./upload-list";
 import type { UploadedStatement } from "@/lib/upload/types";
+import type { PortsieExtraction } from "@/lib/extraction/schema";
 
 const QC_POLL_STATUSES = new Set(["qc_running", "qc_fixing"]);
+
+/** Build a human-readable summary of what was saved */
+function buildSavedSummary(uploads: UploadedStatement[], confirmedIds: string[]) {
+  const confirmed = uploads.filter((u) => confirmedIds.includes(u.id));
+  if (confirmed.length === 0) return null;
+
+  let totalPositions = 0;
+  let totalTransactions = 0;
+  let totalBalances = 0;
+  const institutions = new Set<string>();
+
+  for (const u of confirmed) {
+    const ext = u.extracted_data as PortsieExtraction | null;
+    if (!ext) continue;
+    for (const acct of ext.accounts) {
+      totalPositions += acct.positions.length;
+      totalTransactions += acct.transactions.length;
+      totalBalances += acct.balances.length;
+      if (acct.account_info.institution_name) {
+        institutions.add(acct.account_info.institution_name);
+      }
+    }
+    totalPositions += ext.unallocated_positions.length;
+  }
+
+  return { totalPositions, totalTransactions, totalBalances, institutions: [...institutions], fileCount: confirmed.length };
+}
 
 export function UploadSection({
   brokerageContext,
@@ -25,6 +53,8 @@ export function UploadSection({
   const [processCount, setProcessCount] = useState<Record<string, number>>({});
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  // Track IDs that were auto-confirmed in this batch for summary dialog
+  const [confirmedIds, setConfirmedIds] = useState<string[]>([]);
   const router = useRouter();
 
   // Auto-redirect countdown after save
@@ -42,6 +72,7 @@ export function UploadSection({
 
   function cancelRedirect() {
     setRedirectCountdown(null);
+    setConfirmedIds([]);
   }
 
   // Poll uploads in QC states (qc_running, qc_fixing) every 3 seconds
@@ -166,7 +197,7 @@ export function UploadSection({
 
     // Process sequentially so queued items stay visually distinct
     (async () => {
-      let anyAutoConfirmed = false;
+      const batchConfirmedIds: string[] = [];
       for (const id of ids) {
         // Move from queued → processing
         setQueuedIds((prev) => {
@@ -175,7 +206,7 @@ export function UploadSection({
           return next;
         });
         const confirmed = await handleProcess(id);
-        if (confirmed) anyAutoConfirmed = true;
+        if (confirmed) batchConfirmedIds.push(id);
         setBatchDone((prev) => {
           const next = prev + 1;
           if (next >= ids.length) {
@@ -196,7 +227,8 @@ export function UploadSection({
         if (reviewable) setReviewingId(reviewable);
         return prev;
       });
-      if (anyAutoConfirmed) {
+      if (batchConfirmedIds.length > 0) {
+        setConfirmedIds(batchConfirmedIds);
         setRedirectCountdown(5);
       }
     })();
@@ -236,27 +268,88 @@ export function UploadSection({
         return prev;
       });
       if (confirmed) {
+        setConfirmedIds([id]);
         setRedirectCountdown(5);
       }
     }
   }
 
+  const savedSummary = redirectCountdown !== null ? buildSavedSummary(uploads, confirmedIds) : null;
+
   return (
     <div className="space-y-4">
-      {/* Auto-redirect banner */}
+      {/* Auto-redirect dialog overlay */}
       {redirectCountdown !== null && (
-        <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-4 py-3">
-          <span className="text-sm font-medium text-green-800">
-            Processing complete.
-            <br />
-            Switching to Analysis Dashboard in {redirectCountdown}s...
-          </span>
-          <button
-            onClick={cancelRedirect}
-            className="rounded-md border border-green-300 bg-white px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-50"
-          >
-            Cancel
-          </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+            {/* Success icon */}
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
+            <h3 className="text-center text-lg font-semibold text-gray-900">
+              Data Saved
+            </h3>
+
+            {/* Summary of what was saved */}
+            {savedSummary && (
+              <div className="mt-3 space-y-2">
+                {savedSummary.institutions.length > 0 && (
+                  <p className="text-center text-sm text-gray-600">
+                    {savedSummary.institutions.join(", ")}
+                  </p>
+                )}
+                <div className="flex flex-wrap justify-center gap-2">
+                  {savedSummary.totalPositions > 0 && (
+                    <span className="rounded-full bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700">
+                      {savedSummary.totalPositions} position{savedSummary.totalPositions !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                  {savedSummary.totalTransactions > 0 && (
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                      {savedSummary.totalTransactions} transaction{savedSummary.totalTransactions !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                  {savedSummary.totalBalances > 0 && (
+                    <span className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700">
+                      {savedSummary.totalBalances} balance{savedSummary.totalBalances !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Countdown progress bar */}
+            <div className="mt-5">
+              <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                <div
+                  className="h-full rounded-full bg-green-500 transition-all duration-1000 ease-linear"
+                  style={{ width: `${((5 - (redirectCountdown ?? 0)) / 5) * 100}%` }}
+                />
+              </div>
+              <p className="mt-2 text-center text-sm text-gray-500">
+                Opening dashboard in {redirectCountdown}s...
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="mt-5 flex items-center justify-center gap-3">
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="rounded-lg bg-green-600 px-5 py-2 text-sm font-medium text-white hover:bg-green-700"
+              >
+                Go now
+              </button>
+              <button
+                onClick={cancelRedirect}
+                className="rounded-lg border border-gray-200 px-5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+              >
+                Stay here
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -318,7 +411,8 @@ export function UploadSection({
             setUploads((prev) =>
               prev.map((u) => (u.id === updated.id ? updated : u))
             );
-            setRedirectCountdown(3);
+            setConfirmedIds([updated.id]);
+            setRedirectCountdown(5);
           }}
           onCloseReview={() => setReviewingId(null)}
         />
