@@ -55,11 +55,14 @@ export default async function Home() {
             {branding.slogan}
           </h1>
 
+          {/* Beta notice */}
+          <p className="text-left text-base font-semibold text-foreground">
+            We&apos;re in beta — join our waiting list and we&apos;ll tell you
+            when we&apos;re ready for you.
+          </p>
+
           {/* Waiting list signup */}
           <div className="space-y-2">
-            <p className="text-muted-foreground text-sm">
-              Get on the waiting list
-            </p>
             <WaitlistForm />
           </div>
 
