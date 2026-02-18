@@ -7,11 +7,11 @@ export const CONNECTION_METHOD_INFO: Record<
   { label: string; description: string }
 > = {
   api: {
-    label: "Connect via API",
+    label: "Connect Via Broker API",
     description: "Direct connection using your developer credentials",
   },
   quiltt: {
-    label: "Link Account",
+    label: "Link with Adapter",
     description:
       "Securely connect through your bank login — no API keys needed",
   },
