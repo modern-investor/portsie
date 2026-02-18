@@ -1,12 +1,12 @@
 {
-  "version": "v260217.28 10:12p",
-  "release": 60,
-  "sha": "7960a52f",
-  "fullSha": "7960a52fd98980063e4eb204086c30476e71937c",
+  "version": "v260217.29 10:29p",
+  "release": 61,
+  "sha": "49a5e477",
+  "fullSha": "49a5e477f7abd5b75c74b7e3062483fff7ad8205",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000058",
-  "pushedAt": "2026-02-18T04:12:14+00",
-  "commits": [{"sha": "7960a52fd98980063e4eb204086c30476e71937c", "short_sha": "7960a52f", "author": "rahulio", "message": "Fix dashboard showing only cash ($56K) instead of full portfolio ($15.7M)"}]
+  "machine": "GitHub Actions 1000000059",
+  "pushedAt": "2026-02-18T04:29:36+00",
+  "commits": [{"sha": "49a5e477f7abd5b75c74b7e3062483fff7ad8205", "short_sha": "49a5e477", "author": "rahulio", "message": "Fix upload processing flow: stuck status, missing View button, no auto-redirect"}]
 }
