@@ -21,6 +21,9 @@ const STATUS_STYLES: Record<
     className: "bg-amber-100 text-amber-700",
   },
   failed: { label: "Failed", className: "bg-red-100 text-red-700" },
+  qc_running: { label: "Verifying...", className: "bg-purple-100 text-purple-700" },
+  qc_failed: { label: "Quality issue", className: "bg-orange-100 text-orange-700" },
+  qc_fixing: { label: "Auto-fixing...", className: "bg-purple-100 text-purple-700" },
 };
 
 const FILE_TYPE_ICONS: Record<string, string> = {
@@ -327,7 +330,8 @@ export function UploadList({
         const isConfirmed = !!upload.confirmed_at;
         const isProcessable = processableIds.includes(upload.id);
         const isExpanded = reviewingId === upload.id;
-        const hasReview = upload.parse_status === "extracted" || upload.parse_status === "completed" || upload.parse_status === "partial";
+        const hasReview = upload.parse_status === "extracted" || upload.parse_status === "completed" || upload.parse_status === "partial" || upload.parse_status === "qc_failed";
+        const isQCActive = upload.parse_status === "qc_running" || upload.parse_status === "qc_fixing";
 
         return (
           <div key={upload.id} id={`upload-${upload.id}`}>
@@ -404,6 +408,16 @@ export function UploadList({
                       {upload.parse_error}
                     </span>
                   )}
+                  {upload.qc_status_message && (
+                    <span
+                      className={`truncate ${
+                        isQCActive ? "text-purple-600" : "text-orange-600"
+                      }`}
+                      title={upload.qc_status_message}
+                    >
+                      {upload.qc_status_message}
+                    </span>
+                  )}
                 </div>
                 {/* Processing timestamps — 3rd line */}
                 {(() => {
@@ -428,7 +442,7 @@ export function UploadList({
               <span
                 className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}
               >
-                {isLiveProcessing && <Spinner className="h-3 w-3" />}
+                {(isLiveProcessing || isQCActive) && <Spinner className="h-3 w-3" />}
                 {isConfirmed ? "Saved" : status.label}
                 {isLiveProcessing && ts?.s && (
                   <ElapsedTimer since={ts.s} />

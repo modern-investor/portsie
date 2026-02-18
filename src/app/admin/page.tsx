@@ -16,6 +16,12 @@ export default async function AdminPage() {
             User Management
           </Link>
           <Link
+            href="/admin/quality-checks"
+            className="block rounded-md bg-black px-4 py-2 text-sm text-white text-center hover:bg-gray-800"
+          >
+            Quality Checks
+          </Link>
+          <Link
             href="/admin/style-guide"
             className="block rounded-md bg-black px-4 py-2 text-sm text-white text-center hover:bg-gray-800"
           >

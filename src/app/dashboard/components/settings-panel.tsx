@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Brain, AlertTriangle } from "lucide-react";
+import { Brain, AlertTriangle, ShieldCheck } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LLMSettings } from "./llm-settings";
 import { ExtractionFailures } from "./extraction-failures";
+import { QualityChecks } from "./quality-checks";
 
-type SettingsTab = "llm" | "failures";
+type SettingsTab = "llm" | "failures" | "quality";
 
 const STORAGE_KEY = "portsie:settings-tab";
-const VALID_TABS: SettingsTab[] = ["llm", "failures"];
+const VALID_TABS: SettingsTab[] = ["llm", "failures", "quality"];
 
 export function SettingsPanel() {
   const [tab, setTab] = useState<SettingsTab>(() => {
@@ -18,6 +19,7 @@ export function SettingsPanel() {
     return saved && VALID_TABS.includes(saved) ? saved : "llm";
   });
   const [unresolvedCount, setUnresolvedCount] = useState(0);
+  const [qcIssueCount, setQcIssueCount] = useState(0);
 
   // Fetch unresolved failure count on mount (for badge)
   useEffect(() => {
@@ -58,6 +60,15 @@ export function SettingsPanel() {
               </span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="quality">
+            <ShieldCheck className="size-4" />
+            Quality
+            {qcIssueCount > 0 && (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1.5 text-xs font-medium text-white">
+                {qcIssueCount}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="llm">
@@ -65,6 +76,9 @@ export function SettingsPanel() {
         </TabsContent>
         <TabsContent value="failures">
           <ExtractionFailures onUnresolvedCount={setUnresolvedCount} />
+        </TabsContent>
+        <TabsContent value="quality">
+          <QualityChecks onUnresolvedCount={setQcIssueCount} />
         </TabsContent>
       </Tabs>
     </div>

@@ -133,7 +133,16 @@ export interface UploadedStatement {
   file_type: UploadFileType;
   file_size_bytes: number | null;
   file_hash: string | null;
-  parse_status: "pending" | "processing" | "extracted" | "completed" | "partial" | "failed";
+  parse_status:
+    | "pending"
+    | "processing"
+    | "extracted"
+    | "completed"
+    | "partial"
+    | "failed"
+    | "qc_running"
+    | "qc_failed"
+    | "qc_fixing";
   parse_error: string | null;
   parsed_at: string | null;
   transactions_created: number;
@@ -145,6 +154,8 @@ export interface UploadedStatement {
   process_count: number;
   confirmed_at: string | null;
   detected_account_info: DetectedAccountInfo | null;
+  quality_check_id: string | null;
+  qc_status_message: string | null;
   created_at: string;
   updated_at: string;
 }
