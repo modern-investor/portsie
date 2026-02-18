@@ -1,0 +1,3273 @@
+{
+  "accounts": [
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Rahul SchwabChecking ...711"
+      },
+      "account_info": {
+        "account_number": "...711",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "Rahul SchwabChecking",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 4774.15,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Robinhood Checking ...074"
+      },
+      "account_info": {
+        "account_number": "...074",
+        "account_type": "checking",
+        "institution_name": "Robinhood",
+        "account_nickname": "Robinhood Checking",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 334.44,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Rahul Brokerage ...566"
+      },
+      "account_info": {
+        "account_number": "...566",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul Brokerage",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 1.78,
+          "cash_balance": 1.78,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Robinhood Brokerage ...113"
+      },
+      "account_info": {
+        "account_number": "...113",
+        "account_type": "individual",
+        "institution_name": "Robinhood",
+        "account_nickname": "Robinhood Brokerage",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 916.01,
+          "cash_balance": 739.68,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Rahul Trading ...192"
+      },
+      "account_info": {
+        "account_number": "...192",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul Trading",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 1592.42,
+          "cash_balance": 1436.31,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Venmo Checking (AAP) ...102"
+      },
+      "account_info": {
+        "account_number": "...102",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "Venmo Checking (AAP)",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Robinhood Savings ...654"
+      },
+      "account_info": {
+        "account_number": "...654",
+        "account_type": "checking",
+        "institution_name": "Robinhood",
+        "account_nickname": "Robinhood Savings",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for RobinTradIRA ...310"
+      },
+      "account_info": {
+        "account_number": "...310",
+        "account_type": "ira",
+        "institution_name": "Robinhood",
+        "account_nickname": "RobinTradIRA",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 5775853.66,
+          "cash_balance": 1590.9,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Mercer Rahul ...095"
+      },
+      "account_info": {
+        "account_number": "...095",
+        "account_type": "ira",
+        "institution_name": null,
+        "account_nickname": "Mercer Rahul",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 561623.71,
+          "cash_balance": 894.5,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for RobinRoth ...249"
+      },
+      "account_info": {
+        "account_number": "...249",
+        "account_type": "roth_ira",
+        "institution_name": "Robinhood",
+        "account_nickname": "RobinRoth",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 250666.68,
+          "cash_balance": 150.97,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for RS - Trad IRA ...902"
+      },
+      "account_info": {
+        "account_number": "...902",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "RS - Trad IRA",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Rahul Inh Trad ...874"
+      },
+      "account_info": {
+        "account_number": "...874",
+        "account_type": "inherited_ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul Inh Trad",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 15.59,
+          "cash_balance": 0.74,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Rahul Roth ...441"
+      },
+      "account_info": {
+        "account_number": "...441",
+        "account_type": "roth_ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul Roth",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for SubTrust Checking ...044"
+      },
+      "account_info": {
+        "account_number": "...044",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "SubTrust Checking",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 2612.76,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for SubTrust Brokerage ...028"
+      },
+      "account_info": {
+        "account_number": "...028",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "SubTrust Brokerage",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0.22,
+          "cash_balance": 0.22,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for SubTrust Roth IRA ...486"
+      },
+      "account_info": {
+        "account_number": "...486",
+        "account_type": "roth_ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "SubTrust Roth IRA",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 7126394.58,
+          "cash_balance": 712.11,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for SubTrust Trad IRA ...403"
+      },
+      "account_info": {
+        "account_number": "...403",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "SubTrust Trad IRA",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 899424.94,
+          "cash_balance": 38.61,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Emina RothTrust ...945"
+      },
+      "account_info": {
+        "account_number": "...945",
+        "account_type": "roth_ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Emina RothTrust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 96290.82,
+          "cash_balance": 751.35,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Hannah RothTrust ...342"
+      },
+      "account_info": {
+        "account_number": "...342",
+        "account_type": "roth_ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Hannah RothTrust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 104304.03,
+          "cash_balance": 104.18,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Haydn RothTrust ...163"
+      },
+      "account_info": {
+        "account_number": "...163",
+        "account_type": "roth_ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Haydn RothTrust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 94644.59,
+          "cash_balance": 11460.63,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Hannah TradTrust ...811"
+      },
+      "account_info": {
+        "account_number": "...811",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Hannah TradTrust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Haydn TradTrust ...661"
+      },
+      "account_info": {
+        "account_number": "...661",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Haydn TradTrust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for EminaTradTrust ...200"
+      },
+      "account_info": {
+        "account_number": "...200",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "EminaTradTrust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Austin Alpaca Playhouse real estate"
+      },
+      "account_info": {
+        "account_number": null,
+        "account_type": "real_estate",
+        "institution_name": null,
+        "account_nickname": "Austin Alpaca Playhouse",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2022-08-25",
+          "liquidation_value": 650000,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Playhouse Mortgage ...259"
+      },
+      "account_info": {
+        "account_number": "...259",
+        "account_type": "mortgage",
+        "institution_name": "PNC Bank",
+        "account_nickname": "Playhouse Mortgage",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -418205.97,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Living Trust ...046"
+      },
+      "account_info": {
+        "account_number": "...046",
+        "account_type": "trust",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Living Trust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for 53 SS ...497"
+      },
+      "account_info": {
+        "account_number": "...497",
+        "account_type": "checking",
+        "institution_name": "Fifth Third Bank",
+        "account_nickname": "53 SS",
+        "account_group": "External Subhash"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2024-03-04",
+          "liquidation_value": 170.77,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for 53 Working ...867"
+      },
+      "account_info": {
+        "account_number": "...867",
+        "account_type": "checking",
+        "institution_name": "Fifth Third Bank",
+        "account_nickname": "53 Working",
+        "account_group": "External Subhash"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2024-03-04",
+          "liquidation_value": 802.67,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Amex Venturables ...003"
+      },
+      "account_info": {
+        "account_number": "...003",
+        "account_type": "credit_card",
+        "institution_name": "American Express",
+        "account_nickname": "Amex Venturables",
+        "account_group": "External Subhash"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-01-05",
+          "liquidation_value": 0,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Chase Savings ...942"
+      },
+      "account_info": {
+        "account_number": "...942",
+        "account_type": "savings",
+        "institution_name": "Chase",
+        "account_nickname": "Chase Savings",
+        "account_group": "External Subhash"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2021-01-01",
+          "liquidation_value": -0.01,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Chase CC ...191"
+      },
+      "account_info": {
+        "account_number": "...191",
+        "account_type": "credit_card",
+        "institution_name": "Chase",
+        "account_nickname": "Chase CC",
+        "account_group": "External Subhash"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -4901.26,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for USB Primary ...444"
+      },
+      "account_info": {
+        "account_number": "...444",
+        "account_type": "checking",
+        "institution_name": "U.S. Bank",
+        "account_nickname": "USB Primary",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2020-12-08",
+          "liquidation_value": 2245.3,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for RobinGold Visa ...892"
+      },
+      "account_info": {
+        "account_number": "...892",
+        "account_type": "credit_card",
+        "institution_name": "Robinhood",
+        "account_nickname": "RobinGold Visa",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -350.6,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Amazon Prime ...206"
+      },
+      "account_info": {
+        "account_number": "...206",
+        "account_type": "credit_card",
+        "institution_name": "Chase",
+        "account_nickname": "Amazon Prime",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2025-10-18",
+          "liquidation_value": -5977.97,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for WF Checking ...709"
+      },
+      "account_info": {
+        "account_number": "...709",
+        "account_type": "checking",
+        "institution_name": "Wells Fargo",
+        "account_nickname": "WF Checking",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2021-03-06",
+          "liquidation_value": 808.79,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Amex CPC ...006"
+      },
+      "account_info": {
+        "account_number": "...006",
+        "account_type": "credit_card",
+        "institution_name": "American Express",
+        "account_nickname": "Amex CPC",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-01-05",
+          "liquidation_value": -227.14,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Chase MY Sloop Loan ...406"
+      },
+      "account_info": {
+        "account_number": "...406",
+        "account_type": "auto_loan",
+        "institution_name": "Chase",
+        "account_nickname": "Chase MY Sloop Loan",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2025-10-28",
+          "liquidation_value": -38697,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for HCU M3 Loan ...l00"
+      },
+      "account_info": {
+        "account_number": "...l00",
+        "account_type": "auto_loan",
+        "institution_name": "United Heritage CU",
+        "account_nickname": "HCU M3 Loan",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2025-09-17",
+          "liquidation_value": -17480.94,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for US Bank LOC ...784"
+      },
+      "account_info": {
+        "account_number": "...784",
+        "account_type": "credit_card",
+        "institution_name": "U.S. Bank",
+        "account_nickname": "US Bank LOC",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0.01,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for US Bank Equity ...078 HELOC"
+      },
+      "account_info": {
+        "account_number": "...078",
+        "account_type": "heloc",
+        "institution_name": "U.S. Bank",
+        "account_nickname": "US Bank Equity",
+        "account_group": "R & K Real Estate"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -284525.87,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Sharingwood real estate"
+      },
+      "account_info": {
+        "account_number": null,
+        "account_type": "real_estate",
+        "institution_name": null,
+        "account_nickname": "Sharingwood",
+        "account_group": "R & K Real Estate"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-01-04",
+          "liquidation_value": 1017400,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Emina Roth ...387"
+      },
+      "account_info": {
+        "account_number": "...387",
+        "account_type": "roth_ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Emina Roth",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 69915.19,
+          "cash_balance": 77.47,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Emina Inh Trad ...866"
+      },
+      "account_info": {
+        "account_number": "...866",
+        "account_type": "inherited_ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Emina Inh Trad",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 109870.28,
+          "cash_balance": 914.55,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Emina Bank ...797"
+      },
+      "account_info": {
+        "account_number": "...797",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "Emina Bank",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 3001.15,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Emina Brokerage ...151"
+      },
+      "account_info": {
+        "account_number": "...151",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Emina Brokerage",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 157476.66,
+          "cash_balance": 36194.53,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Emina WF Chkg ...259"
+      },
+      "account_info": {
+        "account_number": "...259",
+        "account_type": "checking",
+        "institution_name": "Wells Fargo",
+        "account_nickname": "Emina WF Chkg",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2021-03-06",
+          "liquidation_value": 62.65,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Haydn Inh Trad ...692"
+      },
+      "account_info": {
+        "account_number": "...692",
+        "account_type": "inherited_ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Haydn Inh Trad",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 93678.97,
+          "cash_balance": 6427.57,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Haydn Bank ...359"
+      },
+      "account_info": {
+        "account_number": "...359",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "Haydn Bank",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 10,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Haydn Brokerage ...944"
+      },
+      "account_info": {
+        "account_number": "...944",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Haydn Brokerage",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 168938.58,
+          "cash_balance": 0.02,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Hannah Ihn Trad IRA ...568"
+      },
+      "account_info": {
+        "account_number": "...568",
+        "account_type": "inherited_ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Hannah Ihn Trad IRA",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 97697.11,
+          "cash_balance": 166.02,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Hannah ROth ...170"
+      },
+      "account_info": {
+        "account_number": "...170",
+        "account_type": "roth_ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Hannah ROth",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 66747.37,
+          "cash_balance": 920.93,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Hannah Bank ...518"
+      },
+      "account_info": {
+        "account_number": "...518",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "Hannah Bank",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 2967.49,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Hannah Solo 401(k) ...362"
+      },
+      "account_info": {
+        "account_number": "...362",
+        "account_type": "401k",
+        "institution_name": null,
+        "account_nickname": "Hannah Solo 401(k)",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 48848.88,
+          "cash_balance": 8.4,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "No existing accounts in portfolio tracker; creating new account for Hannah Brokerage ...830"
+      },
+      "account_info": {
+        "account_number": "...830",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Hannah Brokerage",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 248550.56,
+          "cash_balance": 2927.81,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    }
+  ],
+  "unallocated_positions": [
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TSLA",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "TESLA INC",
+      "quantity": 9062,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 417.44,
+      "market_value": 3782841.28,
+      "cost_basis_total": 2768950.75,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 36.62
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TSLA",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "Tesla, Inc. Common Stock",
+      "quantity": 7105.3067,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": null,
+      "market_value": 2966110.3,
+      "cost_basis_total": 574478.56,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 416.31
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "NVDA",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "NVIDIA CORP",
+      "quantity": 6527.9647,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 182.81,
+      "market_value": 1193311.03,
+      "cost_basis_total": 656976.77,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 81.64
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "PLTR",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "PALANTIR TECHNOLOGIES INC CLASS A",
+      "quantity": 7154.6506,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 131.41,
+      "market_value": 940247.59,
+      "cost_basis_total": 87350.36,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 976.41
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "GOOGL",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "ALPHABET INC CLASS A",
+      "quantity": 2308.5067,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 305.72,
+      "market_value": 705766.94,
+      "cost_basis_total": 709777.98,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -0.57
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "HOOD",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "ROBINHOOD MKTS INC CLASS A",
+      "quantity": 4657.4892,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 75.97,
+      "market_value": 353829.45,
+      "cost_basis_total": 590335.28,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -40.06
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "AMD",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "Advanced Micro Devices, Inc. Common Stock",
+      "quantity": 1240.5945,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 207.36,
+      "market_value": 257249.67,
+      "cost_basis_total": 222444.8,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 15.65
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "CLH",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "CLEAN HARBORS INC",
+      "quantity": 880,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 273.82,
+      "market_value": 240961.6,
+      "cost_basis_total": 216364,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 11.37
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "AMD",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "ADVANCED MICRO DEVICES",
+      "quantity": 863,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 207.32,
+      "market_value": 178917.16,
+      "cost_basis_total": 122408.09,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 46.16
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "BMNR",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "BITMINE IMMERSION TECHNOLOGIES",
+      "quantity": 7679,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 20.96,
+      "market_value": 161051.24,
+      "cost_basis_total": 382367.79,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -57.88
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "AMZN",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "AMAZON.COM INC",
+      "quantity": 577,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 198.79,
+      "market_value": 114691.07,
+      "cost_basis_total": 7528.68,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 1423.39
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "META",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "META PLATFORMS INC CLASS A",
+      "quantity": 151,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 639.77,
+      "market_value": 96605.22,
+      "cost_basis_total": 104885.24,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -7.89
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "PL",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "Planet Labs PBC",
+      "quantity": 4000,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 22.42,
+      "market_value": 89660,
+      "cost_basis_total": 0,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 100
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TSM",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "TAIWAN SEMICONDUCTOR MFG SPONSORED ADR",
+      "quantity": 204,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 366.36,
+      "market_value": 74737.44,
+      "cost_basis_total": 49276.2,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 51.67
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "CRWV",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "COREWEAVE INC CLASS A",
+      "quantity": 730,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 96.04,
+      "market_value": 70109.2,
+      "cost_basis_total": 80538.94,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -12.95
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "MSTR",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "STRATEGY INC CLASS A",
+      "quantity": 504.2587,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 133.88,
+      "market_value": 67510.16,
+      "cost_basis_total": 41935.15,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 60.99
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "CRSP",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "CRISPR THERAPEUTICS AG",
+      "quantity": 701,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 53.07,
+      "market_value": 37202.07,
+      "cost_basis_total": 66046.95,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -43.67
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "BRK/B",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "BERKSHIRE HATHAWAY CLASS B",
+      "quantity": 39,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 497.55,
+      "market_value": 19404.45,
+      "cost_basis_total": 18091.71,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 7.26
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "APP",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "APPLOVIN CORP CLASS A",
+      "quantity": 48,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 390.55,
+      "market_value": 18746.4,
+      "cost_basis_total": 30544.08,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -38.63
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "MRNA",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "MODERNA INC",
+      "quantity": 352,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 42.23,
+      "market_value": 14864.96,
+      "cost_basis_total": 149313.64,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -90.04
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "MP",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "MP MATERIALS CORP CLASS A",
+      "quantity": 250,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 58.03,
+      "market_value": 14507.5,
+      "cost_basis_total": 2965,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 389.29
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "ISRG",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "INTUITIVE SURGICAL INC",
+      "quantity": 24,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 485.84,
+      "market_value": 11660.16,
+      "cost_basis_total": 5443.93,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 114.19
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "HIMS",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "Hims & Hers Health, Inc.",
+      "quantity": 525,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 16.32,
+      "market_value": 8566.74,
+      "cost_basis_total": 0,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 100
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "IREN",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "IREN LTD",
+      "quantity": 200,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 42.22,
+      "market_value": 8444,
+      "cost_basis_total": 9730.5,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -13.22
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "GOOG",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "ALPHABET INC CLASS C",
+      "quantity": 27.2544,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 306.02,
+      "market_value": 8340.39,
+      "cost_basis_total": 7698.69,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 8.34
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "SATS",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "ECHOSTAR CORP CLASS A",
+      "quantity": 70,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 113.15,
+      "market_value": 7920.5,
+      "cost_basis_total": 5323.42,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 48.79
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "ABCL",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "ABCELLERA BIOLOGICS INC",
+      "quantity": 2000,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 3.1,
+      "market_value": 6200,
+      "cost_basis_total": 7988.72,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -22.39
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "RBLX",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "ROBLOX CORP CLASS A",
+      "quantity": 75,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 63.17,
+      "market_value": 4737.75,
+      "cost_basis_total": 5534.25,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -14.39
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "LMND",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "LEMONADE INC",
+      "quantity": 50,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 63.76,
+      "market_value": 3188,
+      "cost_basis_total": 3914.05,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -18.55
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "RKLB",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "ROCKET LAB CORP CLASS A",
+      "quantity": 25,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 67.44,
+      "market_value": 1686,
+      "cost_basis_total": 1047.25,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 60.99
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "NET",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "CLOUDFLARE INC CLASS A",
+      "quantity": 6,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 195.85,
+      "market_value": 1175.1,
+      "cost_basis_total": 1158.6,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 1.42
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "AAPL",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "APPLE INC",
+      "quantity": 4,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 255.78,
+      "market_value": 1023.12,
+      "cost_basis_total": 578.63,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 76.82
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "CIFR",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "CIPHER MINING INC",
+      "quantity": 59,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 16.42,
+      "market_value": 968.78,
+      "cost_basis_total": 983.24,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -1.47
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "QCLS",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "Q C TECHNOLOGIES INC",
+      "quantity": 200,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 3.88,
+      "market_value": 776,
+      "cost_basis_total": 1153.98,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -32.75
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "EDIT",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "EDITAS MEDICINE INC",
+      "quantity": 418,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 1.76,
+      "market_value": 735.68,
+      "cost_basis_total": 28910.42,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -97.46
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "ABNB",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "AIRBNB INC CLASS A",
+      "quantity": 5,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 121.35,
+      "market_value": 606.81,
+      "cost_basis_total": 170.96,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 254.94
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "NBIS",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "NEBIUS GROUP N.V. CLASS A",
+      "quantity": 5,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 98.01,
+      "market_value": 490.05,
+      "cost_basis_total": 457.5,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 7.11
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "SPOT",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "SPOTIFY TECHNOLOGY S.A.",
+      "quantity": 1,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 458.34,
+      "market_value": 458.34,
+      "cost_basis_total": 287,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 59.7
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "OPEN",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "OPENDOOR TECHNOLOGIES INC CLASS A",
+      "quantity": 73,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 4.445,
+      "market_value": 324.49,
+      "cost_basis_total": 87.4,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 271.27
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "NIO",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "NIO INC",
+      "quantity": 65,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 4.95,
+      "market_value": 321.75,
+      "cost_basis_total": 3919.36,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -91.79
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "KO",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "THE COCA-COLA CO",
+      "quantity": 3.4007,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 78.68,
+      "market_value": 267.57,
+      "cost_basis_total": 193.53,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 38.26
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "CLOV",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "CLOVER HEALTH INVESTMENTS CORP CLASS A",
+      "quantity": 77,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 2.02,
+      "market_value": 155.77,
+      "cost_basis_total": 350.69,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -55.58
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "FWDI",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "Forward Industries, Inc. Common Stock",
+      "quantity": 24,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 4.83,
+      "market_value": 115.92,
+      "cost_basis_total": 263.28,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -55.97
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "SPHR",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "SPHERE ENTERTAINMENT CLASS A",
+      "quantity": 1,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 115.7,
+      "market_value": 115.7,
+      "cost_basis_total": 34.64,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 234.01
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "DIS",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "DISNEY WALT CO",
+      "quantity": 1.024,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 105.45,
+      "market_value": 107.98,
+      "cost_basis_total": 165.52,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -34.76
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "SE",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "SEA LTD UNSPON ADR 1 ADR REPS 1 ORD SHS",
+      "quantity": 1,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 106.74,
+      "market_value": 106.74,
+      "cost_basis_total": 143.74,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -25.74
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "XIFR",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "XPLR INFRASTRUCTURE L LP",
+      "quantity": 9.488,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 10.79,
+      "market_value": 102.38,
+      "cost_basis_total": 469.76,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -78.21
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "XYZ",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "BLOCK INC CLASS A",
+      "quantity": 2,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 49.8,
+      "market_value": 99.6,
+      "cost_basis_total": 188.42,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -47.14
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TCEHY",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "TENCENT HOLDINGS LTD UNSPON ADR",
+      "quantity": 1,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 68.28,
+      "market_value": 68.28,
+      "cost_basis_total": 49,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 39.35
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "Z",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "ZILLOW GROUP INC CLASS C",
+      "quantity": 1,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 43.45,
+      "market_value": 43.45,
+      "cost_basis_total": 70.51,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -38.38
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": null,
+      "cusip": "96684W126",
+      "asset_type": "EQUITY",
+      "description": "Opendoor Technologies Inc Series K Warrants",
+      "quantity": 2,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 0.6,
+      "market_value": 1.2,
+      "cost_basis_total": 0,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 100
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "PLNH",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "PLANET 13 HOLDINGS INC NEV",
+      "quantity": 1,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 0.168,
+      "market_value": 0.17,
+      "cost_basis_total": 2.05,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -91.71
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": null,
+      "cusip": "57064N110",
+      "asset_type": "EQUITY",
+      "description": "MARKFORGED HOLDING CORP MANDATORY MERGER",
+      "quantity": 250,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": null,
+      "market_value": null,
+      "cost_basis_total": 5060,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "GLDM",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "SPDR GOLD MINISHARES ETF",
+      "quantity": 26912.6513,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 99.61,
+      "market_value": 2680869.09,
+      "cost_basis_total": 2153358.07,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 24.5
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "IBIT",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "ISHARES BITCOIN ETF",
+      "quantity": 11912.2599,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 38.97,
+      "market_value": 464257.37,
+      "cost_basis_total": 307006.81,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 51.22
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "ARKB",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "ARK 21SHARES BITCOIN ETF",
+      "quantity": 19847,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 22.82,
+      "market_value": 453017.89,
+      "cost_basis_total": 201257.95,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 125.09
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "EZET",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "FRANKLIN ETHEREUM ETF",
+      "quantity": 7562,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 15.505,
+      "market_value": 117248.81,
+      "cost_basis_total": 259288.35,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -54.78
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "ARKG",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "ARK GENOMIC REVOLUTION ETF",
+      "quantity": 3833.1585,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 28.36,
+      "market_value": 108708.38,
+      "cost_basis_total": 157413.41,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -30.94
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "ARKF",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "ARK BLOCKCHAIN AND FINTECH INNOVATION ETF",
+      "quantity": 1022,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 37.58,
+      "market_value": 38406.76,
+      "cost_basis_total": 29563.5,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 29.91
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "FFND",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "ONE GLOBAL ETF",
+      "quantity": 1027,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 30.485,
+      "market_value": 31308.1,
+      "cost_basis_total": 25717.53,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 21.74
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "BCFN",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "BARON FINANCIALS ETF",
+      "quantity": 1335,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 21.704,
+      "market_value": 28974.84,
+      "cost_basis_total": 20277.13,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 42.89
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "ETHA",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "ISHARES ETHEREUM TRUST ETF",
+      "quantity": 1151,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 15.44,
+      "market_value": 17771.44,
+      "cost_basis_total": 34945.13,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -49.14
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "ARKK",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "ARK INNOVATION ETF",
+      "quantity": 162,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 70.25,
+      "market_value": 11380.5,
+      "cost_basis_total": 8365.68,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 36.04
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "CPER",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "UNITED STATES COPPER INDEX ETF",
+      "quantity": 139,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 35.56,
+      "market_value": 4942.84,
+      "cost_basis_total": 5069.08,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -2.49
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "SPYG",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "SPDR S&P 500 GROWTH ETF",
+      "quantity": 10,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 103.01,
+      "market_value": 1030.1,
+      "cost_basis_total": 1038.75,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -0.83
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "GBTC",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "Grayscale Bitcoin Trust ETF",
+      "quantity": 1,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 53.63,
+      "market_value": 53.63,
+      "cost_basis_total": 0,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 100
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "BPTRX",
+      "cusip": null,
+      "asset_type": "MUTUAL_FUND",
+      "description": "BARON PARTNERS RETAIL",
+      "quantity": 508.032,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 251.03,
+      "market_value": 127531.27,
+      "cost_basis_total": 75557.27,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 68.79
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "BWBFX",
+      "cusip": null,
+      "asset_type": "MUTUAL_FUND",
+      "description": "BARON WEALTHBUILDER RETAIL",
+      "quantity": 1138.68,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 20.66,
+      "market_value": 23525.13,
+      "cost_basis_total": 16179.67,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 45.4
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "FCNTX",
+      "cusip": null,
+      "asset_type": "MUTUAL_FUND",
+      "description": "FIDELITY CONTRAFUND",
+      "quantity": 919.452,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 24.16,
+      "market_value": 22213.96,
+      "cost_basis_total": 12085.96,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 83.8
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "BREFX",
+      "cusip": null,
+      "asset_type": "MUTUAL_FUND",
+      "description": "BARON REAL ESTATE RETAIL",
+      "quantity": 1.016,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 40.53,
+      "market_value": 41.18,
+      "cost_basis_total": 29.24,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 40.83
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TSLA $300 CALL 06/16",
+      "cusip": null,
+      "asset_type": "OPTION",
+      "description": "TSLA $300 CALL 06/16",
+      "quantity": 7,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 19543,
+      "market_value": 136801,
+      "cost_basis_total": 162850,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -16
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TSLA $400 CALL 12/17",
+      "cusip": null,
+      "asset_type": "OPTION",
+      "description": "TSLA $400 CALL 12/17",
+      "quantity": 2,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 13433,
+      "market_value": 26866,
+      "cost_basis_total": 21200,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 26.73
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TSLA $300 CALL 12/17",
+      "cusip": null,
+      "asset_type": "OPTION",
+      "description": "TSLA $300 CALL 12/17",
+      "quantity": 1,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 18280,
+      "market_value": 18280,
+      "cost_basis_total": 12450,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 46.83
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TSLA $300 CALL 01/15",
+      "cusip": null,
+      "asset_type": "OPTION",
+      "description": "TSLA $300 CALL 01/15",
+      "quantity": 1,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 15235,
+      "market_value": 15235,
+      "cost_basis_total": 0,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 100
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "EZET",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "Franklin Ethereum ETF (NO NUMBER - external account)",
+      "quantity": 6078,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 15.52,
+      "market_value": 94300.17,
+      "cost_basis_total": 208573.26,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": -54.79
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": null,
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "Opendoor Technologies Inc Series A Warrants",
+      "quantity": 2,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 0.36,
+      "market_value": 0.72,
+      "cost_basis_total": 0,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 100
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": null,
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "Opendoor Technologies Inc Series Z Warrants",
+      "quantity": 2,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 0.33,
+      "market_value": 0.66,
+      "cost_basis_total": 0,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 100
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "SNOXX",
+      "cusip": null,
+      "asset_type": "CASH_EQUIVALENT",
+      "description": "SCHWAB TREASURY OBLIGATIONS MONEY MARKET INV",
+      "quantity": 18035.37,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 1,
+      "market_value": 18035.37,
+      "cost_basis_total": 18035.37,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": 0
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "Cash & Cash Investments",
+      "cusip": null,
+      "asset_type": "CASH_EQUIVALENT",
+      "description": "Cash & Cash Investments (28 accounts, external)",
+      "quantity": null,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": null,
+      "market_value": 65519.28,
+      "cost_basis_total": null,
+      "unrealized_profit_loss": null,
+      "unrealized_profit_loss_pct": null
+    }
+  ],
+  "statement_start_date": null,
+  "statement_end_date": "2026-02-16",
+  "confidence": "high",
+  "notes": [
+    "This is a Charles Schwab portfolio summary page dated 02/16/2026 at 12:00 AM ET.",
+    "Total portfolio value shown is $15,087,637.02 across 38 of 54 accounts included in Total Value.",
+    "The Positions section at the bottom is an aggregate view marked with †† symbols spanning multiple accounts and cannot be attributed to individual accounts — all placed in unallocated_positions.",
+    "Many positions are marked †† indicating they are held across one or more external accounts and values shown are aggregates.",
+    "HCU M3 Loan account type was set to auto_loan based on context; it shows as 'Other' in the document — user should verify.",
+    "Chase MY Sloop Loan account type was set to auto_loan based on name; it shows as 'Auto Loan' in the document.",
+    "The 'Robinhood Savings ...654' account shows as 'Checking' type in the document — it may actually be a savings account; user should verify.",
+    "Some account data (e.g., 53 SS, 53 Working, USB Primary, WF Checking) is stale — last updated 2020-2024.",
+    "Austin Alpaca Playhouse real estate value is as of 08/25/2022 — may be outdated.",
+    "Sharingwood real estate value is as of 01/04/2026.",
+    "The TSLA options descriptions include expiration dates that may reference future expirations (e.g., 06/16, 12/17, 01/15) — interpreted as month/day without year context; user should verify exact option contracts.",
+    "Two duplicate AMD entries appear in the Positions section (one as 'Advanced Micro Devices, Inc. Common Stock' with 1,240.5945 shares and one as 'ADVANCED MICRO DEVIC' with 863 shares) — likely held in different accounts; both included in unallocated_positions.",
+    "Two duplicate TSLA equity entries appear (9,062 shares and 7,105.3067 shares) — likely held in different accounts; both included in unallocated_positions.",
+    "The Franklin Ethereum ETF appears twice in unallocated_positions: once as EZET with 7,562 shares and once as 'NO NUMBER' with 6,078 shares — the second entry is from an external account with no ticker symbol."
+  ],
+  "account_info": {
+    "account_number": "...711",
+    "account_type": "checking",
+    "institution_name": "Schwab Bank",
+    "account_nickname": "Rahul SchwabChecking",
+    "account_group": "Non Retirement"
+  },
+  "transactions": [],
+  "positions": [],
+  "balances": [
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 4774.15,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 334.44,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 1.78,
+      "cash_balance": 1.78,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 916.01,
+      "cash_balance": 739.68,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 1592.42,
+      "cash_balance": 1436.31,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 5775853.66,
+      "cash_balance": 1590.9,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 561623.71,
+      "cash_balance": 894.5,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 250666.68,
+      "cash_balance": 150.97,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 15.59,
+      "cash_balance": 0.74,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 2612.76,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0.22,
+      "cash_balance": 0.22,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 7126394.58,
+      "cash_balance": 712.11,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 899424.94,
+      "cash_balance": 38.61,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 96290.82,
+      "cash_balance": 751.35,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 104304.03,
+      "cash_balance": 104.18,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 94644.59,
+      "cash_balance": 11460.63,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2022-08-25",
+      "liquidation_value": 650000,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -418205.97,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2024-03-04",
+      "liquidation_value": 170.77,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2024-03-04",
+      "liquidation_value": 802.67,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-01-05",
+      "liquidation_value": 0,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2021-01-01",
+      "liquidation_value": -0.01,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -4901.26,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2020-12-08",
+      "liquidation_value": 2245.3,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -350.6,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2025-10-18",
+      "liquidation_value": -5977.97,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2021-03-06",
+      "liquidation_value": 808.79,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-01-05",
+      "liquidation_value": -227.14,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2025-10-28",
+      "liquidation_value": -38697,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2025-09-17",
+      "liquidation_value": -17480.94,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0.01,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -284525.87,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-01-04",
+      "liquidation_value": 1017400,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 69915.19,
+      "cash_balance": 77.47,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 109870.28,
+      "cash_balance": 914.55,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 3001.15,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 157476.66,
+      "cash_balance": 36194.53,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2021-03-06",
+      "liquidation_value": 62.65,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 93678.97,
+      "cash_balance": 6427.57,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 10,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 168938.58,
+      "cash_balance": 0.02,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 97697.11,
+      "cash_balance": 166.02,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 66747.37,
+      "cash_balance": 920.93,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 2967.49,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 48848.88,
+      "cash_balance": 8.4,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 248550.56,
+      "cash_balance": 2927.81,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    }
+  ]
+}

@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
   // If a duplicate exists and was already processed, carry over its results
   const isProcessed =
     existing &&
-    (existing.parse_status === "completed" || existing.parse_status === "partial");
+    (existing.parse_status === "extracted" || existing.parse_status === "completed" || existing.parse_status === "partial");
 
   const insertData: Record<string, unknown> = {
     user_id: user.id,

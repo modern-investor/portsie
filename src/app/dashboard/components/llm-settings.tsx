@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type LLMMode = "cli" | "api";
+type LLMMode = "gemini" | "cli" | "api";
 
 export function LLMSettings() {
   const [loading, setLoading] = useState(true);
@@ -11,7 +11,7 @@ export function LLMSettings() {
   const [success, setSuccess] = useState("");
 
   // Settings state
-  const [llmMode, setLlmMode] = useState<LLMMode>("cli");
+  const [llmMode, setLlmMode] = useState<LLMMode>("gemini");
   const [hasApiKey, setHasApiKey] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [cliEndpoint, setCliEndpoint] = useState("");
@@ -24,7 +24,7 @@ export function LLMSettings() {
         return res.json();
       })
       .then((data) => {
-        setLlmMode(data.llmMode ?? "cli");
+        setLlmMode(data.llmMode ?? "gemini");
         setHasApiKey(data.hasApiKey ?? false);
         setCliEndpoint(data.cliEndpoint ?? "");
       })
@@ -78,9 +78,9 @@ export function LLMSettings() {
       const res = await fetch("/api/settings/llm", { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete API key");
       setHasApiKey(false);
-      setLlmMode("cli");
+      setLlmMode("gemini");
       setApiKey("");
-      setSuccess("API key removed. Reverted to CLI mode.");
+      setSuccess("API key removed. Reverted to Gemini Flash.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -109,6 +109,41 @@ export function LLMSettings() {
         </p>
 
         <div className="space-y-3">
+          {/* Gemini mode (default) */}
+          <label
+            className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors ${
+              llmMode === "gemini"
+                ? "border-blue-500 bg-blue-50"
+                : "hover:bg-gray-50"
+            }`}
+          >
+            <input
+              type="radio"
+              name="llmMode"
+              value="gemini"
+              checked={llmMode === "gemini"}
+              onChange={() => setLlmMode("gemini")}
+              className="mt-1 accent-blue-600"
+            />
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium">Gemini Flash</p>
+                <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+                  Default
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-gray-500">
+                Google Gemini 3 Flash — fast, accurate, and cost-effective.
+                Automatically falls back to Claude if Gemini is unavailable.
+              </p>
+            </div>
+            {llmMode === "gemini" && (
+              <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                Active
+              </span>
+            )}
+          </label>
+
           {/* CLI mode */}
           <label
             className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors ${
@@ -126,14 +161,9 @@ export function LLMSettings() {
               className="mt-1 accent-blue-600"
             />
             <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium">Claude CLI</p>
-                <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
-                  Default
-                </span>
-              </div>
+              <p className="text-sm font-medium">Claude CLI</p>
               <p className="mt-0.5 text-xs text-gray-500">
-                Uses Claude Code CLI on the server. No per-token cost — included
+                Claude Sonnet 4.6 via CLI wrapper. No per-token cost — included
                 with Claude Max subscription.
               </p>
             </div>
@@ -176,46 +206,48 @@ export function LLMSettings() {
         </div>
       </div>
 
-      {/* API Key section */}
-      <div className="space-y-4 rounded-lg border p-4 sm:p-6">
-        <h3 className="font-medium">Anthropic API Key</h3>
+      {/* API Key section — only show for API mode */}
+      {llmMode === "api" && (
+        <div className="space-y-4 rounded-lg border p-4 sm:p-6">
+          <h3 className="font-medium">Anthropic API Key</h3>
 
-        {hasApiKey ? (
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-green-500" />
-              <span className="text-sm text-gray-600">API key configured</span>
+          {hasApiKey ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-green-500" />
+                <span className="text-sm text-gray-600">API key configured</span>
+              </div>
+              <button
+                onClick={handleDeleteApiKey}
+                disabled={saving}
+                className="w-full rounded-md border px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 sm:w-auto sm:py-1.5"
+              >
+                Remove Key
+              </button>
             </div>
-            <button
-              onClick={handleDeleteApiKey}
-              disabled={saving}
-              className="w-full rounded-md border px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 sm:w-auto sm:py-1.5"
-            >
-              Remove Key
-            </button>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500">No API key configured.</p>
-        )}
+          ) : (
+            <p className="text-sm text-gray-500">No API key configured.</p>
+          )}
 
-        <div>
-          <label htmlFor="apiKey" className="mb-1 block text-sm font-medium">
-            {hasApiKey ? "Update API Key" : "Enter API Key"}
-          </label>
-          <input
-            id="apiKey"
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="sk-ant-..."
-            className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <p className="mt-1 text-xs text-gray-400">
-            Encrypted and stored securely. Never exposed to your browser after
-            saving.
-          </p>
+          <div>
+            <label htmlFor="apiKey" className="mb-1 block text-sm font-medium">
+              {hasApiKey ? "Update API Key" : "Enter API Key"}
+            </label>
+            <input
+              id="apiKey"
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="sk-ant-..."
+              className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              Encrypted and stored securely. Never exposed to your browser after
+              saving.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* CLI Endpoint (advanced) */}
       {llmMode === "cli" && (
@@ -223,7 +255,7 @@ export function LLMSettings() {
           <h3 className="font-medium">CLI Endpoint</h3>
           <p className="text-sm text-gray-500">
             Optional. URL for a remote Claude CLI HTTP wrapper (e.g., on
-            DigitalOcean). Leave blank to use the local CLI.
+            DigitalOcean). Leave blank to use the default server.
           </p>
           <input
             type="url"

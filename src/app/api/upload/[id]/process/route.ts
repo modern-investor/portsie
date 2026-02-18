@@ -2,16 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { processFileForLLM } from "@/lib/upload/file-processor";
 import { extractFinancialData } from "@/lib/llm/dispatcher";
-import { autoLinkOrCreateAccount } from "@/lib/upload/account-matcher";
-import { writeExtractedData } from "@/lib/upload/data-writer";
+import {
+  loadExistingAccountsForMatching,
+  matchAccounts,
+} from "@/lib/extraction/account-matcher";
+import { writeExtraction } from "@/lib/extraction/db-writer";
 import { getLLMSettings } from "@/lib/llm/settings";
 import type { UploadFileType } from "@/lib/upload/types";
-import type { AutoLinkResult } from "@/lib/upload/account-matcher";
 
 // LLM extraction can take several minutes for large PDF/CSV files
 export const maxDuration = 300; // 5 minutes
 
-/** POST /api/upload/[id]/process — Trigger LLM extraction for an upload */
+/**
+ * POST /api/upload/[id]/process
+ *
+ * DEPRECATED: Use /api/upload/[id]/extract?auto_confirm=true instead.
+ *
+ * This route is kept for backward compatibility. It runs the full
+ * 3-stage pipeline (extract → match → write) in one call.
+ */
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -45,10 +54,8 @@ export async function POST(
     );
   }
 
-  // Track processing attempt count
   const newProcessCount = (statement.process_count ?? 0) + 1;
 
-  // Mark as processing, increment attempt counter, and clear previous confirmation state
   await supabase
     .from("uploaded_statements")
     .update({
@@ -60,7 +67,7 @@ export async function POST(
     .eq("id", id);
 
   try {
-    // Download file from Supabase Storage
+    // Download file
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("statements")
       .download(statement.file_path);
@@ -73,118 +80,72 @@ export async function POST(
 
     const buffer = Buffer.from(await fileData.arrayBuffer());
     const fileType = statement.file_type as UploadFileType;
-
-    // Pre-process the file for Claude
     const processedFile = processFileForLLM(buffer, fileType, fileData.type);
 
-    // Extract data via configured LLM backend (CLI or API)
-    const { result: extractionResult, rawResponse } =
-      await extractFinancialData(supabase, user.id, processedFile, fileType, statement.filename);
+    // Stage 1+2: Extract + validate
+    const { extraction, rawResponse } = await extractFinancialData(
+      supabase,
+      user.id,
+      processedFile,
+      fileType,
+      statement.filename
+    );
 
-    // Determine if extraction produced data
-    const hasData =
-      extractionResult.transactions.length > 0 ||
-      extractionResult.positions.length > 0 ||
-      extractionResult.balances.length > 0;
+    // Check if extraction produced data
+    const totalPositions =
+      extraction.accounts.reduce((sum, a) => sum + a.positions.length, 0) +
+      extraction.unallocated_positions.length;
+    const totalTransactions = extraction.accounts.reduce(
+      (sum, a) => sum + a.transactions.length,
+      0
+    );
+    const totalBalances = extraction.accounts.reduce(
+      (sum, a) => sum + a.balances.length,
+      0
+    );
+    const hasData = totalPositions > 0 || totalTransactions > 0 || totalBalances > 0;
+    const parseStatus = hasData ? "extracted" : "partial";
 
-    const parseStatus = hasData ? "completed" : "partial";
-
-    // Auto-link/create account and auto-confirm
-    let autoLinkResult: AutoLinkResult | null = null;
-    let autoConfirmed = false;
-    let autoConfirmError: string | null = null;
-    let transactionsCreated = 0;
-    let positionsCreated = 0;
-
-    if (hasData) {
-      try {
-        // If re-processing an already-confirmed upload, reuse the existing account
-        let accountId: string | null = null;
-
-        if (statement.account_id && statement.confirmed_at) {
-          const { data: existingAccount } = await supabase
-            .from("accounts")
-            .select("id")
-            .eq("id", statement.account_id)
-            .eq("is_active", true)
-            .single();
-
-          if (existingAccount) {
-            const existingId: string = existingAccount.id;
-            accountId = existingId;
-            autoLinkResult = {
-              accountId: existingId,
-              action: "matched",
-              matchReason: "Previously linked account",
-            };
-          }
-        }
-
-        // No existing link — auto-match or create
-        if (!accountId) {
-          // Use detected account info, or fall back to filename-based info
-          const accountInfo = extractionResult.account_info ?? {
-            institution_name: "Unknown",
-            account_type: null,
-            account_number: null,
-            account_nickname: statement.filename,
-          };
-          autoLinkResult = await autoLinkOrCreateAccount(
-            supabase,
-            user.id,
-            accountInfo
-          );
-          accountId = autoLinkResult.accountId;
-        }
-
-        // Write data to canonical tables
-        const writeResult = await writeExtractedData(
-          supabase,
-          user.id,
-          accountId,
-          id,
-          extractionResult
-        );
-        transactionsCreated = writeResult.transactionsCreated;
-        positionsCreated = writeResult.positionsCreated;
-        autoConfirmed = true;
-      } catch (linkErr) {
-        // Auto-link/confirm failed — save extraction results anyway
-        autoConfirmError =
-          linkErr instanceof Error ? linkErr.message : "Unknown auto-confirm error";
-        console.error("Auto-link/confirm failed:", linkErr);
-      }
-    }
-
-    // Save extraction results to the database
-    // Note: writeExtractedData already sets confirmed_at, account_id, and
-    // parse_status if auto-confirm succeeded. This update ensures extraction
-    // metadata is saved regardless.
+    // Save extraction
     await supabase
       .from("uploaded_statements")
       .update({
         parse_status: parseStatus,
         parsed_at: new Date().toISOString(),
-        extracted_data: extractionResult,
+        extracted_data: extraction,
         raw_llm_response: rawResponse,
-        detected_account_info: extractionResult.account_info,
-        account_id: autoLinkResult?.accountId ?? null,
-        statement_start_date: extractionResult.statement_start_date,
-        statement_end_date: extractionResult.statement_end_date,
-        parse_error: autoConfirmError,
+        detected_account_info: extraction.accounts[0]?.account_info ?? null,
+        extraction_schema_version: extraction.schema_version,
+        statement_start_date: extraction.document.statement_start_date,
+        statement_end_date: extraction.document.statement_end_date,
       })
       .eq("id", id);
 
+    // Stage 2.5+3: Auto-confirm
+    let autoConfirmed = false;
+    let autoConfirmError: string | null = null;
+
+    if (hasData) {
+      try {
+        const existingAccounts = await loadExistingAccountsForMatching(
+          supabase,
+          user.id
+        );
+        const accountMap = matchAccounts(extraction, existingAccounts);
+        await writeExtraction(supabase, user.id, id, extraction, accountMap);
+        autoConfirmed = true;
+      } catch (err) {
+        autoConfirmError =
+          err instanceof Error ? err.message : "Unknown auto-confirm error";
+        console.error("Auto-confirm failed:", err);
+      }
+    }
+
     return NextResponse.json({
-      extraction: extractionResult,
-      autoLinkedAccountId: autoLinkResult?.accountId ?? null,
-      autoLinkAction: autoLinkResult?.action ?? null,
-      autoLinkReason: autoLinkResult?.matchReason ?? null,
+      extraction,
       autoConfirmed,
       autoConfirmError,
-      transactionsCreated,
-      positionsCreated,
-      parseStatus,
+      parseStatus: autoConfirmed ? "completed" : parseStatus,
     });
   } catch (err) {
     const errorMessage =
@@ -199,7 +160,6 @@ export async function POST(
       })
       .eq("id", id);
 
-    // Auto-log extraction failure on 2nd+ attempt for diagnostic review
     if (newProcessCount >= 2) {
       try {
         const settings = await getLLMSettings(supabase, user.id);
@@ -211,7 +171,7 @@ export async function POST(
           file_path: statement.file_path,
           attempt_number: newProcessCount,
           error_message: errorMessage,
-          llm_mode: settings?.llmMode ?? "cli",
+          llm_mode: settings?.llmMode ?? "gemini",
           file_size_bytes: statement.file_size_bytes,
         });
       } catch (logErr) {

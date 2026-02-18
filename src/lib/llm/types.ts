@@ -1,6 +1,12 @@
 // LLM settings types
 
-export type LLMMode = "cli" | "api";
+/**
+ * LLM backend modes:
+ * - "gemini"  — Gemini 3 Flash via Google REST API (default, server-side key)
+ * - "cli"     — Claude Sonnet 4.6 via CLI wrapper on DO (fallback)
+ * - "api"     — Anthropic API with per-user key (user override)
+ */
+export type LLMMode = "gemini" | "cli" | "api";
 
 /** Public-facing settings (safe to return to client — no raw API key) */
 export interface LLMSettings {

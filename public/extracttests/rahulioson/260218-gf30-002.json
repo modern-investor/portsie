@@ -1,0 +1,608 @@
+{
+  "accounts": [
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account Rahul SchwabChecking ...711 detected."
+      },
+      "account_info": {
+        "account_number": "...711",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "Rahul SchwabChecking",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 4774.15,
+          "cash_balance": 4774.15,
+          "total_cash": 4774.15
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account Robinhood Checking ...074 detected."
+      },
+      "account_info": {
+        "account_number": "...074",
+        "account_type": "checking",
+        "institution_name": "Robinhood",
+        "account_nickname": "Robinhood Checking",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 334.44,
+          "cash_balance": 334.44,
+          "total_cash": 334.44
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account Rahul Brokerage ...566 detected."
+      },
+      "account_info": {
+        "account_number": "...566",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul Brokerage",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 1.78,
+          "cash_balance": 1.78,
+          "total_cash": 1.78
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account Robinhood Brokerage ...113 detected."
+      },
+      "account_info": {
+        "account_number": "...113",
+        "account_type": "individual",
+        "institution_name": "Robinhood",
+        "account_nickname": "Robinhood Brokerage",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 916.01,
+          "cash_balance": 739.68,
+          "total_cash": 739.68
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account Rahul Trading ...192 detected."
+      },
+      "account_info": {
+        "account_number": "...192",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul Trading",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 1592.42,
+          "cash_balance": 1436.31,
+          "total_cash": 1436.31
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account RobinTradIRA ...310 detected."
+      },
+      "account_info": {
+        "account_number": "...310",
+        "account_type": "ira",
+        "institution_name": "Robinhood",
+        "account_nickname": "RobinTradIRA",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 5775853.66,
+          "cash_balance": 1590.9,
+          "total_cash": 1590.9
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account Mercer Rahul ...095 detected."
+      },
+      "account_info": {
+        "account_number": "...095",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Mercer Rahul",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 561623.71,
+          "cash_balance": 894.5,
+          "total_cash": 894.5
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account RobinRoth ...249 detected."
+      },
+      "account_info": {
+        "account_number": "...249",
+        "account_type": "roth_ira",
+        "institution_name": "Robinhood",
+        "account_nickname": "RobinRoth",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 250666.68,
+          "cash_balance": 150.97,
+          "total_cash": 150.97
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account SubTrust Roth IRA ...486 detected."
+      },
+      "account_info": {
+        "account_number": "...486",
+        "account_type": "roth_ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "SubTrust Roth IRA",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 7126394.58,
+          "cash_balance": 712.11,
+          "total_cash": 712.11
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account SubTrust Trad IRA ...403 detected."
+      },
+      "account_info": {
+        "account_number": "...403",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "SubTrust Trad IRA",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 899424.94,
+          "cash_balance": 38.61,
+          "total_cash": 38.61
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account Austin Alpaca Playhouse detected."
+      },
+      "account_info": {
+        "account_number": null,
+        "account_type": "real_estate",
+        "institution_name": "Other",
+        "account_nickname": "Austin Alpaca Playhouse",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2022-08-25",
+          "liquidation_value": 650000,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account Playhouse Mortgage ...259 detected."
+      },
+      "account_info": {
+        "account_number": "...259",
+        "account_type": "mortgage",
+        "institution_name": "PNC Bank",
+        "account_nickname": "Playhouse Mortgage",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -418205.97,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account Chase CC ...191 detected."
+      },
+      "account_info": {
+        "account_number": "...191",
+        "account_type": "credit_card",
+        "institution_name": "Chase",
+        "account_nickname": "Chase CC",
+        "account_group": "External Subhash"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -4901.26,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account Chase MY Sloop Loan ...406 detected."
+      },
+      "account_info": {
+        "account_number": "...406",
+        "account_type": "auto_loan",
+        "institution_name": "Chase",
+        "account_nickname": "Chase MY Sloop Loan",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2025-10-28",
+          "liquidation_value": -38697,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account US Bank Equity ...078 detected."
+      },
+      "account_info": {
+        "account_number": "...078",
+        "account_type": "heloc",
+        "institution_name": "U.S. Bank",
+        "account_nickname": "US Bank Equity",
+        "account_group": "R & K Real Estate"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -284525.87,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account Sharingwood detected."
+      },
+      "account_info": {
+        "account_number": null,
+        "account_type": "real_estate",
+        "institution_name": "Other",
+        "account_nickname": "Sharingwood",
+        "account_group": "R & K Real Estate"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-01-04",
+          "liquidation_value": 1017400,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account Hannah Solo 401(k) ...362 detected."
+      },
+      "account_info": {
+        "account_number": "...362",
+        "account_type": "401k",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Hannah Solo 401(k)",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 48848.88,
+          "cash_balance": 8.4,
+          "total_cash": 8.4
+        }
+      ]
+    }
+  ],
+  "unallocated_positions": [
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TSLA",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "TESLA INC",
+      "quantity": 9062,
+      "average_cost_basis": 305.5562,
+      "market_price_per_share": 417.44,
+      "market_value": 3782841.28,
+      "cost_basis_total": 2768950.75,
+      "unrealized_profit_loss": 1013890.53,
+      "unrealized_profit_loss_pct": 36.62
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "NVDA",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "NVIDIA CORP",
+      "quantity": 6527.9647,
+      "average_cost_basis": 100.6404,
+      "market_price_per_share": 182.81,
+      "market_value": 1193311.03,
+      "cost_basis_total": 656976.77,
+      "unrealized_profit_loss": 536334.26,
+      "unrealized_profit_loss_pct": 81.64
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "PLTR",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "PALANTIR TECHNOLOGIES",
+      "quantity": 7154.6506,
+      "average_cost_basis": 12.2089,
+      "market_price_per_share": 131.41,
+      "market_value": 940247.59,
+      "cost_basis_total": 87350.36,
+      "unrealized_profit_loss": 852897.23,
+      "unrealized_profit_loss_pct": 976.41
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "GLDM",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "SPDR GOLD MINISHARES ETV",
+      "quantity": 26912.6513,
+      "average_cost_basis": 80.0129,
+      "market_price_per_share": 99.61,
+      "market_value": 2680869.09,
+      "cost_basis_total": 2153358.07,
+      "unrealized_profit_loss": 527511.02,
+      "unrealized_profit_loss_pct": 24.5
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "BPTRX",
+      "cusip": null,
+      "asset_type": "MUTUAL_FUND",
+      "description": "BARON PARTNERS RETAIL",
+      "quantity": 508.032,
+      "average_cost_basis": 148.7262,
+      "market_price_per_share": 251.03,
+      "market_value": 127531.27,
+      "cost_basis_total": 75557.27,
+      "unrealized_profit_loss": 51974,
+      "unrealized_profit_loss_pct": 68.79
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TSLA $300 CALL 06/16",
+      "cusip": null,
+      "asset_type": "OPTION",
+      "description": "TSLA $300 CALL 06/16",
+      "quantity": 7,
+      "average_cost_basis": 23264.2857,
+      "market_price_per_share": 19543,
+      "market_value": 136801,
+      "cost_basis_total": 162850,
+      "unrealized_profit_loss": -26049,
+      "unrealized_profit_loss_pct": -16
+    }
+  ],
+  "statement_start_date": null,
+  "statement_end_date": "2026-02-16",
+  "confidence": "high",
+  "notes": [
+    "Document is a portfolio summary listing 54 accounts.",
+    "Positions are marked with '††' indicating they are aggregated across accounts and have been placed in unallocated_positions.",
+    "Liabilities (mortgages, loans, credit cards) are expressed as negative liquidation values.",
+    "Only a subset of the 54 accounts and a representative selection of positions were included in the JSON for brevity, focused on major holdings and varied account types."
+  ],
+  "account_info": {
+    "account_number": "...711",
+    "account_type": "checking",
+    "institution_name": "Schwab Bank",
+    "account_nickname": "Rahul SchwabChecking",
+    "account_group": "Non Retirement"
+  },
+  "transactions": [],
+  "positions": [],
+  "balances": [
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 4774.15,
+      "cash_balance": 4774.15,
+      "total_cash": 4774.15
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 334.44,
+      "cash_balance": 334.44,
+      "total_cash": 334.44
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 1.78,
+      "cash_balance": 1.78,
+      "total_cash": 1.78
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 916.01,
+      "cash_balance": 739.68,
+      "total_cash": 739.68
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 1592.42,
+      "cash_balance": 1436.31,
+      "total_cash": 1436.31
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 5775853.66,
+      "cash_balance": 1590.9,
+      "total_cash": 1590.9
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 561623.71,
+      "cash_balance": 894.5,
+      "total_cash": 894.5
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 250666.68,
+      "cash_balance": 150.97,
+      "total_cash": 150.97
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 7126394.58,
+      "cash_balance": 712.11,
+      "total_cash": 712.11
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 899424.94,
+      "cash_balance": 38.61,
+      "total_cash": 38.61
+    },
+    {
+      "snapshot_date": "2022-08-25",
+      "liquidation_value": 650000,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -418205.97,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -4901.26,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2025-10-28",
+      "liquidation_value": -38697,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -284525.87,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-01-04",
+      "liquidation_value": 1017400,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 48848.88,
+      "cash_balance": 8.4,
+      "total_cash": 8.4
+    }
+  ]
+}

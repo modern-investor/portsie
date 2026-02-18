@@ -4,9 +4,11 @@ export async function hasCompletedBrokerageSetup(
   supabase: SupabaseClient,
   userId: string,
   hasSchwabCreds: boolean,
-  hasSchwabConn: boolean
+  hasSchwabConn: boolean,
+  hasQuilttConn?: boolean
 ): Promise<boolean> {
   if (hasSchwabCreds || hasSchwabConn) return true;
+  if (hasQuilttConn) return true;
 
   const { count: accountCount } = await supabase
     .from("accounts")

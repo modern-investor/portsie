@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getOrCreateQuilttSession } from "@/lib/quiltt/session";
+import { getOrCreateQuilttProfile } from "@/lib/quiltt/session";
 
-/** GET /api/quiltt/session — Get or create a Quiltt session token for the current user */
-export async function GET() {
+/**
+ * POST /api/quiltt/session
+ * Creates a Quiltt session token for the authenticated user.
+ * Used by the client-side Quiltt connector widget.
+ */
+export async function POST() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -14,12 +18,21 @@ export async function GET() {
   }
 
   try {
-    const { token, profileId } = await getOrCreateQuilttSession(
-      supabase,
-      user.id,
-      user.email!
-    );
-    return NextResponse.json({ token, profileId });
+    const email = user.email;
+    if (!email) {
+      return NextResponse.json(
+        { error: "User email required for Quiltt" },
+        { status: 400 }
+      );
+    }
+
+    const result = await getOrCreateQuilttProfile(supabase, user.id, email);
+
+    return NextResponse.json({
+      token: result.token,
+      profileId: result.profileId,
+      expiresAt: result.expiresAt,
+    });
   } catch (error) {
     console.error("Failed to create Quiltt session:", error);
     return NextResponse.json(

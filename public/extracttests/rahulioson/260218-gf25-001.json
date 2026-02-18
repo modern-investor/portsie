@@ -1,0 +1,113 @@
+{
+  "accounts": [
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Rahul SchwabChecking ...711"
+      },
+      "account_info": {
+        "account_number": "...711",
+        "account_type": "checking",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul SchwabChecking",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 4774.15,
+          "cash_balance": 4774.15,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Robinhood Checking ...074"
+      },
+      "account_info": {
+        "account_number": "...074",
+        "account_type": "checking",
+        "institution_name": "Robinhood",
+        "account_nickname": "Robinhood Checking",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 334.44,
+          "cash_balance": 334.44,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Rahul Brokerage ...566"
+      },
+      "account_info": {
+        "account_number": "...566",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul Brokerage",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": []
+    }
+  ],
+  "notes": [
+    "WARNING: LLM response was truncated and JSON was auto-repaired. Some data may be missing."
+  ],
+  "confidence": "medium",
+  "account_info": {
+    "account_number": "...711",
+    "account_type": "checking",
+    "institution_name": "Charles Schwab",
+    "account_nickname": "Rahul SchwabChecking",
+    "account_group": "Non Retirement"
+  },
+  "transactions": [],
+  "positions": [],
+  "balances": [
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 4774.15,
+      "cash_balance": 4774.15,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 334.44,
+      "cash_balance": 334.44,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    }
+  ],
+  "unallocated_positions": []
+}

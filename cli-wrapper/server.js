@@ -29,7 +29,7 @@ function log(msg) {
  * Run `claude -p <prompt>` and return the JSON result.
  * For binary files, writes to a temp dir so claude can read them.
  */
-async function runClaude(prompt, file) {
+async function runClaude(prompt, file, model) {
   let tempDir = null;
   let tempFilePath = null;
 
@@ -57,6 +57,12 @@ async function runClaude(prompt, file) {
       "--output-format", "json",
       "--dangerously-skip-permissions",
     ];
+
+    // Allow callers to request a specific model (e.g., claude-sonnet-4-5-20250929)
+    if (model) {
+      args.push("--model", model);
+      log(`Using model: ${model}`);
+    }
 
     return await new Promise((resolve, reject) => {
       const child = spawn("claude", args, {
@@ -111,11 +117,11 @@ async function runClaude(prompt, file) {
  */
 function drainQueue() {
   while (activeCount < MAX_CONCURRENT && requestQueue.length > 0) {
-    const { prompt, file, resolve, reject } = requestQueue.shift();
+    const { prompt, file, model, resolve, reject } = requestQueue.shift();
     activeCount++;
-    log(`Starting extraction (active: ${activeCount}/${MAX_CONCURRENT}, queued: ${requestQueue.length}, file: ${file ? file.filename : "none"})`);
+    log(`Starting extraction (active: ${activeCount}/${MAX_CONCURRENT}, queued: ${requestQueue.length}, file: ${file ? file.filename : "none"}, model: ${model || "default"})`);
 
-    runClaude(prompt, file)
+    runClaude(prompt, file, model)
       .then((result) => {
         log(`Extraction complete (active: ${activeCount - 1}/${MAX_CONCURRENT}, queued: ${requestQueue.length})`);
         resolve(result);
@@ -135,14 +141,14 @@ function drainQueue() {
 /**
  * Enqueue an extraction request. Returns a promise that resolves when processing completes.
  */
-function enqueueExtraction(prompt, file) {
+function enqueueExtraction(prompt, file, model) {
   return new Promise((resolve, reject) => {
     if (requestQueue.length >= MAX_QUEUE_SIZE) {
       reject(new Error("Queue full. Try again later."));
       return;
     }
     const position = requestQueue.length + activeCount;
-    requestQueue.push({ prompt, file, resolve, reject });
+    requestQueue.push({ prompt, file, model, resolve, reject });
     log(`Queued extraction (position: ${position + 1}, active: ${activeCount}/${MAX_CONCURRENT}, queued: ${requestQueue.length})`);
     // Try to start immediately if we have capacity
     drainQueue();
@@ -263,7 +269,7 @@ const server = http.createServer(async (req, res) => {
 
   try {
     const body = await readBody(req);
-    const { prompt, file } = JSON.parse(body);
+    const { prompt, file, model } = JSON.parse(body);
 
     if (!prompt) {
       res.writeHead(400, { "Content-Type": "application/json" });
@@ -272,7 +278,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     try {
-      const result = await enqueueExtraction(prompt, file || null);
+      const result = await enqueueExtraction(prompt, file || null, model || null);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(result));
     } catch (err) {

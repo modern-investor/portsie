@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import type { AccountMatch, DetectedAccountInfo } from "@/lib/upload/types";
+import type { DetectedAccountInfo } from "@/lib/upload/types";
+
+interface AccountMatchDisplay {
+  id: string;
+  account_nickname: string | null;
+  institution_name: string | null;
+  account_type: string | null;
+  schwab_account_number: string | null;
+  match_reason: string;
+}
 
 export function AccountLinkModal({
   accountMatches,
@@ -10,7 +19,7 @@ export function AccountLinkModal({
   onConfirm,
   onCancel,
 }: {
-  accountMatches: AccountMatch[];
+  accountMatches: AccountMatchDisplay[];
   detectedInfo: DetectedAccountInfo;
   autoLinkedAccountId: string | null;
   onConfirm: (params: {

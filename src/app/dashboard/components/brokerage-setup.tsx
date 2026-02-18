@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { SchwabSetupInline } from "./schwab-setup-inline";
 import { UploadSection } from "./upload-section";
-import { QuilttProviderWrapper } from "./quiltt-provider-wrapper";
-import { QuilttConnect } from "./quiltt-connect";
+import { QuilttConnector } from "@/components/quiltt-connector";
 
 export function BrokerageSetup({
   brokerageId,
@@ -30,7 +29,6 @@ export function BrokerageSetup({
 
   if (!brokerage) return null;
 
-  const connectorId = process.env.NEXT_PUBLIC_QUILTT_CONNECTOR_ID!;
   const showTabs = methods.length > 1;
   const isGeneric = brokerage.id === "other-bank" || brokerage.id === "other-brokerage";
 
@@ -79,13 +77,12 @@ export function BrokerageSetup({
       )}
 
       {activeMethod === "quiltt" && (
-        <QuilttProviderWrapper>
-          <QuilttConnect
-            connectorId={connectorId}
-            institution={isGeneric ? undefined : brokerage.name}
-            institutionName={isGeneric ? undefined : brokerage.name}
-          />
-        </QuilttProviderWrapper>
+        <QuilttConnector
+          institutionSearch={isGeneric ? undefined : brokerage.quilttInstitutionSearch}
+          onSuccess={() => {
+            // Could navigate to portfolio view or refresh
+          }}
+        />
       )}
 
       {activeMethod === "upload" && (

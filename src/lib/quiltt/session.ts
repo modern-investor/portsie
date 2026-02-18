@@ -1,53 +1,80 @@
+// ============================================================================
+// Quiltt session token management
+// ============================================================================
+
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { QUILTT_CONFIG, getQuilttApiSecret } from "./config";
+import type { QuilttSessionResponse, QuilttProfileRecord } from "./types";
 
-const QUILTT_AUTH_URL = "https://auth.quiltt.io/v1/users/sessions";
+/**
+ * Create a Quiltt session token for a user.
+ * If the user already has a Quiltt profile, uses their profile ID.
+ * Otherwise, creates a new Quiltt profile with their email.
+ */
+export async function createQuilttSession(
+  email: string,
+  existingProfileId?: string
+): Promise<QuilttSessionResponse> {
+  const secret = getQuilttApiSecret();
 
-interface QuilttSessionResponse {
-  token: string;
-  userId: string;
-  expiration: number;
-  expiresAt: string;
+  const body: Record<string, string> = {};
+  if (existingProfileId) {
+    body.userId = existingProfileId;
+  } else {
+    body.email = email;
+  }
+
+  const response = await fetch(`${QUILTT_CONFIG.authBaseUrl}/users/sessions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${secret}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `Quiltt session creation failed (${response.status}): ${errorText}`
+    );
+  }
+
+  return response.json();
 }
 
 /**
- * Get or create a Quiltt session token for a Portsie user.
- *
- * 1. Check quiltt_profiles for an existing Quiltt profile
- * 2. If found, issue a new session for that profile
- * 3. If not found, create a new Quiltt profile and save the mapping
+ * Get the user's Quiltt profile from the database, or create one via the
+ * Quiltt API and persist it.
+ * Returns a fresh session token and the profile ID.
  */
-export async function getOrCreateQuilttSession(
+export async function getOrCreateQuilttProfile(
   supabase: SupabaseClient,
   userId: string,
-  userEmail: string
-): Promise<{ token: string; profileId: string }> {
-  const secretKey = process.env.QUILTT_SECRET_KEY;
-  if (!secretKey) {
-    throw new Error("QUILTT_SECRET_KEY is not configured");
-  }
-
+  email: string
+): Promise<{ token: string; profileId: string; expiresAt: string }> {
   // Check for existing profile
-  const { data: profile } = await supabase
+  const { data: existing } = await supabase
     .from("quiltt_profiles")
-    .select("quiltt_profile_id")
+    .select("*")
     .eq("user_id", userId)
     .single();
 
-  if (profile?.quiltt_profile_id) {
-    // Issue session for existing profile
-    const session = await issueQuilttSession(secretKey, {
-      userId: profile.quiltt_profile_id,
-    });
-    return { token: session.token, profileId: profile.quiltt_profile_id };
+  if (existing) {
+    const profile = existing as QuilttProfileRecord;
+    // Create a new session for the existing profile
+    const session = await createQuilttSession(email, profile.quiltt_profile_id);
+    return {
+      token: session.token,
+      profileId: profile.quiltt_profile_id,
+      expiresAt: session.expiresAt,
+    };
   }
 
-  // Create new profile via Quiltt
-  const session = await issueQuilttSession(secretKey, {
-    email: userEmail,
-    metadata: { portsie_user_id: userId },
-  });
+  // No profile yet — create one via Quiltt
+  const session = await createQuilttSession(email);
 
-  // Save the profile mapping
+  // Persist the profile mapping
   const { error } = await supabase.from("quiltt_profiles").insert({
     user_id: userId,
     quiltt_profile_id: session.userId,
@@ -56,23 +83,47 @@ export async function getOrCreateQuilttSession(
   if (error) {
     // If unique constraint violation, profile was created concurrently — fetch it
     if (error.code === "23505") {
-      const { data: existing } = await supabase
+      const { data: raceWinner } = await supabase
         .from("quiltt_profiles")
         .select("quiltt_profile_id")
         .eq("user_id", userId)
         .single();
-      if (existing) {
-        return { token: session.token, profileId: existing.quiltt_profile_id };
+      if (raceWinner) {
+        return {
+          token: session.token,
+          profileId: raceWinner.quiltt_profile_id,
+          expiresAt: session.expiresAt,
+        };
       }
     }
-    throw new Error(`Failed to save Quiltt profile: ${error.message}`);
+    throw new Error(`Failed to store Quiltt profile: ${error.message}`);
   }
 
-  return { token: session.token, profileId: session.userId };
+  return {
+    token: session.token,
+    profileId: session.userId,
+    expiresAt: session.expiresAt,
+  };
 }
 
 /**
- * Check if a user has a Quiltt profile linked.
+ * Get the Quiltt profile ID for a user (or null if none exists).
+ */
+export async function getQuilttProfileId(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("quiltt_profiles")
+    .select("quiltt_profile_id")
+    .eq("user_id", userId)
+    .single();
+
+  return data?.quiltt_profile_id ?? null;
+}
+
+/**
+ * Check if a user has a Quiltt profile (i.e. has connected via Open Banking).
  */
 export async function hasQuilttProfile(
   supabase: SupabaseClient,
@@ -83,29 +134,23 @@ export async function hasQuilttProfile(
     .select("id")
     .eq("user_id", userId)
     .single();
+
   return !!data;
 }
 
 /**
- * Issue a Quiltt session token via the Auth API.
+ * Delete a user's Quiltt profile mapping.
  */
-async function issueQuilttSession(
-  secretKey: string,
-  body: Record<string, unknown>
-): Promise<QuilttSessionResponse> {
-  const res = await fetch(QUILTT_AUTH_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${secretKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+export async function deleteQuilttProfile(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("quiltt_profiles")
+    .delete()
+    .eq("user_id", userId);
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Quiltt Auth API error (${res.status}): ${text}`);
+  if (error) {
+    throw new Error(`Failed to delete Quiltt profile: ${error.message}`);
   }
-
-  return res.json();
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { UploadDropzone } from "./upload-dropzone";
 import { UploadList } from "./upload-list";
-import { UploadReview } from "./upload-review";
 import type { UploadedStatement } from "@/lib/upload/types";
 
 export function UploadSection({
@@ -22,7 +22,25 @@ export function UploadSection({
   // Track how many times each upload has been processed this session
   const [processCount, setProcessCount] = useState<Record<string, number>>({});
   const [reviewingId, setReviewingId] = useState<string | null>(null);
-  const reviewRef = useRef<HTMLDivElement>(null);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const router = useRouter();
+
+  // Auto-redirect countdown after save
+  useEffect(() => {
+    if (redirectCountdown === null) return;
+    if (redirectCountdown <= 0) {
+      router.push("/dashboard");
+      return;
+    }
+    const timer = setTimeout(() => {
+      setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [redirectCountdown, router]);
+
+  function cancelRedirect() {
+    setRedirectCountdown(null);
+  }
 
   // Fetch existing uploads on mount
   const fetchUploads = useCallback(async () => {
@@ -48,8 +66,10 @@ export function UploadSection({
     setUploads((prev) => [statement, ...prev]);
   }
 
-  // Trigger LLM processing for a single upload (auto-links account and saves data)
-  async function handleProcess(uploadId: string) {
+  // Trigger LLM processing for a single upload (auto-links account and saves data).
+  // Returns true if auto-confirm succeeded (data was written to DB).
+  async function handleProcess(uploadId: string): Promise<boolean> {
+    let autoConfirmed = false;
     setProcessingIds((prev) => new Set(prev).add(uploadId));
     setProcessCount((prev) => ({ ...prev, [uploadId]: (prev[uploadId] ?? 0) + 1 }));
     // Record processing start timestamp (keep existing q timestamp)
@@ -59,7 +79,11 @@ export function UploadSection({
     }));
 
     try {
-      await fetch(`/api/upload/${uploadId}/process`, { method: "POST" });
+      const res = await fetch(`/api/upload/${uploadId}/extract?auto_confirm=true`, { method: "POST" });
+      if (res.ok) {
+        const body = await res.json();
+        autoConfirmed = !!body.autoConfirmed;
+      }
     } catch {
       // Error status will be reflected in the refreshed upload record
     } finally {
@@ -86,9 +110,11 @@ export function UploadSection({
         return next;
       });
     }
+    return autoConfirmed;
   }
 
-  // Batch process: fire all concurrently — server queues and runs up to 3 at a time
+  // Batch process: run sequentially so only one is actively processing at a time.
+  // Queued items show "Queued" until their turn.
   function handleBatchProcess(ids: string[]) {
     const now = new Date().toISOString();
     setQueuedIds(new Set(ids));
@@ -101,16 +127,20 @@ export function UploadSection({
       return next;
     });
 
-    for (const id of ids) {
-      setQueuedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-      handleProcess(id).then(() => {
+    // Process sequentially so queued items stay visually distinct
+    (async () => {
+      let anyAutoConfirmed = false;
+      for (const id of ids) {
+        // Move from queued → processing
+        setQueuedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        const confirmed = await handleProcess(id);
+        if (confirmed) anyAutoConfirmed = true;
         setBatchDone((prev) => {
           const next = prev + 1;
-          // Clear batch state when all done
           if (next >= ids.length) {
             setQueuedIds(new Set());
             setBatchTotal(0);
@@ -118,17 +148,26 @@ export function UploadSection({
           }
           return next;
         });
+      }
+      // After batch completes, auto-open review for the first file that has data.
+      // We use the setUploads updater to read latest state (closure is stale).
+      setUploads((prev) => {
+        const reviewable = ids.find((fid) => {
+          const u = prev.find((up) => up.id === fid);
+          return u && ["completed", "extracted", "partial"].includes(u.parse_status);
+        });
+        if (reviewable) setReviewingId(reviewable);
+        return prev;
       });
-    }
+      if (anyAutoConfirmed) {
+        setRedirectCountdown(5);
+      }
+    })();
   }
 
-  // Open review panel and scroll to it
+  // Toggle review panel for a specific upload (empty string closes)
   function handleReview(uploadId: string) {
-    setReviewingId(uploadId);
-    // Scroll after React renders the review section
-    requestAnimationFrame(() => {
-      reviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    setReviewingId(uploadId || null);
   }
 
   // Delete an upload
@@ -143,22 +182,47 @@ export function UploadSection({
   // Re-process a file
   async function handleReprocess() {
     if (reviewingId) {
+      const id = reviewingId;
       const now = new Date().toISOString();
       setTimestamps((prev) => ({
         ...prev,
-        [reviewingId]: { q: now },
+        [id]: { q: now },
       }));
       setReviewingId(null);
-      await handleProcess(reviewingId);
+      const confirmed = await handleProcess(id);
+      // Re-open review after reprocessing completes
+      setUploads((prev) => {
+        const u = prev.find((up) => up.id === id);
+        if (u && ["completed", "extracted", "partial"].includes(u.parse_status)) {
+          setReviewingId(id);
+        }
+        return prev;
+      });
+      if (confirmed) {
+        setRedirectCountdown(5);
+      }
     }
   }
 
-  const reviewingUpload = reviewingId
-    ? uploads.find((u) => u.id === reviewingId)
-    : null;
-
   return (
     <div className="space-y-4">
+      {/* Auto-redirect banner */}
+      {redirectCountdown !== null && (
+        <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-4 py-3">
+          <span className="text-sm font-medium text-green-800">
+            Processing complete.
+            <br />
+            Switching to Analysis Dashboard in {redirectCountdown}s...
+          </span>
+          <button
+            onClick={cancelRedirect}
+            className="rounded-md border border-green-300 bg-white px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-50"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
       <h2 className="text-lg font-semibold">Upload Statements</h2>
 
       {brokerageContext && (
@@ -180,12 +244,23 @@ export function UploadSection({
         </div>
       )}
 
-      <UploadDropzone onUploaded={handleFileUploaded} />
+      <UploadDropzone onUploaded={handleFileUploaded} onBatchComplete={handleBatchProcess} />
 
       {loading ? (
-        <div className="animate-pulse space-y-2">
+        <div className="space-y-2">
+          <p className="text-sm text-gray-400">Loading uploads...</p>
           {[1, 2].map((i) => (
-            <div key={i} className="h-16 rounded-lg bg-gray-200" />
+            <div
+              key={i}
+              className="flex h-16 items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 animate-pulse"
+            >
+              <div className="h-4 w-4 rounded bg-gray-200" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3.5 w-40 rounded bg-gray-200" />
+                <div className="h-3 w-24 rounded bg-gray-200" />
+              </div>
+              <div className="h-6 w-16 rounded-full bg-gray-200" />
+            </div>
           ))}
         </div>
       ) : (
@@ -197,25 +272,19 @@ export function UploadSection({
           batchDone={batchDone}
           timestamps={timestamps}
           processCount={processCount}
+          reviewingId={reviewingId}
           onBatchProcess={handleBatchProcess}
           onReview={handleReview}
           onDelete={handleDelete}
+          onReprocess={handleReprocess}
+          onSaved={(updated) => {
+            setUploads((prev) =>
+              prev.map((u) => (u.id === updated.id ? updated : u))
+            );
+            setRedirectCountdown(3);
+          }}
+          onCloseReview={() => setReviewingId(null)}
         />
-      )}
-
-      {reviewingUpload && (
-        <div ref={reviewRef}>
-          <UploadReview
-            upload={reviewingUpload}
-            onReprocess={handleReprocess}
-            onClose={() => setReviewingId(null)}
-            onSaved={(updated) => {
-              setUploads((prev) =>
-                prev.map((u) => (u.id === updated.id ? updated : u))
-              );
-            }}
-          />
-        </div>
       )}
     </div>
   );

@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getQuilttProfileId } from "@/lib/quiltt/session";
+import { importQuilttAccounts, syncAllQuilttAccounts } from "@/lib/quiltt/sync";
 
-/** POST /api/quiltt/callback — Save a Quiltt connection result as an account */
+/**
+ * POST /api/quiltt/callback
+ * Called by the client after the Quiltt connector completes.
+ * Imports new accounts and triggers initial data sync.
+ *
+ * Body: { connectionId: string }
+ */
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const {
@@ -12,61 +20,50 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { connectionId, profileId, institutionName } = await request.json();
-
-  if (!connectionId) {
-    return NextResponse.json(
-      { error: "connectionId is required" },
-      { status: 400 }
-    );
-  }
-
   try {
-    // Check for duplicate connection
-    const { data: existing } = await supabase
-      .from("accounts")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("quiltt_connection_id", connectionId)
-      .single();
+    const body = await request.json();
+    const connectionId = body?.connectionId;
 
-    if (existing) {
-      return NextResponse.json({ accountId: existing.id, action: "existing" });
+    if (!connectionId) {
+      return NextResponse.json(
+        { error: "connectionId is required" },
+        { status: 400 }
+      );
     }
 
-    // Create new account linked to Quiltt connection
-    const { data: account, error } = await supabase
-      .from("accounts")
-      .insert({
-        user_id: user.id,
-        data_source: "quiltt",
-        quiltt_connection_id: connectionId,
-        institution_name: institutionName || "Connected Account",
-        account_nickname: institutionName
-          ? `${institutionName} Account`
-          : "Linked Account",
-        is_active: true,
-      })
-      .select("id")
-      .single();
-
-    if (error) {
-      throw new Error(`Failed to create account: ${error.message}`);
+    const profileId = await getQuilttProfileId(supabase, user.id);
+    if (!profileId) {
+      return NextResponse.json(
+        { error: "No Quiltt profile found" },
+        { status: 404 }
+      );
     }
 
-    // Update quiltt_profiles with profileId if provided and not yet saved
-    if (profileId) {
-      await supabase
-        .from("quiltt_profiles")
-        .update({ quiltt_profile_id: profileId })
-        .eq("user_id", user.id);
-    }
+    // Import any new accounts from Quiltt
+    const importResult = await importQuilttAccounts(
+      supabase,
+      user.id,
+      profileId
+    );
 
-    return NextResponse.json({ accountId: account!.id, action: "created" });
+    // Trigger initial sync for all Quiltt accounts
+    const syncResult = await syncAllQuilttAccounts(
+      supabase,
+      user.id,
+      profileId
+    );
+
+    return NextResponse.json({
+      message: "Connection processed",
+      connectionId,
+      imported: importResult.imported,
+      totalAccounts: importResult.total,
+      sync: syncResult,
+    });
   } catch (error) {
-    console.error("Failed to save Quiltt connection:", error);
+    console.error("Failed to process Quiltt callback:", error);
     return NextResponse.json(
-      { error: "Failed to save connection" },
+      { error: "Failed to process connection" },
       { status: 500 }
     );
   }

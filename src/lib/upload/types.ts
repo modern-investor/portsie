@@ -75,9 +75,43 @@ export interface DetectedAccountInfo {
   account_type?: string | null;
   institution_name?: string | null;
   account_nickname?: string | null;
+  account_group?: string | null;
+}
+
+/** Claude's account linkage decision — returned inline in extraction results */
+export interface AccountLink {
+  action: "match_existing" | "create_new";
+  existing_account_id?: string; // UUID, present only when action === "match_existing"
+  match_confidence: "high" | "medium" | "low";
+  match_reason: string;
+}
+
+/** Per-account container for multi-account extractions */
+export interface ExtractedAccount {
+  account_link?: AccountLink; // Claude's matching decision (optional for backward compat)
+  account_info: DetectedAccountInfo;
+  transactions: ExtractedTransaction[];
+  positions: ExtractedPosition[];
+  balances: ExtractedBalance[];
+}
+
+/** Existing account context injected into the extraction prompt */
+export interface ExistingAccountContext {
+  id: string;
+  account_nickname: string | null;
+  institution_name: string | null;
+  account_type: string | null;
+  account_number_hint: string | null; // last 4 digits only, e.g. "...5902"
+  account_group: string | null;
 }
 
 export interface LLMExtractionResult {
+  // Multi-account: per-account data (primary structure for multi-account docs)
+  accounts?: ExtractedAccount[];
+  // Positions from aggregate sections that can't be attributed to a specific account
+  unallocated_positions?: ExtractedPosition[];
+
+  // Single-account / backward-compat: always populated (synthesized from accounts[] if needed)
   account_info: DetectedAccountInfo;
   statement_start_date?: string | null;
   statement_end_date?: string | null;
@@ -99,7 +133,7 @@ export interface UploadedStatement {
   file_type: UploadFileType;
   file_size_bytes: number | null;
   file_hash: string | null;
-  parse_status: "pending" | "processing" | "completed" | "partial" | "failed";
+  parse_status: "pending" | "processing" | "extracted" | "completed" | "partial" | "failed";
   parse_error: string | null;
   parsed_at: string | null;
   transactions_created: number;
@@ -115,13 +149,3 @@ export interface UploadedStatement {
   updated_at: string;
 }
 
-// ── Account match result ──
-
-export interface AccountMatch {
-  id: string;
-  account_nickname: string | null;
-  institution_name: string | null;
-  account_type: string | null;
-  schwab_account_number: string | null;
-  match_reason: string;
-}

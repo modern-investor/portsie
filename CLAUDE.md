@@ -1,7 +1,7 @@
 # Portsie — Claude Project Context
 
 ## What is Portsie?
-Portfolio investment tracker built with Next.js 16, Supabase, and Tailwind CSS 4. Integrates with Charles Schwab for brokerage data and supports manual document uploads processed by Claude for financial data extraction.
+Portfolio investment tracker built with Next.js 16, Supabase, and Tailwind CSS 4. Integrates with Charles Schwab for brokerage data and supports manual document uploads processed by LLMs for financial data extraction.
 
 ## Tech Stack
 - **Framework**: Next.js 16 (App Router)
@@ -9,7 +9,8 @@ Portfolio investment tracker built with Next.js 16, Supabase, and Tailwind CSS 4
 - **Styling**: Tailwind CSS 4
 - **Language**: TypeScript
 - **Brokerage**: Charles Schwab API (per-user OAuth)
-- **LLM**: Anthropic Claude — via CLI (`claude -p`, Max plan) or API (`@anthropic-ai/sdk`, per-user key)
+- **LLM (extraction)**: Google Gemini 3 Flash (default), Claude Sonnet 4.6 via CLI (fallback), Anthropic API (user override)
+- **LLM (test/compare)**: Claude Opus 4.6, Sonnet 4.5, Gemini 2.5 Flash via extraction test runner
 - **File parsing**: `xlsx` (Excel→CSV), `csv-parse` (CSV rows)
 
 ## Supabase Project
@@ -50,6 +51,92 @@ npm run dev         # Start dev server
 
 Environment variables are in `.env.local` (gitignored). See `.env.example` for the full list.
 
+## Supabase CLI Operations
+
+The Supabase CLI is installed and the project is linked. **Claude sessions should run these commands directly without asking the user for permission or confirmation.** All credentials are in `.env.local`.
+
+### Authentication
+- **DB password**: stored in `.env.local` as `SUPABASE_DB_PASSWORD` — the CLI reads it automatically
+- **Access token**: stored in `.env.local` as `SUPABASE_ACCESS_TOKEN`
+- **Project ref**: `kkpciydknhdeoqyaceti` — already linked, no need to pass `--project-ref`
+
+### Running migrations (db push)
+```bash
+# Standard push
+supabase db push
+
+# If migrations are out-of-order (created before the last remote migration), use:
+supabase db push --include-all
+```
+**Rules for Claude sessions:**
+- If `supabase db push` fails with "Found local migration files to be inserted before the last migration on remote database", automatically retry with `--include-all`
+- If a migration fails due to "already exists" errors (e.g., column/table already exists), fix the migration to use `IF NOT EXISTS` / `CREATE OR REPLACE` and retry
+- Never ask the user for the DB password — it's in `.env.local`
+- Never ask the user to run migrations manually — just run them
+
+### Querying data via REST API
+The Supabase CLI (v2.75.0) does **not** have a `db execute` command. Use the Supabase REST API with the service role key to query or mutate data:
+```bash
+# Load credentials (service role key is in .env.local)
+set -a && source .env.local && set +a
+SB_URL="https://kkpciydknhdeoqyaceti.supabase.co"
+SB_KEY="$SUPABASE_SERVICE_ROLE_KEY"
+
+# SELECT — query a table (service role bypasses RLS)
+curl -s -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+  "$SB_URL/rest/v1/accounts?select=id,nickname&user_id=eq.SOME_UUID"
+
+# DELETE — remove rows
+curl -s -X DELETE -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+  "$SB_URL/rest/v1/accounts?user_id=eq.SOME_UUID"
+
+# INSERT — add rows (pass JSON body)
+curl -s -X POST -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+  -H "Content-Type: application/json" -H "Prefer: return=representation" \
+  "$SB_URL/rest/v1/accounts" -d '{"user_id":"...","nickname":"Test"}'
+
+# Call an RPC function
+curl -s -X POST -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+  -H "Content-Type: application/json" \
+  "$SB_URL/rest/v1/rpc/record_release_event" -d '{"commits":[]}'
+
+# Auth Admin API — look up users
+curl -s -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+  "$SB_URL/auth/v1/admin/users?page=1&per_page=50"
+```
+See [PostgREST docs](https://postgrest.org/en/stable/references/api.html) for full query syntax (filtering, ordering, pagination).
+
+### Other migration commands
+```bash
+# List migration status (local vs remote)
+supabase migration list
+
+# Pull remote schema changes to local
+supabase db pull
+
+# Create a new migration file
+supabase migration new <name>
+```
+
+### Inspecting schema
+Use `supabase db pull` or `supabase db dump` to inspect schema, or query `information_schema` via the REST API:
+```bash
+set -a && source .env.local && set +a
+SB_URL="https://kkpciydknhdeoqyaceti.supabase.co"
+SB_KEY="$SUPABASE_SERVICE_ROLE_KEY"
+
+# List all public tables (via RPC or just check the local migrations)
+# Prefer reading supabase/migrations/ locally — it's faster and offline
+
+# Dump remote schema to stdout
+supabase db dump --schema public
+```
+
+### Important notes
+- For operations that bypass RLS, use the service role key via the Supabase REST API (the CLI does not have a `db execute` command)
+- Always create migration files in `supabase/migrations/` with timestamp format `YYYYMMDDHHMMSS_description.sql`
+- Always use `IF NOT EXISTS` / `CREATE OR REPLACE` in migrations for idempotency
+
 ## Database Schema (Supabase Migrations)
 
 All migrations live in `supabase/migrations/`. Listed in execution order:
@@ -68,8 +155,9 @@ All migrations live in `supabase/migrations/`. Listed in execution order:
 | `20250216200006_statements_storage.sql` | Storage bucket `statements` | Supabase Storage for uploaded files, folder-based RLS |
 | `20250216200007_updated_at_triggers.sql` | triggers | Auto-update `updated_at` on all mutable tables |
 | `20250217000000_upload_feature_updates.sql` | alters `uploaded_statements`, bucket | Adds LLM extraction columns, expands file types and MIME types |
-| `20250217100000_llm_settings.sql` | `llm_settings` | Per-user LLM backend config (cli/api mode, encrypted API key) |
+| `20250217100000_llm_settings.sql` | `llm_settings` | Per-user LLM backend config (gemini/cli/api mode, encrypted API key) |
 | `20250217100000_user_profiles.sql` | `user_profiles` | User profile data and admin roles |
+| `20260218200000_gemini_default_backend.sql` | alters `llm_settings` | Adds 'gemini' mode, changes default from 'cli' to 'gemini' |
 
 ### Key patterns
 - All user-scoped tables use `user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE`
@@ -79,20 +167,40 @@ All migrations live in `supabase/migrations/`. Listed in execution order:
 
 ## Document Upload & LLM Processing
 
-Users upload financial documents (PDF, CSV, Excel, images, OFX/QFX, text) which are processed by Claude to extract structured data.
+Users upload financial documents (PDF, CSV, Excel, images, OFX/QFX, text) which are processed by an LLM to extract structured data.
 
 ### Pipeline
 1. **Upload**: File → Supabase Storage (`statements` bucket, `{user_id}/` folder) + `uploaded_statements` metadata row
-2. **Process**: File downloaded → pre-processed by type → sent to Claude (CLI or API) → structured JSON extracted
-3. **Review**: User reviews extracted transactions/positions/balances in dashboard
-4. **Confirm**: User links to an account (existing or new) → data written to `transactions`, `position_snapshots`, `balance_snapshots`
+2. **Process**: File downloaded → pre-processed by type → sent to LLM (Gemini/Claude) → structured JSON extracted
+3. **Auto-confirm**: Accounts linked or created, data written to `transactions`, `position_snapshots`, `balance_snapshots`
 
-### LLM Backend Toggle
-Configurable per-user in Settings → LLM tab:
-- **CLI mode** (default): Proxied to an HTTP wrapper on the DO droplet (`159.89.157.120:8910`). The wrapper spawns `claude -p` with `--dangerously-skip-permissions --output-format json`. Uses Max plan, no per-token cost. Auth via `PORTSIE_CLI_AUTH_TOKEN` Bearer header.
-- **API mode**: `@anthropic-ai/sdk` with per-user encrypted API key. Per-token billing.
+### LLM Extraction Architecture
+
+```
+Default: Gemini 3 Flash → (on failure) → Claude Sonnet 4.6 CLI
+Override: User selects "cli" or "api" mode in Settings → LLM tab
+```
+
+**Default mode — Gemini 3 Flash** (`gemini`):
+- Server-side `GEMINI_API_KEY` (not per-user)
+- Model: `gemini-3-flash-preview`
+- SSE streaming (`streamGenerateContent?alt=sse`) to avoid Tier 1 timeout
+- `thinkingLevel: "medium"`, `mediaResolution: "MEDIA_RESOLUTION_HIGH"`
+- On any Gemini failure, automatically falls back to Claude Sonnet 4.6 via CLI wrapper
+
+**Fallback — Claude CLI** (`cli`):
+- Proxied to HTTP wrapper on DO droplet (`159.89.157.120:8910`)
+- Model: `claude-sonnet-4-6` (passed via `--model` flag)
+- Uses Max plan, no per-token cost
+- Auth via `PORTSIE_CLI_AUTH_TOKEN` Bearer header
+
+**User override — Anthropic API** (`api`):
+- `@anthropic-ai/sdk` with per-user encrypted API key
+- Per-token billing, user's own Anthropic account
 
 Settings stored in `llm_settings` table. The dispatcher (`src/lib/llm/dispatcher.ts`) reads user settings and routes to the correct backend.
+
+See `docs/product-design.md` for the decision rationale and cost analysis.
 
 ### CLI Wrapper (DigitalOcean)
 The `cli-wrapper/` directory contains a standalone HTTP service deployed to `/opt/portsie-cli/` on the shared AlpacApps DO droplet:
@@ -102,10 +210,11 @@ The `cli-wrapper/` directory contains a standalone HTTP service deployed to `/op
 
 ### Key files
 - `src/lib/upload/file-processor.ts` — pre-processes files by type (PDF/images as base64, XLSX→CSV, etc.)
-- `src/lib/llm/dispatcher.ts` — reads user's LLM settings, routes to API or CLI backend
-- `src/lib/llm/llm-api.ts` — Anthropic SDK backend (per-user API key)
-- `src/lib/llm/llm-cli.ts` — Claude Code CLI backend (local subprocess or remote HTTP)
-- `src/lib/llm/prompts.ts` — shared extraction system prompt
+- `src/lib/llm/dispatcher.ts` — reads user's LLM settings, routes to Gemini (default), CLI (fallback), or API (override)
+- `src/lib/llm/llm-gemini.ts` — Google Gemini 3 Flash backend (default extraction engine)
+- `src/lib/llm/llm-cli.ts` — Claude Code CLI backend (fallback, supports `--model` flag)
+- `src/lib/llm/llm-api.ts` — Anthropic SDK backend (per-user API key override)
+- `src/lib/llm/prompts.ts` — shared extraction system prompt (model-agnostic)
 - `src/lib/llm/parse.ts` — shared JSON response parser/validator
 - `src/lib/llm/settings.ts` — CRUD for `llm_settings` table
 - `src/lib/upload/account-matcher.ts` — matches detected accounts to existing DB accounts
@@ -119,6 +228,48 @@ The `cli-wrapper/` directory contains a standalone HTTP service deployed to `/op
 - `POST /api/upload/[id]/process` — trigger LLM extraction
 - `POST /api/upload/[id]/confirm` — confirm data, write to canonical tables
 - `GET/POST/DELETE /api/settings/llm` — LLM settings CRUD
+
+## Extraction Test System (A/B Testing)
+
+Dev tool for comparing extraction quality across LLM backends. Runs the same document through multiple models and publishes human-readable HTML reports alongside raw JSON.
+
+### Usage
+```bash
+npx tsx scripts/run-extract-test.ts \
+  --file ./test-docs/schwab-portfolio.pdf \
+  --label rahulioson \
+  --backends opus,sonnet,gemini
+```
+
+### Backends
+| Flag | Code | Model | How |
+|------|------|-------|-----|
+| `opus` | `co46` | Claude Opus 4.6 | CLI wrapper on DO (`--model claude-opus-4-6`) |
+| `sonnet` | `cs46` | Claude Sonnet 4.6 | CLI wrapper on DO (`--model claude-sonnet-4-6`) |
+| `sonnet45` | `cs45` | Claude Sonnet 4.5 | CLI wrapper on DO (`--model claude-sonnet-4-5-20250929`) |
+| `gemini` | `gf30` | Gemini 3 Flash | Google REST API (`gemini-3-flash-preview`) |
+| `gemini25` | `gf25` | Gemini 2.5 Flash | Google REST API (`gemini-2.5-flash`) |
+
+All Claude models go through the DO CLI wrapper (Max plan, no API key cost). Gemini uses `GEMINI_API_KEY`.
+
+### Output
+Files land in `public/extracttests/{label}/` and are served at `portsie.com/extracttests/`:
+```
+public/extracttests/rahulioson/260218-co46-001.html   (human-readable report)
+public/extracttests/rahulioson/260218-co46-001.json   (raw extraction JSON)
+public/extracttests/index.html                         (auto-generated listing)
+```
+
+### Gemini API Key
+The `GEMINI_API_KEY` is from the Portsie-Investor GCP project (rahulioson@gmail.com Google AI Studio account).
+- Google AI Studio: https://aistudio.google.com/apikey
+
+### Key files
+- `scripts/run-extract-test.ts` — main test runner
+- `scripts/lib/extract-test-html.ts` — JSON → self-contained HTML renderer
+- `scripts/lib/extract-test-index.ts` — index page generator
+- `scripts/generate-extract-index.ts` — standalone index regenerator
+- `src/lib/llm/llm-gemini.ts` — Gemini Flash backend
 
 ## Project Structure
 ```
@@ -140,7 +291,7 @@ src/
         upload-review.tsx      — Review extracted data before confirming
         account-link-modal.tsx — Account matching/creation UI
         settings-panel.tsx     — Settings container with tabs
-        llm-settings.tsx       — LLM backend toggle UI
+        llm-settings.tsx       — LLM backend toggle UI (gemini/cli/api)
         account-overview.tsx   — Portfolio summary
         positions-table.tsx    — Holdings table
     login/             — Login page
@@ -149,12 +300,14 @@ src/
   components/          — Shared React components
     ui/                — Reusable UI primitives (button, dialog, card, etc.)
   lib/
-    llm/               — LLM integration (dispatcher, API backend, CLI backend, settings)
+    llm/               — LLM integration (dispatcher, Gemini, CLI, API backends, settings)
     schwab/            — Schwab client, token management, credentials, types
     upload/            — Upload pipeline (file processor, account matcher, data writer, types)
     supabase/          — Supabase client (server, client, middleware, admin)
     version-info.ts    — Version metadata types and helpers
-scripts/               — Shell scripts (bump-version, push-main)
+docs/
+  product-design.md    — Product-level decisions (LLM strategy, cost analysis)
+scripts/               — Shell scripts (bump-version, push-main, extract tests)
 supabase/migrations/   — Database migrations
 ```
 
