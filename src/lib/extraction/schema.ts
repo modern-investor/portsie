@@ -156,6 +156,10 @@ export interface ExtractionPosition {
   unrealized_profit_loss: number | null;
   /** Unrealized gain/loss as percentage (e.g. 36.62 for +36.62%) */
   unrealized_profit_loss_pct: number | null;
+  /** Day change amount in dollars (single-day movement, not unrealized P&L) */
+  day_change_amount: number | null;
+  /** Day change as percentage (e.g. -0.88 for -0.88%) */
+  day_change_pct: number | null;
 }
 
 export interface ExtractionBalance {
@@ -239,6 +243,19 @@ export interface PortsieExtraction {
 
   /** LLM's assessment of extraction quality */
   confidence: Confidence;
+
+  /**
+   * Document-level reported totals (for integrity validation).
+   * These are "grand total" values printed on the document.
+   */
+  document_totals?: {
+    /** Total portfolio/document value as stated (includes liabilities as negatives) */
+    total_value: number | null;
+    /** Total day change amount as stated */
+    total_day_change: number | null;
+    /** Total day change percentage as stated */
+    total_day_change_pct: number | null;
+  } | null;
 
   /** Anything unusual, ambiguous, or needing user review */
   notes: string[];
@@ -394,6 +411,20 @@ export const PORTSIE_EXTRACTION_JSON_SCHEMA = {
       type: "string" as const,
       enum: [...CONFIDENCE_LEVELS],
     },
+    document_totals: {
+      oneOf: [
+        {
+          type: "object" as const,
+          properties: {
+            total_value: { type: ["number", "null"] as const },
+            total_day_change: { type: ["number", "null"] as const },
+            total_day_change_pct: { type: ["number", "null"] as const },
+          },
+          additionalProperties: false,
+        },
+        { type: "null" as const },
+      ],
+    },
     notes: {
       type: "array" as const,
       items: { type: "string" as const },
@@ -495,6 +526,8 @@ export const PORTSIE_EXTRACTION_JSON_SCHEMA = {
         cost_basis_total: { type: ["number", "null"] as const },
         unrealized_profit_loss: { type: ["number", "null"] as const },
         unrealized_profit_loss_pct: { type: ["number", "null"] as const },
+        day_change_amount: { type: ["number", "null"] as const },
+        day_change_pct: { type: ["number", "null"] as const },
       },
       additionalProperties: false,
     },

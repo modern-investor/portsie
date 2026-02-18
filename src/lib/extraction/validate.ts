@@ -391,6 +391,17 @@ class ExtractionValidator {
       this.addCoercion("Converted single notes string to array");
     }
 
+    // document_totals (optional)
+    const totalsRaw = raw.document_totals;
+    let documentTotals: PortsieExtraction["document_totals"] = null;
+    if (isPlainObject(totalsRaw)) {
+      documentTotals = {
+        total_value: coerceNumber(totalsRaw.total_value),
+        total_day_change: coerceNumber(totalsRaw.total_day_change),
+        total_day_change_pct: coerceNumber(totalsRaw.total_day_change_pct),
+      };
+    }
+
     // Validate we have SOME data
     const totalPositions =
       accounts.reduce((sum, a) => sum + a.positions.length, 0) +
@@ -420,6 +431,7 @@ class ExtractionValidator {
       document,
       accounts,
       unallocated_positions: unallocatedPositions,
+      document_totals: documentTotals,
       confidence,
       notes,
     };
@@ -622,6 +634,8 @@ class ExtractionValidator {
       cost_basis_total: coerceNumber(raw.cost_basis_total),
       unrealized_profit_loss: coerceNumber(raw.unrealized_profit_loss),
       unrealized_profit_loss_pct: coerceNumber(raw.unrealized_profit_loss_pct),
+      day_change_amount: coerceNumber(raw.day_change_amount),
+      day_change_pct: coerceNumber(raw.day_change_pct),
     };
   }
 

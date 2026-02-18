@@ -349,6 +349,17 @@ async function writeAccountData(
     latestBalance as unknown as import("@/lib/upload/types").ExtractedBalance | undefined
   );
 
+  // Store document-reported total for integrity validation
+  if (latestBalance?.liquidation_value != null) {
+    await supabase
+      .from("accounts")
+      .update({
+        document_reported_total: latestBalance.liquidation_value,
+        document_reported_date: latestBalance.snapshot_date,
+      })
+      .eq("id", accountId);
+  }
+
   const accountNickname =
     account.account_info.account_nickname ||
     `${account.account_info.institution_name || "Unknown"} Account`;

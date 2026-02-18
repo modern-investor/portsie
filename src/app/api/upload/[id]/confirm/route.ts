@@ -5,6 +5,7 @@ import {
   matchAccounts,
 } from "@/lib/extraction/account-matcher";
 import { writeExtraction } from "@/lib/extraction/db-writer";
+import { checkExtractionIntegrity } from "@/lib/extraction/integrity-check";
 import type { PortsieExtraction, AccountMapResult } from "@/lib/extraction/schema";
 
 /**
@@ -93,6 +94,9 @@ export async function POST(
         accountMapOverrides.aggregate_account_id;
     }
 
+    // ── Integrity check (pre-write validation) ──
+    const integrityReport = checkExtractionIntegrity(extraction);
+
     // ── Stage 3: DB writes ──
     const writeReport = await writeExtraction(
       supabase,
@@ -102,9 +106,16 @@ export async function POST(
       accountMap
     );
 
+    // Store integrity report on the statement
+    await supabase
+      .from("uploaded_statements")
+      .update({ integrity_report: integrityReport })
+      .eq("id", id);
+
     return NextResponse.json({
       success: true,
       writeReport,
+      integrityReport,
       parseStatus: "completed",
     });
   } catch (err) {

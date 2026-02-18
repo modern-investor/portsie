@@ -57,6 +57,10 @@ export interface ExtractedPosition {
   cost_basis_total?: number | null;
   unrealized_profit_loss?: number | null;
   unrealized_profit_loss_pct?: number | null;
+  /** Day change amount in dollars */
+  day_change_amount?: number | null;
+  /** Day change as percentage */
+  day_change_pct?: number | null;
 }
 
 export interface ExtractedBalance {
