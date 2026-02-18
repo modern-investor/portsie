@@ -1,12 +1,12 @@
 {
-  "version": "v260218.13 6:36a",
-  "release": 78,
-  "sha": "7dd546ed",
-  "fullSha": "7dd546ed9f9d2dac1e11ad031d736853b6f04d06",
+  "version": "v260218.14 6:49a",
+  "release": 79,
+  "sha": "7b519c09",
+  "fullSha": "7b519c09f4d5b1a6f23fff4d125de09693e4b203",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000097",
-  "pushedAt": "2026-02-18T12:36:21+00",
-  "commits": [{"sha": "7dd546ed9f9d2dac1e11ad031d736853b6f04d06", "short_sha": "7dd546ed", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/claude/hardcore-mclean'"}, {"sha": "68aeece6b4737eac2602a9a369800566067592f4", "short_sha": "68aeece6", "author": "rahulio", "message": "Unify dashboard tabs with shared Radix-based Tabs component"}]
+  "machine": "GitHub Actions 1000000101",
+  "pushedAt": "2026-02-18T12:49:47+00",
+  "commits": [{"sha": "7b519c09f4d5b1a6f23fff4d125de09693e4b203", "short_sha": "7b519c09", "author": "rahulio", "message": "Auto-open review panel after upload processing completes"}]
 }
