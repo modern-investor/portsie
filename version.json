@@ -1,12 +1,12 @@
 {
-  "version": "v260218.01 12:02a",
-  "release": 66,
-  "sha": "5900259f",
-  "fullSha": "5900259f60bb9195a6f7c310566565bbb9964859",
+  "version": "v260218.02 12:28a",
+  "release": 67,
+  "sha": "4a7a3c5b",
+  "fullSha": "4a7a3c5bf8990cd1b545715ddc49667fe84af6ba",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000064",
-  "pushedAt": "2026-02-18T06:02:16+00",
-  "commits": [{"sha": "5900259f60bb9195a6f7c310566565bbb9964859", "short_sha": "5900259f", "author": "rahulio", "message": "Expand ledger design doc with full justifications for every decision"}]
+  "machine": "GitHub Actions 1000000065",
+  "pushedAt": "2026-02-18T06:28:32+00",
+  "commits": [{"sha": "4a7a3c5bf8990cd1b545715ddc49667fe84af6ba", "short_sha": "4a7a3c5b", "author": "rahulio", "message": "Update ledger design doc: LLM-driven matching, DB-backed prompts, Gemini temp note"}]
 }
