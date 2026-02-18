@@ -1,12 +1,12 @@
 {
-  "version": "v260218.08 2:48a",
-  "release": 73,
-  "sha": "13306df2",
-  "fullSha": "13306df2c8eca9c7dbea121e278bb8f37adb445a",
+  "version": "v260218.09 5:15a",
+  "release": 74,
+  "sha": "6bcd5881",
+  "fullSha": "6bcd58815f927a161e4b892e6f975ce1a9f4a1b1",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000072",
-  "pushedAt": "2026-02-18T08:48:40+00",
-  "commits": [{"sha": "13306df2c8eca9c7dbea121e278bb8f37adb445a", "short_sha": "13306df2", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/claude/relaxed-black'"}, {"sha": "accc1175f3a07271e7b59039bc5f65ea5f816b64", "short_sha": "accc1175", "author": "rahulio", "message": "Positions table: widen account column, add equity names under tickers"}]
+  "machine": "GitHub Actions 1000000076",
+  "pushedAt": "2026-02-18T11:15:49+00",
+  "commits": [{"sha": "6bcd58815f927a161e4b892e6f975ce1a9f4a1b1", "short_sha": "6bcd5881", "author": "Rahul", "message": "Merge pull request #13 from modern-investor/claude/intelligent-yonath"}, {"sha": "d86cca99566cd020638b5c7cf74e8dd147e2c0da", "short_sha": "d86cca99", "author": "rahulio", "message": "Update homepage tagline to new copy"}]
 }
