@@ -1,12 +1,12 @@
 {
-  "version": "v260218.19 8:36a",
-  "release": 84,
-  "sha": "1b4b0d16",
-  "fullSha": "1b4b0d16edb6c068437549e7cef0f79c20c9c773",
+  "version": "v260218.20 8:37a",
+  "release": 85,
+  "sha": "f702a9ca",
+  "fullSha": "f702a9ca6e0a51cd476625922212326e7310de52",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000125",
-  "pushedAt": "2026-02-18T14:36:34+00",
-  "commits": [{"sha": "1b4b0d16edb6c068437549e7cef0f79c20c9c773", "short_sha": "1b4b0d16", "author": "rahulio", "message": "Merge branch 'claude/epic-banach'"}, {"sha": "5ab092b88dd367665601da910bef4d78932a3c35", "short_sha": "5ab092b8", "author": "rahulio", "message": "Add collapsible show/hide toggles to Brokerages and Banks sections"}]
+  "machine": "GitHub Actions 1000000127",
+  "pushedAt": "2026-02-18T14:37:05+00",
+  "commits": [{"sha": "f702a9ca6e0a51cd476625922212326e7310de52", "short_sha": "f702a9ca", "author": "Rahul", "message": "Merge pull request #20 from modern-investor/claude/elated-khorana"}, {"sha": "06bc4a0abb7b3b23914a0ddd93a540af29a7c713", "short_sha": "06bc4a0a", "author": "rahulio", "message": "Fix upload processing flow: prevent stale Process button after extraction"}]
 }
