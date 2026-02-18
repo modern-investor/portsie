@@ -1,0 +1,641 @@
+{
+  "accounts": [
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Rahul SchwabChecking (...711)"
+      },
+      "account_info": {
+        "account_number": "...711",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "Rahul SchwabChecking",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 4774.15,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Robinhood Checking (...074)"
+      },
+      "account_info": {
+        "account_number": "...074",
+        "account_type": "checking",
+        "institution_name": "Robinhood",
+        "account_nickname": "Robinhood Checking",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 334.44,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Rahul Brokerage (...566)"
+      },
+      "account_info": {
+        "account_number": "...566",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul Brokerage",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 1.78,
+          "cash_balance": 1.78,
+          "available_funds": null,
+          "total_cash": 1.78,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Robinhood Brokerage (...113)"
+      },
+      "account_info": {
+        "account_number": "...113",
+        "account_type": "individual",
+        "institution_name": "Robinhood",
+        "account_nickname": "Robinhood Brokerage",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 916.01,
+          "cash_balance": 739.68,
+          "available_funds": null,
+          "total_cash": 739.68,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Rahul Trading (...192)"
+      },
+      "account_info": {
+        "account_number": "...192",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul Trading",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 1592.42,
+          "cash_balance": 1436.31,
+          "available_funds": null,
+          "total_cash": 1436.31,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: RobinTradIRA (...310)"
+      },
+      "account_info": {
+        "account_number": "...310",
+        "account_type": "ira",
+        "institution_name": "Robinhood",
+        "account_nickname": "RobinTradIRA",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 5775853.66,
+          "cash_balance": 1590.9,
+          "available_funds": null,
+          "total_cash": 1590.9,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Mercer Rahul (...095)"
+      },
+      "account_info": {
+        "account_number": "...095",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Mercer Rahul",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 561623.71,
+          "cash_balance": 894.5,
+          "available_funds": null,
+          "total_cash": 894.5,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: RobinRoth (...249)"
+      },
+      "account_info": {
+        "account_number": "...249",
+        "account_type": "ira",
+        "institution_name": "Robinhood",
+        "account_nickname": "RobinRoth",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 250666.68,
+          "cash_balance": 150.97,
+          "available_funds": null,
+          "total_cash": 150.97,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: SubTrust Roth IRA (...486)"
+      },
+      "account_info": {
+        "account_number": "...486",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "SubTrust Roth IRA",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 7126394.58,
+          "cash_balance": 712.11,
+          "available_funds": null,
+          "total_cash": 712.11,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Playhouse Mortgage (...259)"
+      },
+      "account_info": {
+        "account_number": "...259",
+        "account_type": "mortgage",
+        "institution_name": "PNC Bank",
+        "account_nickname": "Playhouse Mortgage",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -418205.97,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Austin Alpaca Playhouse"
+      },
+      "account_info": {
+        "account_number": null,
+        "account_type": "real_estate",
+        "institution_name": null,
+        "account_nickname": "Austin Alpaca Playhouse",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 650000,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Chase CC (...191)"
+      },
+      "account_info": {
+        "account_number": "...191",
+        "account_type": "credit_card",
+        "institution_name": "Chase",
+        "account_nickname": "Chase CC",
+        "account_group": "External Subhash"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -4901.26,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Chase MY Sloop Loan (...406)"
+      },
+      "account_info": {
+        "account_number": "...406",
+        "account_type": "auto_loan",
+        "institution_name": "Chase",
+        "account_nickname": "Chase MY Sloop Loan",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -38697,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: US Bank Equity (...078)"
+      },
+      "account_info": {
+        "account_number": "...078",
+        "account_type": "heloc",
+        "institution_name": "U.S. Bank",
+        "account_nickname": "US Bank Equity",
+        "account_group": "R & K Real Estate"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -284525.87,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected: Sharingwood"
+      },
+      "account_info": {
+        "account_number": null,
+        "account_type": "real_estate",
+        "institution_name": null,
+        "account_nickname": "Sharingwood",
+        "account_group": "R & K Real Estate"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 1017400,
+          "cash_balance": null,
+          "available_funds": null,
+          "total_cash": null,
+          "equity": null,
+          "long_market_value": null,
+          "buying_power": null
+        }
+      ]
+    }
+  ],
+  "unallocated_positions": [
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TSLA",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "TESLA INC",
+      "quantity": 9062,
+      "short_quantity": null,
+      "average_cost_basis": 305.55,
+      "market_price_per_share": 417.44,
+      "market_value": 3782841.28,
+      "cost_basis_total": 2768950.75,
+      "unrealized_profit_loss": 1013890.53,
+      "unrealized_profit_loss_pct": 36.62
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "NVDA",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "NVIDIA CORP",
+      "quantity": 6527.9647,
+      "short_quantity": null,
+      "average_cost_basis": 100.64,
+      "market_price_per_share": 182.81,
+      "market_value": 1193311.03,
+      "cost_basis_total": 656976.77,
+      "unrealized_profit_loss": 536334.26,
+      "unrealized_profit_loss_pct": 81.64
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "GLDM",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "SPDR GOLD MINISHARES ETV",
+      "quantity": 26912.6513,
+      "short_quantity": null,
+      "average_cost_basis": 80.01,
+      "market_price_per_share": 99.61,
+      "market_value": 2680869.09,
+      "cost_basis_total": 2153358.07,
+      "unrealized_profit_loss": 527511.02,
+      "unrealized_profit_loss_pct": 24.5
+    }
+  ],
+  "statement_start_date": null,
+  "statement_end_date": "2026-02-16",
+  "confidence": "high",
+  "notes": [
+    "Extracted 38+ accounts from a multi-page Schwab summary.",
+    "Positions marked with †† were placed in unallocated_positions as they represent aggregate holdings across external accounts.",
+    "Liabilities (mortgages, loans, credit cards) were recorded with negative liquidation values.",
+    "Real estate holdings (Austin Alpaca, Sharingwood) were extracted as separate accounts."
+  ],
+  "account_info": {
+    "account_number": "...711",
+    "account_type": "checking",
+    "institution_name": "Schwab Bank",
+    "account_nickname": "Rahul SchwabChecking",
+    "account_group": "Non Retirement"
+  },
+  "transactions": [],
+  "positions": [],
+  "balances": [
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 4774.15,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 334.44,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 1.78,
+      "cash_balance": 1.78,
+      "available_funds": null,
+      "total_cash": 1.78,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 916.01,
+      "cash_balance": 739.68,
+      "available_funds": null,
+      "total_cash": 739.68,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 1592.42,
+      "cash_balance": 1436.31,
+      "available_funds": null,
+      "total_cash": 1436.31,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 5775853.66,
+      "cash_balance": 1590.9,
+      "available_funds": null,
+      "total_cash": 1590.9,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 561623.71,
+      "cash_balance": 894.5,
+      "available_funds": null,
+      "total_cash": 894.5,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 250666.68,
+      "cash_balance": 150.97,
+      "available_funds": null,
+      "total_cash": 150.97,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 7126394.58,
+      "cash_balance": 712.11,
+      "available_funds": null,
+      "total_cash": 712.11,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -418205.97,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 650000,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -4901.26,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -38697,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -284525.87,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 1017400,
+      "cash_balance": null,
+      "available_funds": null,
+      "total_cash": null,
+      "equity": null,
+      "long_market_value": null,
+      "buying_power": null
+    }
+  ]
+}

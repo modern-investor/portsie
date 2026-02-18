@@ -109,7 +109,7 @@ export async function deleteLLMApiKey(
     .from("llm_settings")
     .update({
       api_key_encrypted: null,
-      llm_mode: "cli",
+      llm_mode: "gemini",
       updated_at: new Date().toISOString(),
     })
     .eq("user_id", userId);

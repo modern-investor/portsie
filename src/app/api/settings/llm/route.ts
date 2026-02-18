@@ -20,7 +20,7 @@ export async function GET() {
 
   const settings = await getLLMSettings(supabase, user.id);
   return NextResponse.json({
-    llmMode: settings?.llmMode ?? "cli",
+    llmMode: settings?.llmMode ?? "gemini",
     hasApiKey: settings?.hasApiKey ?? false,
     cliEndpoint: settings?.cliEndpoint ?? null,
   });
@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
   };
 
   // Validate mode
-  const mode: LLMMode = llmMode ?? "cli";
-  if (mode !== "cli" && mode !== "api") {
+  const mode: LLMMode = llmMode ?? "gemini";
+  if (mode !== "gemini" && mode !== "cli" && mode !== "api") {
     return NextResponse.json({ error: "Invalid LLM mode" }, { status: 400 });
   }
 

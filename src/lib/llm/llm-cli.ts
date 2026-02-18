@@ -21,12 +21,13 @@ export async function extractViaCLI(
   processedFile: ProcessedFile,
   fileType: UploadFileType,
   filename: string,
-  cliEndpoint: string | null
+  cliEndpoint: string | null,
+  model?: string
 ): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
   if (cliEndpoint) {
-    return extractViaCLIRemote(cliEndpoint, processedFile, fileType, filename);
+    return extractViaCLIRemote(cliEndpoint, processedFile, fileType, filename, model);
   }
-  return extractViaCLILocal(processedFile, fileType, filename);
+  return extractViaCLILocal(processedFile, fileType, filename, model);
 }
 
 /**
@@ -37,7 +38,8 @@ export async function extractViaCLI(
 async function extractViaCLILocal(
   processedFile: ProcessedFile,
   fileType: UploadFileType,
-  filename: string
+  filename: string,
+  model?: string
 ): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
   let tempDir: string | null = null;
   let tempFilePath: string | null = null;
@@ -53,9 +55,12 @@ async function extractViaCLILocal(
 
     const prompt = buildCLIPrompt(processedFile, fileType, filename, tempFilePath);
 
+    const cliArgs = ["-p", prompt, "--output-format", "json"];
+    if (model) cliArgs.push("--model", model);
+
     const { stdout } = await execFileAsync(
       "claude",
-      ["-p", prompt, "--output-format", "json"],
+      cliArgs,
       {
         timeout: 300_000, // 5 minute timeout
         maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large responses
@@ -113,11 +118,13 @@ async function extractViaCLIRemote(
   endpoint: string,
   processedFile: ProcessedFile,
   fileType: UploadFileType,
-  filename: string
+  filename: string,
+  model?: string
 ): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
   const prompt = buildCLIPrompt(processedFile, fileType, filename, null);
 
   const body: Record<string, unknown> = { prompt };
+  if (model) body.model = model;
 
   // For binary files, send the base64 content to the remote server
   if (processedFile.contentType !== "text" && processedFile.base64Data) {

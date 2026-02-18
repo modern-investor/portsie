@@ -22,9 +22,9 @@ export const UPLOAD_CONFIG = {
   acceptString:
     ".pdf,.csv,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.ofx,.qfx,.json",
 
-  /** Claude model used for extraction (Sonnet for cost/quality balance) */
+  /** Claude model for Anthropic API mode (user override with their own key) */
   claudeModel: "claude-sonnet-4-20250514" as const,
 
-  /** Max tokens for Claude response (32K for multi-account summaries with many positions) */
+  /** Max tokens for Claude API response (32K for multi-account summaries) */
   claudeMaxTokens: 32768,
 } as const;

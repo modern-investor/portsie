@@ -171,7 +171,7 @@ export async function POST(
           file_path: statement.file_path,
           attempt_number: newProcessCount,
           error_message: errorMessage,
-          llm_mode: settings?.llmMode ?? "cli",
+          llm_mode: settings?.llmMode ?? "gemini",
           file_size_bytes: statement.file_size_bytes,
         });
       } catch (logErr) {

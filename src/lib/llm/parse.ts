@@ -3,6 +3,66 @@ import type { LLMExtractionResult, ExtractedAccount, AccountLink } from "../uplo
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
+ * Attempt to repair truncated JSON by closing open structures.
+ * Handles cases where LLM response was cut off due to token limits.
+ * Returns the repaired string or null if repair isn't feasible.
+ */
+function repairTruncatedJSON(text: string): string | null {
+  // Must start with { to be a JSON object
+  if (!text.startsWith("{")) return null;
+
+  // Track open brackets/braces (ignore those inside strings)
+  const stack: string[] = [];
+  let inString = false;
+  let escape = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (ch === "\\") {
+      if (inString) escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+
+    if (ch === "{") stack.push("}");
+    else if (ch === "[") stack.push("]");
+    else if (ch === "}" || ch === "]") {
+      if (stack.length > 0 && stack[stack.length - 1] === ch) {
+        stack.pop();
+      }
+    }
+  }
+
+  // Nothing to close — shouldn't happen if parse failed
+  if (stack.length === 0) return null;
+
+  // Close any open string
+  let repaired = text;
+  if (inString) {
+    repaired += '"';
+  }
+
+  // Remove trailing comma or colon (incomplete key-value pair)
+  repaired = repaired.replace(/,\s*$/, "").replace(/:\s*$/, ': null');
+
+  // Close all open structures in reverse order
+  while (stack.length > 0) {
+    repaired += stack.pop();
+  }
+
+  return repaired;
+}
+
+/**
  * Validate and normalize an account_link object from Claude's response.
  * Returns the validated link or null if invalid/missing.
  */
@@ -73,9 +133,25 @@ export function parseAndValidateExtraction(rawText: string): LLMExtractionResult
   try {
     result = JSON.parse(jsonText);
   } catch {
-    throw new Error(
-      `Failed to parse Claude response as JSON. Raw response: ${jsonText.slice(0, 500)}`
-    );
+    // Attempt to repair truncated JSON (common with Gemini token limits)
+    const repaired = repairTruncatedJSON(jsonText);
+    if (repaired) {
+      try {
+        result = JSON.parse(repaired);
+        // Mark as truncated so the user knows
+        if (!Array.isArray(result.notes)) result.notes = [];
+        result.notes.push("WARNING: LLM response was truncated and JSON was auto-repaired. Some data may be missing.");
+        if (!result.confidence || result.confidence === "high") result.confidence = "medium";
+      } catch {
+        throw new Error(
+          `Failed to parse Claude response as JSON (repair also failed). Raw response: ${jsonText.slice(0, 500)}`
+        );
+      }
+    } else {
+      throw new Error(
+        `Failed to parse Claude response as JSON. Raw response: ${jsonText.slice(0, 500)}`
+      );
+    }
   }
 
   // ── Multi-account normalization ──

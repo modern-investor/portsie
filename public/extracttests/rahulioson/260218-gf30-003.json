@@ -1,0 +1,1687 @@
+{
+  "accounts": [
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...711",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "Rahul SchwabChecking",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 4774.15,
+          "cash_balance": 4774.15
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...074",
+        "account_type": "checking",
+        "institution_name": "Robinhood",
+        "account_nickname": "Robinhood Checking",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 334.44,
+          "cash_balance": 334.44
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...566",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul Brokerage",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 1.78,
+          "cash_balance": 1.78
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...113",
+        "account_type": "individual",
+        "institution_name": "Robinhood",
+        "account_nickname": "Robinhood Brokerage",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 916.01,
+          "cash_balance": 739.68
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...192",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul Trading",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 1592.42,
+          "cash_balance": 1436.31
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...102",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "Venmo Checking (AAP)",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...654",
+        "account_type": "checking",
+        "institution_name": "Robinhood",
+        "account_nickname": "Robinhood Savings",
+        "account_group": "Non Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...310",
+        "account_type": "ira",
+        "institution_name": "Robinhood",
+        "account_nickname": "RobinTradIRA",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 5775853.66,
+          "cash_balance": 1590.9
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...095",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Mercer Rahul",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 561623.71,
+          "cash_balance": 894.5
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...249",
+        "account_type": "ira",
+        "institution_name": "Robinhood",
+        "account_nickname": "RobinRoth",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 250666.68,
+          "cash_balance": 150.97
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...902",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "RS - Trad IRA",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...874",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul Inh Trad",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 15.59,
+          "cash_balance": 0.74
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...441",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Rahul Roth",
+        "account_group": "Retirement"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...044",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "SubTrust Checking",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 2612.76,
+          "cash_balance": 2612.76
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...028",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "SubTrust Brokerage",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0.22,
+          "cash_balance": 0.22
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...486",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "SubTrust Roth IRA",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 7126394.58,
+          "cash_balance": 712.11
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...403",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "SubTrust Trad IRA",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 899424.94,
+          "cash_balance": 38.61
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...945",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Emina RothTrust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 96290.82,
+          "cash_balance": 751.35
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...342",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Hannah RothTrust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 104304.03,
+          "cash_balance": 104.18
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...163",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Haydn RothTrust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 94644.59,
+          "cash_balance": 11460.63
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...811",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Hannah TradTrust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...661",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Haydn TradTrust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...200",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "EminaTradTrust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": null,
+        "account_type": "real_estate",
+        "institution_name": null,
+        "account_nickname": "Austin Alpaca Playhouse",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 650000,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...259",
+        "account_type": "mortgage",
+        "institution_name": "PNC Bank",
+        "account_nickname": "Playhouse Mortgage",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -418205.97,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...046",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Living Trust",
+        "account_group": "SubTrust"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": 0
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...497",
+        "account_type": "checking",
+        "institution_name": "Fifth Third Bank",
+        "account_nickname": "53 SS",
+        "account_group": "External Subhash"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 170.77,
+          "cash_balance": 170.77
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...867",
+        "account_type": "checking",
+        "institution_name": "Fifth Third Bank",
+        "account_nickname": "53 Working",
+        "account_group": "External Subhash"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 802.67,
+          "cash_balance": 802.67
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...003",
+        "account_type": "credit_card",
+        "institution_name": "American Express",
+        "account_nickname": "Amex Venturables",
+        "account_group": "External Subhash"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...942",
+        "account_type": "savings",
+        "institution_name": "Chase",
+        "account_nickname": "Chase Savings",
+        "account_group": "External Subhash"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -0.01,
+          "cash_balance": -0.01
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...191",
+        "account_type": "credit_card",
+        "institution_name": "Chase",
+        "account_nickname": "Chase CC",
+        "account_group": "External Subhash"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -4901.26,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...444",
+        "account_type": "checking",
+        "institution_name": "U.S. Bank",
+        "account_nickname": "USB Primary",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 2245.3,
+          "cash_balance": 2245.3
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...892",
+        "account_type": "credit_card",
+        "institution_name": "Robinhood",
+        "account_nickname": "RobinGold Visa",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -350.6,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...206",
+        "account_type": "credit_card",
+        "institution_name": "Chase",
+        "account_nickname": "Amazon Prime",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -5977.97,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...709",
+        "account_type": "checking",
+        "institution_name": "Wells Fargo",
+        "account_nickname": "WF Checking",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 808.79,
+          "cash_balance": 808.79
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...006",
+        "account_type": "credit_card",
+        "institution_name": "American Express",
+        "account_nickname": "Amex CPC",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -227.14,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...406",
+        "account_type": "auto_loan",
+        "institution_name": "Chase",
+        "account_nickname": "Chase MY Sloop Loan",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -38697,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...l00",
+        "account_type": "other",
+        "institution_name": "United Heritage CU",
+        "account_nickname": "HCU M3 Loan",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -17480.94,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...784",
+        "account_type": "credit_card",
+        "institution_name": "U.S. Bank",
+        "account_nickname": "US Bank LOC",
+        "account_group": "External Bank And CC"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 0.01,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...078",
+        "account_type": "heloc",
+        "institution_name": "U.S. Bank",
+        "account_nickname": "US Bank Equity",
+        "account_group": "R & K Real Estate"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": -284525.87,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": null,
+        "account_type": "real_estate",
+        "institution_name": null,
+        "account_nickname": "Sharingwood",
+        "account_group": "R & K Real Estate"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 1017400,
+          "cash_balance": null
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...387",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Emina Roth",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 69915.19,
+          "cash_balance": 77.47
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...866",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Emina Inh Trad",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 109870.28,
+          "cash_balance": 914.55
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...797",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "Emina Bank",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 3001.15,
+          "cash_balance": 3001.15
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...151",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Emina Brokerage",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 157476.66,
+          "cash_balance": 36194.53
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...259",
+        "account_type": "checking",
+        "institution_name": "Wells Fargo",
+        "account_nickname": "Emina WF Chkg",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 62.65,
+          "cash_balance": 62.65
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...692",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Haydn Inh Trad",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 93678.97,
+          "cash_balance": 6427.57
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...359",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "Haydn Bank",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 10,
+          "cash_balance": 10
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...944",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Haydn Brokerage",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 168938.58,
+          "cash_balance": 0.02
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...568",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Hannah Ihn Trad IRA",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 97697.11,
+          "cash_balance": 166.02
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...170",
+        "account_type": "ira",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Hannah ROth",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 66747.37,
+          "cash_balance": 920.93
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...518",
+        "account_type": "checking",
+        "institution_name": "Schwab Bank",
+        "account_nickname": "Hannah Bank",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 2967.49,
+          "cash_balance": 2967.49
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...362",
+        "account_type": "view_only",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Hannah Solo 401(k)",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 48848.88,
+          "cash_balance": 8.4
+        }
+      ]
+    },
+    {
+      "account_link": {
+        "action": "create_new",
+        "match_confidence": "high",
+        "match_reason": "New account detected in statement."
+      },
+      "account_info": {
+        "account_number": "...830",
+        "account_type": "individual",
+        "institution_name": "Charles Schwab",
+        "account_nickname": "Hannah Brokerage",
+        "account_group": "Other People's Money"
+      },
+      "transactions": [],
+      "positions": [],
+      "balances": [
+        {
+          "snapshot_date": "2026-02-16",
+          "liquidation_value": 248550.56,
+          "cash_balance": 2927.81
+        }
+      ]
+    }
+  ],
+  "unallocated_positions": [
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TSLA",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "TESLA INC",
+      "quantity": 9062,
+      "short_quantity": null,
+      "average_cost_basis": 305.56,
+      "market_price_per_share": 417.44,
+      "market_value": 3782841.28,
+      "cost_basis_total": 2768950.75,
+      "unrealized_profit_loss": 1013890.53,
+      "unrealized_profit_loss_pct": 36.62
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TSLA",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "Tesla, Inc. Common Stock",
+      "quantity": 7105.3067,
+      "short_quantity": null,
+      "average_cost_basis": 80.85,
+      "market_price_per_share": null,
+      "market_value": 2966110.3,
+      "cost_basis_total": 574478.56,
+      "unrealized_profit_loss": 2391631.74,
+      "unrealized_profit_loss_pct": 416.31
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "NVDA",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "NVIDIA CORP",
+      "quantity": 6527.9647,
+      "short_quantity": null,
+      "average_cost_basis": 100.64,
+      "market_price_per_share": 182.81,
+      "market_value": 1193311.03,
+      "cost_basis_total": 656976.77,
+      "unrealized_profit_loss": 536334.26,
+      "unrealized_profit_loss_pct": 81.64
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "PLTR",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "PALANTIR TECHNOLOGIES INCLASS CLASS A",
+      "quantity": 7154.6506,
+      "short_quantity": null,
+      "average_cost_basis": 12.21,
+      "market_price_per_share": 131.41,
+      "market_value": 940247.59,
+      "cost_basis_total": 87350.36,
+      "unrealized_profit_loss": 852897.23,
+      "unrealized_profit_loss_pct": 976.41
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "GOOGL",
+      "cusip": null,
+      "asset_type": "EQUITY",
+      "description": "ALPHABET INC CLASS CLASS A",
+      "quantity": 2308.5067,
+      "short_quantity": null,
+      "average_cost_basis": 307.46,
+      "market_price_per_share": 305.72,
+      "market_value": 705766.94,
+      "cost_basis_total": 709777.98,
+      "unrealized_profit_loss": -4011.04,
+      "unrealized_profit_loss_pct": -0.57
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "GLDM",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "SPDR GOLD MINISHARES ETV",
+      "quantity": 26912.6513,
+      "short_quantity": null,
+      "average_cost_basis": 80.01,
+      "market_price_per_share": 99.61,
+      "market_value": 2680869.09,
+      "cost_basis_total": 2153358.07,
+      "unrealized_profit_loss": 527511.02,
+      "unrealized_profit_loss_pct": 24.5
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "IBIT",
+      "cusip": null,
+      "asset_type": "ETF",
+      "description": "ISHARES BITCOIN ETF",
+      "quantity": 11912.2599,
+      "short_quantity": null,
+      "average_cost_basis": 25.77,
+      "market_price_per_share": 38.97,
+      "market_value": 464257.37,
+      "cost_basis_total": 307006.81,
+      "unrealized_profit_loss": 157250.56,
+      "unrealized_profit_loss_pct": 51.22
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "BPTRX",
+      "cusip": null,
+      "asset_type": "MUTUAL_FUND",
+      "description": "BARON PARTNERS RETAIL",
+      "quantity": 508.032,
+      "short_quantity": null,
+      "average_cost_basis": 148.73,
+      "market_price_per_share": 251.03,
+      "market_value": 127531.27,
+      "cost_basis_total": 75557.27,
+      "unrealized_profit_loss": 51974,
+      "unrealized_profit_loss_pct": 68.79
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "TSLA $300 CALL 06/16",
+      "cusip": null,
+      "asset_type": "OPTION",
+      "description": "TSLA $300 CALL 06/16",
+      "quantity": 7,
+      "short_quantity": null,
+      "average_cost_basis": null,
+      "market_price_per_share": 19543,
+      "market_value": 136801,
+      "cost_basis_total": 162850,
+      "unrealized_profit_loss": -26049,
+      "unrealized_profit_loss_pct": -16
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "symbol": "SNOXX",
+      "cusip": null,
+      "asset_type": "CASH_EQUIVALENT",
+      "description": "SCHWAB TREASURY OBLIG MONEY INV",
+      "quantity": 18035.37,
+      "short_quantity": null,
+      "average_cost_basis": 1,
+      "market_price_per_share": 1,
+      "market_value": 18035.37,
+      "cost_basis_total": 18035.37,
+      "unrealized_profit_loss": 0,
+      "unrealized_profit_loss_pct": 0
+    }
+  ],
+  "statement_start_date": null,
+  "statement_end_date": "2026-02-16",
+  "confidence": "high",
+  "notes": [
+    "Extracted 54 accounts spanning Charles Schwab and various external institutions.",
+    "Positions marked with †† are aggregated across accounts and placed in unallocated_positions.",
+    "Liabilities like mortgages and credit card balances are represented as negative liquidation values."
+  ],
+  "account_info": {
+    "account_number": "...711",
+    "account_type": "checking",
+    "institution_name": "Schwab Bank",
+    "account_nickname": "Rahul SchwabChecking",
+    "account_group": "Non Retirement"
+  },
+  "transactions": [],
+  "positions": [],
+  "balances": [
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 4774.15,
+      "cash_balance": 4774.15
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 334.44,
+      "cash_balance": 334.44
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 1.78,
+      "cash_balance": 1.78
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 916.01,
+      "cash_balance": 739.68
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 1592.42,
+      "cash_balance": 1436.31
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 5775853.66,
+      "cash_balance": 1590.9
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 561623.71,
+      "cash_balance": 894.5
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 250666.68,
+      "cash_balance": 150.97
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 15.59,
+      "cash_balance": 0.74
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 2612.76,
+      "cash_balance": 2612.76
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0.22,
+      "cash_balance": 0.22
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 7126394.58,
+      "cash_balance": 712.11
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 899424.94,
+      "cash_balance": 38.61
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 96290.82,
+      "cash_balance": 751.35
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 104304.03,
+      "cash_balance": 104.18
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 94644.59,
+      "cash_balance": 11460.63
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 650000,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -418205.97,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": 0
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 170.77,
+      "cash_balance": 170.77
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 802.67,
+      "cash_balance": 802.67
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -0.01,
+      "cash_balance": -0.01
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -4901.26,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 2245.3,
+      "cash_balance": 2245.3
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -350.6,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -5977.97,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 808.79,
+      "cash_balance": 808.79
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -227.14,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -38697,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -17480.94,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 0.01,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": -284525.87,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 1017400,
+      "cash_balance": null
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 69915.19,
+      "cash_balance": 77.47
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 109870.28,
+      "cash_balance": 914.55
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 3001.15,
+      "cash_balance": 3001.15
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 157476.66,
+      "cash_balance": 36194.53
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 62.65,
+      "cash_balance": 62.65
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 93678.97,
+      "cash_balance": 6427.57
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 10,
+      "cash_balance": 10
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 168938.58,
+      "cash_balance": 0.02
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 97697.11,
+      "cash_balance": 166.02
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 66747.37,
+      "cash_balance": 920.93
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 2967.49,
+      "cash_balance": 2967.49
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 48848.88,
+      "cash_balance": 8.4
+    },
+    {
+      "snapshot_date": "2026-02-16",
+      "liquidation_value": 248550.56,
+      "cash_balance": 2927.81
+    }
+  ]
+}
