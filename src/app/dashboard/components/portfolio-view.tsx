@@ -174,7 +174,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
     return (
       <PortfolioEmptyState
         onGoToUploads={() => onNavigateTab?.("connections:uploads")}
-        onGoToConnections={() => onNavigateTab?.("connections:api")}
+        onGoToConnections={() => onNavigateTab?.("connections:datalinks")}
       />
     );
   }
