@@ -1,12 +1,12 @@
 {
-  "version": "v260218.05 2:32a",
-  "release": 70,
-  "sha": "f9727138",
-  "fullSha": "f97271387253674966163e6dcce97e6e8a3ac36a",
+  "version": "v260218.06 2:37a",
+  "release": 71,
+  "sha": "eb628f9a",
+  "fullSha": "eb628f9a724ae62763de66867e914c2f95344e8c",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000068",
-  "pushedAt": "2026-02-18T08:32:48+00",
-  "commits": [{"sha": "f97271387253674966163e6dcce97e6e8a3ac36a", "short_sha": "f9727138", "author": "rahulio", "message": "Homepage: two-column layout to fit above the fold on desktop"}]
+  "machine": "GitHub Actions 1000000069",
+  "pushedAt": "2026-02-18T08:37:09+00",
+  "commits": [{"sha": "eb628f9a724ae62763de66867e914c2f95344e8c", "short_sha": "eb628f9a", "author": "rahulio", "message": "Positions table: sortable columns, category grouping, multi-select filter, UI polish"}]
 }
