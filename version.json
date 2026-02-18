@@ -1,12 +1,12 @@
 {
-  "version": "v260218.26 2:03p",
-  "release": 91,
-  "sha": "1283ef26",
-  "fullSha": "1283ef26d7599712524194476b5d392938dda2d4",
+  "version": "v260218.27 2:04p",
+  "release": 92,
+  "sha": "7bd48c7a",
+  "fullSha": "7bd48c7a1e4c9202f0378ecda36ffcf2301877a0",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000156",
-  "pushedAt": "2026-02-18T20:03:48+00",
-  "commits": [{"sha": "1283ef26d7599712524194476b5d392938dda2d4", "short_sha": "1283ef26", "author": "rahulio", "message": "Fix Quiltt SDK infinite loading spinner on Link Account tab"}]
+  "machine": "GitHub Actions 1000000158",
+  "pushedAt": "2026-02-18T20:04:09+00",
+  "commits": [{"sha": "7bd48c7a1e4c9202f0378ecda36ffcf2301877a0", "short_sha": "7bd48c7a", "author": "rahulio", "message": "Redesign connections nav: compact tabs, rename methods, remove redundant upload tab"}]
 }
