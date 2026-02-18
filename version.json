@@ -1,12 +1,12 @@
 {
-  "version": "v260218.17 8:01a",
-  "release": 82,
-  "sha": "156f6d3c",
-  "fullSha": "156f6d3c2fd99094f2b22fd98dedde1e74c8f7cb",
+  "version": "v260218.18 8:01a",
+  "release": 83,
+  "sha": "48af87b7",
+  "fullSha": "48af87b7ab6904b46d6de5541c0c852fe5ee8a77",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000114",
-  "pushedAt": "2026-02-18T14:01:02+00",
-  "commits": [{"sha": "156f6d3c2fd99094f2b22fd98dedde1e74c8f7cb", "short_sha": "156f6d3c", "author": "Rahul", "message": "Merge pull request #17 from modern-investor/claude/sweet-rubin"}, {"sha": "bcd94e559dc915e7918baaccc8506430570b176f", "short_sha": "bcd94e55", "author": "rahulio", "message": "Merge latest main: resolve upload-section conflict (keep brokerageContext + QC polling)"}, {"sha": "d55f0d13ed8cbd487ac03d60500aeb862272ddc4", "short_sha": "d55f0d13", "author": "rahulio", "message": "Merge origin/main and resolve conflicts for multi-method connections"}, {"sha": "e67baa47f4477e2ce92057f219d6370294564341", "short_sha": "e67baa47", "author": "rahulio", "message": "Add Quiltt integration with multi-method institution connections and bank support"}]
+  "machine": "GitHub Actions 1000000119",
+  "pushedAt": "2026-02-18T14:01:56+00",
+  "commits": [{"sha": "48af87b7ab6904b46d6de5541c0c852fe5ee8a77", "short_sha": "48af87b7", "author": "rahulio", "message": "Restructure asset type categories with top-level display groups and subcategories"}]
 }
