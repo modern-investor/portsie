@@ -193,7 +193,7 @@ export function UploadList({
       uploads
         .filter(
           (u) =>
-            (u.parse_status === "pending" || u.parse_status === "failed" || u.parse_status === "processing") &&
+            (u.parse_status === "pending" || u.parse_status === "failed") &&
             !processingIds.has(u.id) &&
             !u.confirmed_at
         )
