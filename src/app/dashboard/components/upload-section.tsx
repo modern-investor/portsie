@@ -145,9 +145,18 @@ export function UploadSection() {
           return next;
         });
       }
-      // Auto-redirect to dashboard if any uploads were auto-confirmed
+      // After batch completes, auto-open review for the first file that has data.
+      // We use the setUploads updater to read latest state (closure is stale).
+      setUploads((prev) => {
+        const reviewable = ids.find((fid) => {
+          const u = prev.find((up) => up.id === fid);
+          return u && ["completed", "extracted", "partial"].includes(u.parse_status);
+        });
+        if (reviewable) setReviewingId(reviewable);
+        return prev;
+      });
       if (anyAutoConfirmed) {
-        setRedirectCountdown(3);
+        setRedirectCountdown(5);
       }
     })();
   }
@@ -169,13 +178,25 @@ export function UploadSection() {
   // Re-process a file
   async function handleReprocess() {
     if (reviewingId) {
+      const id = reviewingId;
       const now = new Date().toISOString();
       setTimestamps((prev) => ({
         ...prev,
-        [reviewingId]: { q: now },
+        [id]: { q: now },
       }));
       setReviewingId(null);
-      await handleProcess(reviewingId);
+      const confirmed = await handleProcess(id);
+      // Re-open review after reprocessing completes
+      setUploads((prev) => {
+        const u = prev.find((up) => up.id === id);
+        if (u && ["completed", "extracted", "partial"].includes(u.parse_status)) {
+          setReviewingId(id);
+        }
+        return prev;
+      });
+      if (confirmed) {
+        setRedirectCountdown(5);
+      }
     }
   }
 
