@@ -54,7 +54,7 @@ export const STYLE_GUIDE_DEFAULTS: StyleGuide = {
   },
   branding: {
     slogan: "Guidance to safe harbors,\nthrough open seas,\nand stormy waters.",
-    tagline: "The AI Agent for your Portfolio.\nNow with ultra-mega-max intelligence.\u2122",
+    tagline: "Your Portfolio Intelligence Agent\u2122.",
     logos: {
       icon_blue: "/brand/portsie-icon-blue.png",
       icon_dark: "/brand/portsie-icon-dark.png",
