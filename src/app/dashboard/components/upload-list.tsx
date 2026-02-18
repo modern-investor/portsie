@@ -209,7 +209,6 @@ export function UploadList({
   timestamps,
   processCount,
   reviewingId,
-  onBatchProcess,
   onReview,
   onDelete,
   onReprocess,
@@ -224,68 +223,12 @@ export function UploadList({
   timestamps: Record<string, { q?: string; s?: string; e?: string }>;
   processCount: Record<string, number>;
   reviewingId: string | null;
-  onBatchProcess: (ids: string[]) => void;
   onReview: (id: string) => void;
   onDelete: (id: string) => void;
   onReprocess: () => void;
   onSaved: (updated: UploadedStatement) => void;
   onCloseReview: () => void;
 }) {
-  // Track IDs the user has explicitly unchecked; everything else defaults to checked
-  const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
-
-  // IDs that can be checked for batch processing (pending or failed, not currently processing)
-  const processableIds = useMemo(
-    () =>
-      uploads
-        .filter(
-          (u) =>
-            (u.parse_status === "pending" || u.parse_status === "failed" || u.parse_status === "processing") &&
-            !processingIds.has(u.id) &&
-            !u.confirmed_at
-        )
-        .map((u) => u.id),
-    [uploads, processingIds]
-  );
-
-  // All processable IDs are checked unless explicitly deselected
-  const checkedIds = useMemo(() => {
-    const set = new Set<string>();
-    for (const id of processableIds) {
-      if (!deselectedIds.has(id)) set.add(id);
-    }
-    return set;
-  }, [processableIds, deselectedIds]);
-
-  function toggleSelection(id: string) {
-    if (checkedIds.has(id)) {
-      setDeselectedIds((prev) => new Set(prev).add(id));
-    } else {
-      setDeselectedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }
-  }
-
-  function toggleAll() {
-    if (checkedIds.size === processableIds.length) {
-      // Deselect all
-      setDeselectedIds(new Set(processableIds));
-    } else {
-      // Select all
-      setDeselectedIds(new Set());
-    }
-  }
-
-  function handleBatchProcess() {
-    const ids = Array.from(checkedIds);
-    if (ids.length > 0) {
-      onBatchProcess(ids);
-    }
-  }
-
   // Ref for scrolling to expanded review
   const reviewRef = useRef<HTMLDivElement>(null);
 
@@ -306,40 +249,12 @@ export function UploadList({
 
   if (uploads.length === 0) return null;
 
-  const allChecked = processableIds.length > 0 && checkedIds.size === processableIds.length;
-  const someChecked = checkedIds.size > 0 && checkedIds.size < processableIds.length;
-
   const reviewingUpload = reviewingId
     ? uploads.find((u) => u.id === reviewingId) ?? null
     : null;
 
   return (
     <div className="space-y-2">
-      {/* Batch action bar */}
-      {processableIds.length > 0 && batchTotal === 0 && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-blue-100 bg-blue-50/50 px-3 py-2 sm:gap-3 sm:px-4 sm:py-2.5">
-          <input
-            type="checkbox"
-            checked={allChecked}
-            ref={(el) => {
-              if (el) el.indeterminate = someChecked;
-            }}
-            onChange={toggleAll}
-            className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 sm:h-4 sm:w-4"
-          />
-          <span className="text-sm text-gray-600">
-            {checkedIds.size} of {processableIds.length} selected
-          </span>
-          <button
-            onClick={handleBatchProcess}
-            disabled={checkedIds.size === 0}
-            className="ml-auto rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Process{checkedIds.size > 0 ? ` (${checkedIds.size})` : ""}
-          </button>
-        </div>
-      )}
-
       {/* Batch progress bar */}
       {batchTotal > 0 && (
         <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5 sm:px-4 sm:py-3">
@@ -375,7 +290,6 @@ export function UploadList({
             ? STATUS_STYLES.queued
             : STATUS_STYLES[upload.parse_status] ?? STATUS_STYLES.pending;
         const isConfirmed = !!upload.confirmed_at;
-        const isProcessable = processableIds.includes(upload.id);
         const isExpanded = reviewingId === upload.id;
         const hasReview = upload.parse_status === "extracted" || upload.parse_status === "completed" || upload.parse_status === "partial" || upload.parse_status === "qc_failed";
         const isQCActive = upload.parse_status === "qc_running" || upload.parse_status === "qc_fixing";
@@ -388,19 +302,6 @@ export function UploadList({
               } ${isExpanded ? "border-gray-400 bg-gray-50/50" : ""}`}
               onClick={hasReview ? () => onReview(isExpanded ? "" : upload.id) : undefined}
             >
-              {/* Checkbox for processable files */}
-              {isProcessable ? (
-                <input
-                  type="checkbox"
-                  checked={checkedIds.has(upload.id)}
-                  onChange={() => toggleSelection(upload.id)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="h-5 w-5 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 sm:h-4 sm:w-4"
-                />
-              ) : (
-                <div className="h-5 w-5 shrink-0 sm:h-4 sm:w-4" />
-              )}
-
               {/* File type badge */}
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-gray-100 text-xs font-semibold text-gray-500">
                 {FILE_TYPE_ICONS[upload.file_type] ?? "?"}
