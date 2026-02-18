@@ -1,12 +1,12 @@
 {
-  "version": "v260218.22 9:06a",
-  "release": 87,
-  "sha": "d504f128",
-  "fullSha": "d504f128233e0e4213f7d6f18ed31bfe5ee3ca03",
+  "version": "v260218.23 12:04p",
+  "release": 88,
+  "sha": "b4dd3c6e",
+  "fullSha": "b4dd3c6efd4d219c1225792f46930834df1e030f",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000137",
-  "pushedAt": "2026-02-18T15:06:09+00",
-  "commits": [{"sha": "d504f128233e0e4213f7d6f18ed31bfe5ee3ca03", "short_sha": "d504f128", "author": "rahulio", "message": "Auto-process uploads and defer redirect dialog until batch completes"}, {"sha": "f3076d4453ac3387d81b1f4a43dceb39c7574dd9", "short_sha": "f3076d44", "author": "rahulio", "message": "Add post-processing data summary and redirect dialog for uploads"}]
+  "machine": "GitHub Actions 1000000143",
+  "pushedAt": "2026-02-18T18:04:45+00",
+  "commits": [{"sha": "b4dd3c6efd4d219c1225792f46930834df1e030f", "short_sha": "b4dd3c6e", "author": "rahulio", "message": "Fix portfolio total and account display for aggregate-only statements"}]
 }
