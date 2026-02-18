@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { StyleGuideInjector } from "@/components/style-guide-injector";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -63,6 +64,7 @@ export default function RootLayout({
         <StyleGuideInjector />
         <SiteHeader />
         <main className="min-h-[calc(100vh-3.5rem)]">{children}</main>
+        <SiteFooter />
       </body>
     </html>
   );
