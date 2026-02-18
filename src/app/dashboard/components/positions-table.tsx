@@ -12,6 +12,81 @@ import {
   type DisplayCategoryId,
 } from "@/lib/portfolio/display-categories";
 
+// ── Well-known equity names (Schwab API doesn't return descriptions for equities) ──
+
+const EQUITY_NAMES: Record<string, string> = {
+  AAPL: "Apple",
+  ABNB: "Airbnb",
+  ADBE: "Adobe",
+  AMD: "AMD",
+  AMZN: "Amazon",
+  AVGO: "Broadcom",
+  BABA: "Alibaba",
+  BAC: "Bank of America",
+  BRK_B: "Berkshire Hathaway B",
+  C: "Citigroup",
+  CRM: "Salesforce",
+  CRWV: "CrowdStrike",
+  CSCO: "Cisco",
+  COIN: "Coinbase",
+  COST: "Costco",
+  CVX: "Chevron",
+  DIS: "Disney",
+  GOOG: "Alphabet (Google)",
+  GOOGL: "Alphabet (Google)",
+  GS: "Goldman Sachs",
+  HD: "Home Depot",
+  HOOD: "Robinhood",
+  INTC: "Intel",
+  JNJ: "Johnson & Johnson",
+  JPM: "JPMorgan Chase",
+  KO: "Coca-Cola",
+  LLY: "Eli Lilly",
+  MA: "Mastercard",
+  META: "Meta Platforms",
+  MRNA: "Moderna",
+  MSFT: "Microsoft",
+  MSTR: "Strategy",
+  NFLX: "Netflix",
+  NIO: "NIO",
+  NKE: "Nike",
+  NVDA: "Nvidia",
+  OPEN: "Opendoor",
+  ORCL: "Oracle",
+  PEP: "PepsiCo",
+  PFE: "Pfizer",
+  PLTR: "Palantir",
+  PYPL: "PayPal",
+  QCOM: "Qualcomm",
+  RIVN: "Rivian",
+  ROKU: "Roku",
+  SHOP: "Shopify",
+  SNAP: "Snap",
+  SNOW: "Snowflake",
+  SOFI: "SoFi Technologies",
+  SQ: "Block",
+  T: "AT&T",
+  TSLA: "Tesla",
+  TSM: "TSMC",
+  UBER: "Uber",
+  UNH: "UnitedHealth",
+  V: "Visa",
+  VZ: "Verizon",
+  WMT: "Walmart",
+  XOM: "ExxonMobil",
+  ZM: "Zoom",
+};
+
+/** Get display name for a position — uses description if available, falls back to lookup */
+function getSecurityName(symbol: string, description: string, assetType: string): string | null {
+  if (description) return description;
+  // Only look up equities — ETFs/options/funds should already have descriptions
+  if (assetType === "EQUITY") {
+    return EQUITY_NAMES[symbol] ?? null;
+  }
+  return null;
+}
+
 // ── Types ───────────────────────────────────────────────────────────────────
 
 type SortField =
@@ -336,7 +411,7 @@ export function PositionsTable({ positions, accounts, hideValues }: Props) {
             <tr className="border-b bg-gray-50 text-left text-gray-500">
               <SortableHeader field="symbol" label="Symbol" {...sortProps} />
               {showAccountColumn && (
-                <th className="px-2 py-2 font-medium sm:px-4 sm:py-3">
+                <th className="px-2 py-2 font-medium sm:px-4 sm:py-3 whitespace-nowrap">
                   Account
                 </th>
               )}
@@ -416,18 +491,21 @@ export function PositionsTable({ positions, accounts, hideValues }: Props) {
                         i % 2 === 1 && "bg-gray-50/60"
                       )}
                     >
-                      {/* Symbol + description */}
+                      {/* Symbol + security name */}
                       <td className="px-2 py-2 sm:px-4 sm:py-3">
                         <div className="font-medium">{pos.symbol}</div>
-                        {pos.description && (
-                          <div className="text-xs text-gray-400 truncate max-w-[120px] sm:max-w-[200px]">
-                            {pos.description}
-                          </div>
-                        )}
+                        {(() => {
+                          const name = getSecurityName(pos.symbol, pos.description, pos.assetType);
+                          return name ? (
+                            <div className="text-xs text-gray-400 truncate max-w-[120px] sm:max-w-[200px]">
+                              {name}
+                            </div>
+                          ) : null;
+                        })()}
                       </td>
                       {/* Account (two-row) */}
                       {showAccountColumn && (
-                        <td className="px-2 py-2 sm:px-4 sm:py-3">
+                        <td className="px-2 py-2 sm:px-4 sm:py-3 whitespace-nowrap">
                           <div className="text-xs text-gray-700">
                             {pos.accountInstitution ?? "Unknown"}
                           </div>
