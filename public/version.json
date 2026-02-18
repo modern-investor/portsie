@@ -1,12 +1,12 @@
 {
-  "version": "v260218.24 12:33p",
-  "release": 89,
-  "sha": "c71227ec",
-  "fullSha": "c71227ecdd378fc7a612ce24d635201a1fd4db62",
+  "version": "v260218.25 12:33p",
+  "release": 90,
+  "sha": "ba6dd8fc",
+  "fullSha": "ba6dd8fcde3d0332ec8010624ac041fdc815e3e6",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000147",
-  "pushedAt": "2026-02-18T18:33:19+00",
-  "commits": [{"sha": "c71227ecdd378fc7a612ce24d635201a1fd4db62", "short_sha": "c71227ec", "author": "rahulio", "message": "Add beta notice to home page above waitlist form"}]
+  "machine": "GitHub Actions 1000000151",
+  "pushedAt": "2026-02-18T18:33:57+00",
+  "commits": [{"sha": "ba6dd8fcde3d0332ec8010624ac041fdc815e3e6", "short_sha": "ba6dd8fc", "author": "rahulio", "message": "Improve first-time experience: redirect to connections, redesign tab selectors"}]
 }
