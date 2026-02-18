@@ -7,20 +7,22 @@ import { BrokerageSelection } from "./brokerage-selection";
 import { BrokerageSetup } from "./brokerage-setup";
 import { UploadSection } from "./upload-section";
 
-type ConnectionsSubTab = "api" | "uploads";
+type ConnectionsSubTab = "institutions" | "uploads";
 
 const SUB_TABS: { id: ConnectionsSubTab; label: string }[] = [
-  { id: "api", label: "API Connections" },
+  { id: "institutions", label: "Institutions" },
   { id: "uploads", label: "Uploads" },
 ];
 
 const STORAGE_KEY = "portsie:connections-tab";
 
 function getStoredTab(): ConnectionsSubTab {
-  if (typeof window === "undefined") return "api";
+  if (typeof window === "undefined") return "institutions";
   const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === "api" || stored === "uploads") return stored;
-  return "api";
+  if (stored === "institutions" || stored === "uploads") return stored;
+  // Migrate old "api" value
+  if (stored === "api") return "institutions";
+  return "institutions";
 }
 
 type SetupView = "list" | "setup";
@@ -73,15 +75,17 @@ export function ConnectionsView({
         ))}
       </nav>
 
-      {/* API Connections sub-tab */}
-      {subTab === "api" && (
+      {/* Institutions sub-tab */}
+      {subTab === "institutions" && (
         <div className="space-y-6">
           {setupView === "list" && (
             <>
-              <SchwabConnect
-                isConnected={isConnected}
-                hasCredentials={hasCredentials}
-              />
+              {(isConnected || hasCredentials) && (
+                <SchwabConnect
+                  isConnected={isConnected}
+                  hasCredentials={hasCredentials}
+                />
+              )}
               <BrokerageSelection onSelect={handleBrokerageSelect} />
             </>
           )}
