@@ -16,7 +16,32 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Portsie",
-  description: "Your portfolio investment tracker",
+  description: "The AI Agent for your Portfolio",
+  metadataBase: new URL("https://www.portsie.com"),
+  icons: {
+    icon: "/brand/portsie-icon-dark.png",
+    apple: "/brand/portsie-icon-blue.png",
+  },
+  openGraph: {
+    title: "Portsie",
+    description: "The AI Agent for your Portfolio",
+    siteName: "Portsie",
+    type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Portsie - The AI Agent for your Portfolio",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Portsie",
+    description: "The AI Agent for your Portfolio",
+    images: ["/twitter-image"],
+  },
 };
 
 export const viewport: Viewport = {
