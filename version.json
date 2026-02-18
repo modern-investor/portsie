@@ -1,12 +1,12 @@
 {
-  "version": "v260218.20 8:37a",
-  "release": 85,
-  "sha": "f702a9ca",
-  "fullSha": "f702a9ca6e0a51cd476625922212326e7310de52",
+  "version": "v260218.21 8:51a",
+  "release": 86,
+  "sha": "c1e483ff",
+  "fullSha": "c1e483fff596a04a5067c7acac044271ca1e4e7b",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000127",
-  "pushedAt": "2026-02-18T14:37:05+00",
-  "commits": [{"sha": "f702a9ca6e0a51cd476625922212326e7310de52", "short_sha": "f702a9ca", "author": "Rahul", "message": "Merge pull request #20 from modern-investor/claude/elated-khorana"}, {"sha": "06bc4a0abb7b3b23914a0ddd93a540af29a7c713", "short_sha": "06bc4a0a", "author": "rahulio", "message": "Fix upload processing flow: prevent stale Process button after extraction"}]
+  "machine": "GitHub Actions 1000000133",
+  "pushedAt": "2026-02-18T14:51:14+00",
+  "commits": [{"sha": "c1e483fff596a04a5067c7acac044271ca1e4e7b", "short_sha": "c1e483ff", "author": "Rahul", "message": "Fix confirm timeout for large extractions by adding maxDuration (#22)"}]
 }
