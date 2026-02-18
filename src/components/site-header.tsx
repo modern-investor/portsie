@@ -16,35 +16,35 @@ export async function SiteHeader() {
 
   return (
     <header className="border-b border-border bg-background">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-[90px] max-w-5xl items-center justify-between px-4 sm:px-6">
         {/* Left: Logo + Wordmark + Version */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5">
-          <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5 sm:gap-4">
+          <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-3">
             <Image
               src="/brand/portsie-icon-dark.png"
               alt="Portsie"
-              width={28}
-              height={28}
+              width={45}
+              height={45}
               className="shrink-0"
             />
             <Image
               src="/brand/portsie-wordmark-dark.png"
               alt="PORTSIE"
-              width={80}
-              height={16}
+              width={128}
+              height={26}
               className="hidden shrink-0 sm:block"
             />
           </Link>
-          <SiteVersion className="hidden text-muted-foreground sm:inline-block" />
+          <SiteVersion className="hidden text-base text-muted-foreground sm:inline-block" />
         </div>
 
         {/* Right: Nav + Auth */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-3 sm:gap-6">
           {user && <SiteHeaderNav />}
           {user && userIsAdmin && (
             <Link
               href="/admin"
-              className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="rounded-md px-4 py-3 text-base font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Admin
             </Link>
