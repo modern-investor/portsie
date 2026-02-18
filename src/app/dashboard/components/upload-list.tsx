@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import type { UploadedStatement } from "@/lib/upload/types";
+import type { PortsieExtraction } from "@/lib/extraction/schema";
 import { UploadReview } from "./upload-review";
 
 const STATUS_STYLES: Record<
@@ -151,6 +152,52 @@ function StaticElapsed({ start, end }: { start: string; end: string }) {
   const rem = secs % 60;
   const display = mins > 0 ? `${mins}m ${rem}s` : `${rem}s`;
   return <span className="tabular-nums">{display}</span>;
+}
+
+/** Compact inline summary shown below a completed upload row */
+function InlineSummary({ upload }: { upload: UploadedStatement }) {
+  const ext = upload.extracted_data as PortsieExtraction | null;
+  if (!ext) return null;
+
+  const totalPositions = ext.accounts.reduce((s, a) => s + a.positions.length, 0) + ext.unallocated_positions.length;
+  const totalTransactions = ext.accounts.reduce((s, a) => s + a.transactions.length, 0);
+  const totalBalances = ext.accounts.reduce((s, a) => s + a.balances.length, 0);
+
+  // Get total value from first account's first balance
+  const totalValue = ext.accounts.reduce((sum, a) => {
+    const bal = a.balances[0];
+    return sum + (bal?.liquidation_value ?? 0);
+  }, 0);
+
+  const institutions = [...new Set(ext.accounts.map((a) => a.account_info.institution_name).filter(Boolean))];
+
+  return (
+    <div className="ml-[52px] sm:ml-[56px] -mt-1 mb-1 flex flex-wrap items-center gap-1.5 text-xs">
+      {institutions.length > 0 && (
+        <span className="font-medium text-gray-600">{institutions.join(", ")}</span>
+      )}
+      {totalValue > 0 && (
+        <span className="rounded bg-green-50 px-1.5 py-0.5 font-medium text-green-700">
+          ${totalValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
+      )}
+      {totalPositions > 0 && (
+        <span className="rounded bg-purple-50 px-1.5 py-0.5 text-purple-600">
+          {totalPositions} pos
+        </span>
+      )}
+      {totalTransactions > 0 && (
+        <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-600">
+          {totalTransactions} txn
+        </span>
+      )}
+      {totalBalances > 0 && (
+        <span className="rounded bg-teal-50 px-1.5 py-0.5 text-teal-600">
+          {totalBalances} bal
+        </span>
+      )}
+    </div>
+  );
 }
 
 export function UploadList({
@@ -498,6 +545,9 @@ export function UploadList({
                 )}
               </div>
             </div>
+
+            {/* Compact inline data summary (when not expanded into full review) */}
+            {!isExpanded && hasReview && <InlineSummary upload={upload} />}
 
             {/* Inline review panel */}
             {isExpanded && reviewingUpload && (
