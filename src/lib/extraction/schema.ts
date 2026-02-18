@@ -48,8 +48,6 @@ export const ASSET_TYPES = [
   "CASH_EQUIVALENT",
   "REAL_ESTATE",
   "PRECIOUS_METAL",
-  "VEHICLE",
-  "JEWELRY",
   "COLLECTIBLE",
   "OTHER_ASSET",
 ] as const;
@@ -113,6 +111,8 @@ export interface ExtractionTransaction {
   cusip: string | null;
   /** Asset type classification */
   asset_type: AssetType;
+  /** Free-text subcategory for COLLECTIBLE and OTHER_ASSET (e.g., "Jewelry", "Art") */
+  asset_subtype: string | null;
   /** Human-readable description — always required, never null */
   description: string;
   /** Transaction action — must be one of the closed enum values */
@@ -138,6 +138,8 @@ export interface ExtractionPosition {
   cusip: string | null;
   /** Asset type classification */
   asset_type: AssetType;
+  /** Free-text subcategory for COLLECTIBLE and OTHER_ASSET (e.g., "Jewelry", "Art") */
+  asset_subtype: string | null;
   /** Human-readable name/description */
   description: string | null;
   /** Number of shares/units held — required */
@@ -494,6 +496,7 @@ export const PORTSIE_EXTRACTION_JSON_SCHEMA = {
             { type: "null" as const },
           ],
         },
+        asset_subtype: { type: ["string", "null"] as const },
         description: { type: "string" as const },
         action: { type: "string" as const, enum: [...TRANSACTION_ACTIONS] },
         quantity: { type: ["number", "null"] as const },
@@ -517,6 +520,7 @@ export const PORTSIE_EXTRACTION_JSON_SCHEMA = {
             { type: "null" as const },
           ],
         },
+        asset_subtype: { type: ["string", "null"] as const },
         description: { type: ["string", "null"] as const },
         quantity: { type: "number" as const },
         short_quantity: { type: ["number", "null"] as const },

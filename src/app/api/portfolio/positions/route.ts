@@ -20,6 +20,7 @@ export interface UnifiedPosition {
   symbol: string;
   description: string;
   assetType: string;
+  assetSubtype: string | null;
   quantity: number;
   shortQuantity: number;
   averagePrice: number;
@@ -230,6 +231,7 @@ export async function GET() {
             symbol: h.symbol ?? h.name,
             description: h.description ?? "",
             assetType: h.asset_type ?? "EQUITY",
+            assetSubtype: h.asset_subtype ?? null,
             quantity: Number(h.quantity) || 0,
             shortQuantity: Number(h.short_quantity) || 0,
             averagePrice: Number(h.purchase_price) || 0,
@@ -273,6 +275,7 @@ export async function GET() {
             symbol: h.symbol ?? h.name,
             description: h.description ?? "",
             assetType: h.asset_type ?? "EQUITY",
+            assetSubtype: h.asset_subtype ?? null,
             quantity: Number(h.quantity) || 0,
             shortQuantity: Number(h.short_quantity) || 0,
             averagePrice: Number(h.purchase_price) || 0,
@@ -385,6 +388,7 @@ function schwabToUnified(
     symbol: pos.instrument.symbol,
     description: pos.instrument.description ?? "",
     assetType: pos.instrument.assetType,
+    assetSubtype: null,
     quantity: pos.longQuantity,
     shortQuantity: pos.shortQuantity,
     averagePrice: pos.averagePrice,

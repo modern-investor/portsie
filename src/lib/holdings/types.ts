@@ -7,6 +7,7 @@ export interface Holding {
   name: string;
   cusip: string | null;
   asset_type: string;
+  asset_subtype: string | null;
   asset_category: "tradeable" | "offline";
   description: string | null;
   quantity: number;

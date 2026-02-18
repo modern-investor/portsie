@@ -156,6 +156,8 @@ function normalizeAssetType(val: unknown): AssetType {
     FUND: "MUTUAL_FUND",
     MONEY_MARKET: "CASH_EQUIVALENT",
     CASH: "CASH_EQUIVALENT",
+    VEHICLE: "OTHER_ASSET",
+    JEWELRY: "COLLECTIBLE",
   };
   return aliases[upper] ?? null;
 }
@@ -576,6 +578,7 @@ class ExtractionValidator {
       symbol: typeof raw.symbol === "string" ? raw.symbol : null,
       cusip: typeof raw.cusip === "string" ? raw.cusip : null,
       asset_type: normalizeAssetType(raw.asset_type),
+      asset_subtype: typeof raw.asset_subtype === "string" ? raw.asset_subtype : null,
       description,
       action,
       quantity: coerceNumber(raw.quantity),
@@ -625,6 +628,7 @@ class ExtractionValidator {
       symbol,
       cusip: typeof raw.cusip === "string" ? raw.cusip : null,
       asset_type: normalizeAssetType(raw.asset_type),
+      asset_subtype: typeof raw.asset_subtype === "string" ? raw.asset_subtype : null,
       description: typeof raw.description === "string" ? raw.description : null,
       quantity,
       short_quantity: coerceNumber(raw.short_quantity),

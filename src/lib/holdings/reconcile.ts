@@ -129,6 +129,7 @@ export async function reconcileHoldings(
       name: symbol,
       cusip: pos.cusip ?? null,
       asset_type: pos.asset_type ?? "EQUITY",
+      asset_subtype: pos.asset_subtype ?? null,
       asset_category: "tradeable",
       description: pos.description ?? null,
       quantity: pos.quantity,

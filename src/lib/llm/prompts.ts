@@ -74,7 +74,8 @@ transactions: Array of transactions for this account (may be empty).
   - settlement_date: "YYYY-MM-DD" or null.
   - symbol: Ticker symbol, or null for non-security transactions (fees, interest, cash transfers).
   - cusip: CUSIP identifier, or null.
-  - asset_type: MUST be one of: "EQUITY", "OPTION", "MUTUAL_FUND", "FIXED_INCOME", "ETF", "CASH_EQUIVALENT", "REAL_ESTATE", "PRECIOUS_METAL", "VEHICLE", "JEWELRY", "COLLECTIBLE", "OTHER_ASSET", or null.
+  - asset_type: MUST be one of: "EQUITY", "ETF", "OPTION", "MUTUAL_FUND", "FIXED_INCOME", "CASH_EQUIVALENT", "REAL_ESTATE", "PRECIOUS_METAL", "COLLECTIBLE", "OTHER_ASSET", or null.
+  - asset_subtype: Free-text subcategory, or null. Used for COLLECTIBLE (e.g., "Jewelry", "Art", "Wine", "Watch") and OTHER_ASSET (e.g., "Cryptocurrency", "Classic Car"). null for standard asset types.
   - description: REQUIRED. Human-readable description of the transaction.
   - action: REQUIRED. MUST be one of: "buy", "sell", "buy_to_cover", "sell_short", "dividend", "capital_gain_long", "capital_gain_short", "interest", "transfer_in", "transfer_out", "fee", "commission", "stock_split", "merger", "spinoff", "reinvestment", "journal", "other".
   - quantity: Number of shares/units, or null for cash-only transactions.
@@ -88,6 +89,7 @@ positions: Array of holdings/positions for this account (may be empty).
   - symbol: REQUIRED. Ticker symbol.
   - cusip: CUSIP identifier, or null.
   - asset_type: Same enum as transactions. Use null if unknown.
+  - asset_subtype: Same as transactions. Free-text subcategory for COLLECTIBLE and OTHER_ASSET, null otherwise.
   - description: Human-readable name/description, or null.
   - quantity: REQUIRED. Number of shares/units held.
   - short_quantity: Shares held short, or null.
@@ -189,7 +191,9 @@ For Robinhood CSV trans_code values:
 
 16. DAY CHANGE DATA: If the document shows day change columns (Day Change $, Day Change %, Price Change, etc.), extract them into day_change_amount and day_change_pct for each position. These track the single-day price movement and are separate from unrealized gain/loss. Also extract the document-level total into document_totals.
 
-17. DOCUMENT TOTALS: If the document shows a grand total value (e.g., "Total Value: $14,953,761.34"), extract it into document_totals.total_value. Similarly extract total day change if shown. This enables integrity validation against per-account sums.`;
+17. DOCUMENT TOTALS: If the document shows a grand total value (e.g., "Total Value: $14,953,761.34"), extract it into document_totals.total_value. Similarly extract total day change if shown. This enables integrity validation against per-account sums.
+
+18. ASSET TYPE CLASSIFICATION: You MUST set asset_type on every position and transaction. Never leave it null, and never lazily default everything to "EQUITY". Use your knowledge of financial instruments and any context from the document (section headers, descriptions, ticker symbols) to classify each item into the correct type: "EQUITY", "ETF", "OPTION", "MUTUAL_FUND", "FIXED_INCOME", "CASH_EQUIVALENT", "REAL_ESTATE", "PRECIOUS_METAL", "COLLECTIBLE", or "OTHER_ASSET". If the document groups positions under section headers (e.g., "Equities", "ETFs & Closed End Funds"), those headers are the strongest signal for classification. For COLLECTIBLE and OTHER_ASSET, also set asset_subtype to a short descriptive label (e.g., "Jewelry", "Art", "Classic Car").`;
 
 /**
  * Build the extraction prompt. In the new architecture, this is just the
