@@ -88,7 +88,7 @@ positions: Array of holdings/positions for this account (may be empty).
   - short_quantity: Shares held short, or null.
   - average_cost_basis: Average cost per share, or null.
   - market_price_per_share: Current price per share, or null.
-  - market_value: Total market value of position, or null.
+  - market_value: Total market value of position AS SHOWN IN THE DOCUMENT. Use the exact "Market Value" column from the document, do NOT compute from quantity * price (the document value may differ due to rounding, lot-level pricing, or after-hours adjustments). null only if the document does not show a market value for this position.
   - cost_basis_total: Total cost basis, or null.
   - unrealized_profit_loss: Unrealized gain/loss in dollars, or null.
   - unrealized_profit_loss_pct: Unrealized gain/loss as percentage (e.g., 36.62 for +36.62%), or null.

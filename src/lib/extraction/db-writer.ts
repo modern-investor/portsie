@@ -476,6 +476,41 @@ export async function writeExtraction(
       }
       linkedAccountIds.push(aggAccountId);
 
+      // Compute a synthetic balance for the aggregate account by summing
+      // individual accounts' liquidation values. This ensures the aggregate
+      // account total matches the document's stated total rather than being
+      // recomputed from holdings (which may differ due to rounding, dedup,
+      // or LLM-computed vs document-stated market values).
+      const snapshotDate =
+        extraction.document.statement_end_date ??
+        extraction.unallocated_positions[0]?.snapshot_date ??
+        new Date().toISOString().slice(0, 10);
+
+      let aggLiquidationValue = 0;
+      let aggCash = 0;
+      for (const acct of extraction.accounts) {
+        for (const bal of acct.balances) {
+          aggLiquidationValue += bal.liquidation_value ?? 0;
+          aggCash += bal.cash_balance ?? 0;
+        }
+      }
+
+      const aggBalances: ExtractionBalance[] =
+        aggLiquidationValue !== 0
+          ? [
+              {
+                snapshot_date: snapshotDate,
+                liquidation_value: aggLiquidationValue,
+                cash_balance: aggCash || null,
+                available_funds: null,
+                total_cash: null,
+                equity: null,
+                long_market_value: null,
+                buying_power: null,
+              },
+            ]
+          : [];
+
       // Build a synthetic account for the aggregate positions
       const aggAccount: ExtractionAccount = {
         account_info: {
@@ -487,7 +522,7 @@ export async function writeExtraction(
         },
         transactions: [],
         positions: extraction.unallocated_positions,
-        balances: [],
+        balances: aggBalances,
       };
 
       const result = await writeAccountData(
