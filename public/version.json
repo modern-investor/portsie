@@ -1,12 +1,12 @@
 {
-  "version": "v260218.11 5:23a",
-  "release": 76,
-  "sha": "084b9a72",
-  "fullSha": "084b9a722bd53471cc6a2a3d4697e38da6e55fe4",
+  "version": "v260218.12 6:11a",
+  "release": 77,
+  "sha": "53c77555",
+  "fullSha": "53c775555c5b16bdc25150d16f3853f01dcfa145",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000087",
-  "pushedAt": "2026-02-18T11:23:57+00",
-  "commits": [{"sha": "084b9a722bd53471cc6a2a3d4697e38da6e55fe4", "short_sha": "084b9a72", "author": "rahulio", "message": "Landing page: stack hero image below text instead of side-by-side"}]
+  "machine": "GitHub Actions 1000000091",
+  "pushedAt": "2026-02-18T12:11:48+00",
+  "commits": [{"sha": "53c775555c5b16bdc25150d16f3853f01dcfa145", "short_sha": "53c77555", "author": "rahulio", "message": "Add site footer with legal pages (privacy policy, terms of service)"}]
 }
