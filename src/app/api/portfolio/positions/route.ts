@@ -305,17 +305,20 @@ export async function GET() {
     positions.push(...aggregatePositions);
     aggregatePositions.length = 0;
 
-    // Zero out individual account cash/liquidation to prevent double-counting.
-    // The aggregate positions already represent the full portfolio value
-    // (including cash-equivalent positions like SNOXX). Without this, the
-    // classify step would add individual account cash on top of position values.
+    // Zero out brokerage account cashBalance to prevent double-counting with
+    // aggregate positions (which include cash-equivalent holdings like SNOXX).
+    // Keep liquidationValue intact so the Accounts tab shows correct per-account
+    // totals. Non-brokerage accounts (banking, credit, loans, real estate) keep
+    // their cashBalance since they aren't represented in aggregate positions.
+    const BROKERAGE_CATEGORIES = new Set(["brokerage"]);
     for (const acct of accounts) {
-      acct.cashBalance = 0;
-      acct.liquidationValue = 0;
+      if (BROKERAGE_CATEGORIES.has(acct.accountCategory)) {
+        acct.cashBalance = 0;
+      }
     }
 
-    // Add the aggregate account so its cash (if any) is counted once.
-    accounts.push(...aggregateAccounts);
+    // Don't merge aggregate accounts into the primary list — they would
+    // duplicate values that are already counted via individual accounts.
     aggregateAccounts.length = 0;
   }
 
