@@ -1,12 +1,12 @@
 {
-  "version": "v260218.07 2:46a",
-  "release": 72,
-  "sha": "5cf02303",
-  "fullSha": "5cf02303988ffb65b3f0cfcb04072528891dbc16",
+  "version": "v260218.08 2:48a",
+  "release": 73,
+  "sha": "13306df2",
+  "fullSha": "13306df2c8eca9c7dbea121e278bb8f37adb445a",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000071",
-  "pushedAt": "2026-02-18T08:46:33+00",
-  "commits": [{"sha": "5cf02303988ffb65b3f0cfcb04072528891dbc16", "short_sha": "5cf02303", "author": "rahulio", "message": "Trigger version bump"}]
+  "machine": "GitHub Actions 1000000072",
+  "pushedAt": "2026-02-18T08:48:40+00",
+  "commits": [{"sha": "13306df2c8eca9c7dbea121e278bb8f37adb445a", "short_sha": "13306df2", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/claude/relaxed-black'"}, {"sha": "accc1175f3a07271e7b59039bc5f65ea5f816b64", "short_sha": "accc1175", "author": "rahulio", "message": "Positions table: widen account column, add equity names under tickers"}]
 }
