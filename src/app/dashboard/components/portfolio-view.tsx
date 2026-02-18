@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { cn } from "@/lib/utils";
 import { classifyPortfolio } from "@/lib/portfolio";
 import type { ClassifiedPortfolio, AssetClassId } from "@/lib/portfolio/types";
 import type { PortfolioData } from "@/app/api/portfolio/positions/route";
-import { Upload, Link2 } from "lucide-react";
+import { Upload, Link2, PieChart, Landmark, List } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PortfolioSummaryBar } from "./portfolio-summary-bar";
 import { PortfolioDonutChart } from "./portfolio-donut-chart";
 import { AssetClassCards } from "./asset-class-cards";
@@ -18,11 +18,8 @@ import { AccountOverview } from "./account-overview";
 
 type PortfolioSubTab = "assets" | "accounts" | "positions";
 
-const SUB_TABS: { id: PortfolioSubTab; label: string }[] = [
-  { id: "assets", label: "Assets" },
-  { id: "accounts", label: "Accounts" },
-  { id: "positions", label: "Positions" },
-];
+const STORAGE_KEY = "portsie:portfolio-tab";
+const VALID_TABS: PortfolioSubTab[] = ["assets", "accounts", "positions"];
 
 // ─── Empty state ────────────────────────────────────────────────────────────
 
@@ -73,7 +70,11 @@ interface Props {
 }
 
 export function PortfolioView({ hideValues, onNavigateTab }: Props) {
-  const [subTab, setSubTab] = useState<PortfolioSubTab>("assets");
+  const [subTab, setSubTab] = useState<PortfolioSubTab>(() => {
+    if (typeof window === "undefined") return "assets";
+    const saved = localStorage.getItem(STORAGE_KEY) as PortfolioSubTab | null;
+    return saved && VALID_TABS.includes(saved) ? saved : "assets";
+  });
   const [selectedClass, setSelectedClass] = useState<AssetClassId | null>(null);
   const [portfolio, setPortfolio] = useState<ClassifiedPortfolio | null>(null);
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
@@ -198,64 +199,71 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
       <PortfolioSummaryBar portfolio={portfolio} hideValues={hideValues} priceDate={priceDate} />
 
       {/* Sub-tabs */}
-      <nav className="flex gap-1">
-        {SUB_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setSubTab(tab.id)}
-            className={cn(
-              "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              subTab === tab.id
-                ? "bg-gray-900 text-white"
-                : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
+      <Tabs
+        value={subTab}
+        onValueChange={(v) => {
+          const tab = v as PortfolioSubTab;
+          setSubTab(tab);
+          localStorage.setItem(STORAGE_KEY, tab);
+        }}
+      >
+        <TabsList>
+          <TabsTrigger value="assets">
+            <PieChart className="size-4" />
+            Assets
+          </TabsTrigger>
+          <TabsTrigger value="accounts">
+            <Landmark className="size-4" />
+            Accounts
+          </TabsTrigger>
+          <TabsTrigger value="positions">
+            <List className="size-4" />
+            Positions
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Assets tab: donut + cards + insights */}
-      {subTab === "assets" && (
-        <div className="space-y-6">
-          <div className="rounded-lg border bg-white p-4 sm:p-6">
-            <h3 className="mb-4 text-sm font-semibold text-gray-500 uppercase tracking-wider">
-              Asset Allocation
-            </h3>
-            <PortfolioDonutChart
+        {/* Assets tab: donut + cards + insights */}
+        <TabsContent value="assets">
+          <div className="space-y-6">
+            <div className="rounded-lg border bg-white p-4 sm:p-6">
+              <h3 className="mb-4 text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                Asset Allocation
+              </h3>
+              <PortfolioDonutChart
+                assetClasses={portfolio.assetClasses}
+                totalMarketValue={portfolio.totalMarketValue}
+                hideValues={hideValues}
+              />
+            </div>
+
+            <AssetClassCards
               assetClasses={portfolio.assetClasses}
-              totalMarketValue={portfolio.totalMarketValue}
               hideValues={hideValues}
+              onSelectClass={(id) => setSelectedClass(id)}
             />
+
+            <PortfolioInsightsCard portfolio={portfolio} hideValues={hideValues} />
           </div>
+        </TabsContent>
 
-          <AssetClassCards
-            assetClasses={portfolio.assetClasses}
+        {/* Accounts tab — pass fetched data as props */}
+        <TabsContent value="accounts">
+          <AccountOverview
+            accounts={portfolioData.accounts}
+            aggregateAccounts={portfolioData.aggregateAccounts}
             hideValues={hideValues}
-            onSelectClass={(id) => setSelectedClass(id)}
           />
+        </TabsContent>
 
-          <PortfolioInsightsCard portfolio={portfolio} hideValues={hideValues} />
-        </div>
-      )}
-
-      {/* Accounts tab — pass fetched data as props */}
-      {subTab === "accounts" && (
-        <AccountOverview
-          accounts={portfolioData.accounts}
-          aggregateAccounts={portfolioData.aggregateAccounts}
-          hideValues={hideValues}
-        />
-      )}
-
-      {/* Positions tab — pass fetched data as props */}
-      {subTab === "positions" && (
-        <PositionsTable
-          positions={portfolioData.positions}
-          accounts={portfolioData.accounts}
-          hideValues={hideValues}
-        />
-      )}
+        {/* Positions tab — pass fetched data as props */}
+        <TabsContent value="positions">
+          <PositionsTable
+            positions={portfolioData.positions}
+            accounts={portfolioData.accounts}
+            hideValues={hideValues}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
