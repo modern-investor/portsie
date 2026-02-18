@@ -170,7 +170,11 @@ export function QuilttConnector({
       <Script
         src="https://cdn.quiltt.io/v1/connector.js"
         onLoad={handleSdkLoad}
-        strategy="lazyOnload"
+        onError={() => {
+          setError("Failed to load connection service. Please refresh and try again.");
+          setState("error");
+        }}
+        strategy="afterInteractive"
       />
 
       {state === "success" ? (
