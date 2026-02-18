@@ -34,6 +34,7 @@ export interface ExtractedTransaction {
   symbol?: string | null;
   cusip?: string | null;
   asset_type?: string | null;
+  asset_subtype?: string | null;
   description: string;
   action: string; // must match transactions.action CHECK constraint
   quantity?: number | null;
@@ -48,6 +49,7 @@ export interface ExtractedPosition {
   symbol: string;
   cusip?: string | null;
   asset_type?: string | null;
+  asset_subtype?: string | null;
   description?: string | null;
   quantity: number;
   short_quantity?: number | null;

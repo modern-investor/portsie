@@ -462,10 +462,10 @@ export function PositionsTable({ positions, accounts, hideValues }: Props) {
             {grouped.map((group) => (
               <React.Fragment key={group.id}>
                 {/* Category header */}
-                <tr className="bg-gray-100">
+                <tr className="bg-gray-100 border-t-2 border-gray-300">
                   <td
                     colSpan={columnCount}
-                    className="px-2 py-1.5 text-xs font-semibold text-gray-600 uppercase tracking-wider sm:px-4"
+                    className="px-2 py-2 text-sm font-bold text-gray-800 uppercase tracking-wide sm:px-4"
                   >
                     {group.label}{" "}
                     <span className="font-normal text-gray-400">
@@ -491,9 +491,16 @@ export function PositionsTable({ positions, accounts, hideValues }: Props) {
                         i % 2 === 1 && "bg-gray-50/60"
                       )}
                     >
-                      {/* Symbol + security name */}
-                      <td className="px-2 py-2 sm:px-4 sm:py-3">
-                        <div className="font-medium">{pos.symbol}</div>
+                      {/* Symbol + security name (indented under category) */}
+                      <td className="pl-4 pr-2 py-2 sm:pl-8 sm:pr-4 sm:py-3">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium">{pos.symbol}</span>
+                          {pos.assetSubtype && (
+                            <span className="text-[10px] text-gray-500 bg-gray-100 rounded px-1 py-0.5 leading-none">
+                              {pos.assetSubtype}
+                            </span>
+                          )}
+                        </div>
                         {(() => {
                           const name = getSecurityName(pos.symbol, pos.description, pos.assetType);
                           return name ? (

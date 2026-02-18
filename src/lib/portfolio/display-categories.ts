@@ -5,9 +5,12 @@ export const DISPLAY_CATEGORIES = [
   { id: "closed_end", label: "Closed End", order: 3 },
   { id: "options", label: "Options", order: 4 },
   { id: "mutual_fund", label: "Mutual Fund", order: 5 },
-  { id: "cash", label: "Cash", order: 6 },
-  { id: "fixed_income", label: "Fixed Income", order: 7 },
-  { id: "other", label: "Other", order: 8 },
+  { id: "precious_metal", label: "Precious Metal", order: 6 },
+  { id: "real_estate", label: "Real Estate", order: 7 },
+  { id: "collectible", label: "Collectible", order: 8 },
+  { id: "cash", label: "Cash & Equivalents", order: 9 },
+  { id: "fixed_income", label: "Fixed Income", order: 10 },
+  { id: "other", label: "Other", order: 11 },
 ] as const;
 
 export type DisplayCategoryId = (typeof DISPLAY_CATEGORIES)[number]["id"];
@@ -19,11 +22,9 @@ const ASSET_TYPE_TO_CATEGORY: Record<string, DisplayCategoryId> = {
   MUTUAL_FUND: "mutual_fund",
   CASH_EQUIVALENT: "cash",
   FIXED_INCOME: "fixed_income",
-  REAL_ESTATE: "other",
-  PRECIOUS_METAL: "other",
-  VEHICLE: "other",
-  JEWELRY: "other",
-  COLLECTIBLE: "other",
+  REAL_ESTATE: "real_estate",
+  PRECIOUS_METAL: "precious_metal",
+  COLLECTIBLE: "collectible",
   OTHER_ASSET: "other",
 };
 
