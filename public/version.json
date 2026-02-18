@@ -1,12 +1,12 @@
 {
-  "version": "v260217.32 11:56p",
-  "release": 64,
-  "sha": "83257600",
-  "fullSha": "8325760054b9891f1af68cc6be14fcaf56af8bd1",
+  "version": "v260217.33 11:57p",
+  "release": 65,
+  "sha": "2b5ce6e8",
+  "fullSha": "2b5ce6e864ebafc217e94fc0941041a2c67f6997",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000062",
-  "pushedAt": "2026-02-18T05:56:04+00",
-  "commits": [{"sha": "8325760054b9891f1af68cc6be14fcaf56af8bd1", "short_sha": "83257600", "author": "rahulio", "message": "Merge branch 'claude/tender-bouman'"}, {"sha": "d4e1590300a78bd51829bc05687ea3e562a97dc3", "short_sha": "d4e15903", "author": "rahulio", "message": "Add ledger design doc covering extraction, labeling, and storage decisions"}]
+  "machine": "GitHub Actions 1000000063",
+  "pushedAt": "2026-02-18T05:57:12+00",
+  "commits": [{"sha": "2b5ce6e864ebafc217e94fc0941041a2c67f6997", "short_sha": "2b5ce6e8", "author": "Rahul", "message": "Merge pull request #12 from modern-investor/claude/serene-boyd"}, {"sha": "444b9945f0df0473d2d861935632bbed93991d98", "short_sha": "444b9945", "author": "rahulio", "message": "Fix dashboard total double-counting cash on top of aggregate positions"}]
 }
