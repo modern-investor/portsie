@@ -267,8 +267,19 @@ export async function GET() {
   // only cash and ignores the actual equity positions.
   if (aggregatePositions.length > 0 && positions.length === 0) {
     positions.push(...aggregatePositions);
-    accounts.push(...aggregateAccounts);
     aggregatePositions.length = 0;
+
+    // Zero out individual account cash/liquidation to prevent double-counting.
+    // The aggregate positions already represent the full portfolio value
+    // (including cash-equivalent positions like SNOXX). Without this, the
+    // classify step would add individual account cash on top of position values.
+    for (const acct of accounts) {
+      acct.cashBalance = 0;
+      acct.liquidationValue = 0;
+    }
+
+    // Add the aggregate account so its cash (if any) is counted once.
+    accounts.push(...aggregateAccounts);
     aggregateAccounts.length = 0;
   }
 
