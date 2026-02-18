@@ -1,12 +1,12 @@
 {
-  "version": "v260217.29 10:29p",
-  "release": 61,
-  "sha": "49a5e477",
-  "fullSha": "49a5e477f7abd5b75c74b7e3062483fff7ad8205",
+  "version": "v260217.30 11:44p",
+  "release": 62,
+  "sha": "26877759",
+  "fullSha": "26877759f79606eadfe3c4fa6534cc5615f89786",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000059",
-  "pushedAt": "2026-02-18T04:29:36+00",
-  "commits": [{"sha": "49a5e477f7abd5b75c74b7e3062483fff7ad8205", "short_sha": "49a5e477", "author": "rahulio", "message": "Fix upload processing flow: stuck status, missing View button, no auto-redirect"}]
+  "machine": "GitHub Actions 1000000060",
+  "pushedAt": "2026-02-18T05:44:11+00",
+  "commits": [{"sha": "26877759f79606eadfe3c4fa6534cc5615f89786", "short_sha": "26877759", "author": "rahulio", "message": "Fix stuck processing badge: use client-side processing state, add extracted status"}]
 }
