@@ -8,7 +8,11 @@ import type { UploadedStatement } from "@/lib/upload/types";
 
 const QC_POLL_STATUSES = new Set(["qc_running", "qc_fixing"]);
 
-export function UploadSection() {
+export function UploadSection({
+  brokerageContext,
+}: {
+  brokerageContext?: string;
+} = {}) {
   const [uploads, setUploads] = useState<UploadedStatement[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
@@ -257,6 +261,25 @@ export function UploadSection() {
       )}
 
       <h2 className="text-lg font-semibold">Upload Statements</h2>
+
+      {brokerageContext && (
+        <div className="rounded-lg border border-blue-100 bg-blue-50/50 px-4 py-3 text-sm text-blue-800">
+          <p className="font-medium">
+            What to upload for {brokerageContext}:
+          </p>
+          <ul className="mt-1.5 list-inside list-disc space-y-0.5 text-blue-700">
+            <li>
+              <strong>PDF printout</strong> of your positions and account summary
+            </li>
+            <li>
+              <strong>JSON</strong> of your transaction log
+            </li>
+            <li className="text-blue-600">
+              We also support CSV, Excel, OFX/QFX, images, and other formats
+            </li>
+          </ul>
+        </div>
+      )}
 
       <UploadDropzone onUploaded={handleFileUploaded} onBatchComplete={handleBatchProcess} />
 

@@ -172,7 +172,11 @@ export function UploadDropzone({
               or drag and drop
             </p>
             <p className="text-xs text-gray-400">
-              PDF, CSV, Excel, JSON, images (PNG/JPG), OFX, QFX, TXT — up to 50MB
+              Statements, transaction exports, tax docs, screenshots
+            </p>
+            <p className="text-xs text-gray-300">
+              PDF, CSV, Excel, JSON, images (PNG/JPG), OFX, QFX, TXT — up to
+              50MB
             </p>
           </div>
         )}

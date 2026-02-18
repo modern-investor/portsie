@@ -9,9 +9,18 @@ import { BrokerageSelection } from "./brokerage-selection";
 import { BrokerageSetup } from "./brokerage-setup";
 import { UploadSection } from "./upload-section";
 
-type ConnectionsSubTab = "api" | "uploads";
+type ConnectionsSubTab = "institutions" | "uploads";
 
 const STORAGE_KEY = "portsie:connections-tab";
+
+function getStoredTab(): ConnectionsSubTab {
+  if (typeof window === "undefined") return "institutions";
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored === "institutions" || stored === "uploads") return stored;
+  // Migrate old "api" value
+  if (stored === "api") return "institutions";
+  return "institutions";
+}
 
 type SetupView = "list" | "setup";
 
@@ -25,18 +34,16 @@ export function ConnectionsView({
   const searchParams = useSearchParams();
   const urlTab = searchParams.get("tab");
   const initialTab: ConnectionsSubTab =
-    urlTab === "api" || urlTab === "uploads"
+    urlTab === "institutions" || urlTab === "uploads"
       ? urlTab
-      : typeof window !== "undefined"
-        ? ((localStorage.getItem(STORAGE_KEY) as ConnectionsSubTab) ?? "api")
-        : "api";
+      : getStoredTab();
   const [subTab, setSubTab] = useState<ConnectionsSubTab>(initialTab);
   const [setupView, setSetupView] = useState<SetupView>("list");
   const [pendingUploadCount, setPendingUploadCount] = useState(0);
 
   // Sync tab when URL search params change (e.g. client-side navigation)
   useEffect(() => {
-    if (urlTab === "api" || urlTab === "uploads") {
+    if (urlTab === "institutions" || urlTab === "uploads") {
       setSubTab(urlTab);
     }
   }, [urlTab]);
@@ -84,9 +91,9 @@ export function ConnectionsView({
         }}
       >
         <TabsList>
-          <TabsTrigger value="api">
+          <TabsTrigger value="institutions">
             <Link2 className="size-4" />
-            API Connections
+            Institutions
           </TabsTrigger>
           <TabsTrigger value="uploads">
             <Upload className="size-4" />
@@ -99,15 +106,17 @@ export function ConnectionsView({
           </TabsTrigger>
         </TabsList>
 
-        {/* API Connections sub-tab */}
-        <TabsContent value="api">
+        {/* Institutions sub-tab */}
+        <TabsContent value="institutions">
           <div className="space-y-6">
             {setupView === "list" && (
               <>
-                <SchwabConnect
-                  isConnected={isConnected}
-                  hasCredentials={hasCredentials}
-                />
+                {(isConnected || hasCredentials) && (
+                  <SchwabConnect
+                    isConnected={isConnected}
+                    hasCredentials={hasCredentials}
+                  />
+                )}
                 <BrokerageSelection onSelect={handleBrokerageSelect} />
               </>
             )}

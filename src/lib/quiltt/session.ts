@@ -81,6 +81,21 @@ export async function getOrCreateQuilttProfile(
   });
 
   if (error) {
+    // If unique constraint violation, profile was created concurrently — fetch it
+    if (error.code === "23505") {
+      const { data: raceWinner } = await supabase
+        .from("quiltt_profiles")
+        .select("quiltt_profile_id")
+        .eq("user_id", userId)
+        .single();
+      if (raceWinner) {
+        return {
+          token: session.token,
+          profileId: raceWinner.quiltt_profile_id,
+          expiresAt: session.expiresAt,
+        };
+      }
+    }
     throw new Error(`Failed to store Quiltt profile: ${error.message}`);
   }
 
