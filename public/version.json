@@ -1,12 +1,12 @@
 {
-  "version": "v260218.12 6:11a",
-  "release": 77,
-  "sha": "53c77555",
-  "fullSha": "53c775555c5b16bdc25150d16f3853f01dcfa145",
+  "version": "v260218.13 6:36a",
+  "release": 78,
+  "sha": "7dd546ed",
+  "fullSha": "7dd546ed9f9d2dac1e11ad031d736853b6f04d06",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000091",
-  "pushedAt": "2026-02-18T12:11:48+00",
-  "commits": [{"sha": "53c775555c5b16bdc25150d16f3853f01dcfa145", "short_sha": "53c77555", "author": "rahulio", "message": "Add site footer with legal pages (privacy policy, terms of service)"}]
+  "machine": "GitHub Actions 1000000097",
+  "pushedAt": "2026-02-18T12:36:21+00",
+  "commits": [{"sha": "7dd546ed9f9d2dac1e11ad031d736853b6f04d06", "short_sha": "7dd546ed", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/claude/hardcore-mclean'"}, {"sha": "68aeece6b4737eac2602a9a369800566067592f4", "short_sha": "68aeece6", "author": "rahulio", "message": "Unify dashboard tabs with shared Radix-based Tabs component"}]
 }
