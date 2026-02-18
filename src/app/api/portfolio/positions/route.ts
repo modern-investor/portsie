@@ -260,14 +260,12 @@ export async function GET() {
     console.error("Holdings data fetch failed:", err);
   }
 
-  // Fallback: if no real positions but aggregate exists, use aggregate as primary
-  // This prevents an empty dashboard when only aggregate data is available
-  const useAggregateAsPrimary =
-    positions.length === 0 &&
-    accounts.every((a) => a.cashBalance === 0 && a.liquidationValue === 0) &&
-    aggregatePositions.length > 0;
-
-  if (useAggregateAsPrimary) {
+  // Merge aggregate positions into primary when individual accounts don't have
+  // their own holdings. This happens when an uploaded statement puts all positions
+  // as "unallocated" — they end up in the aggregate account while individual
+  // accounts only have cash/balance data. Without merging, the dashboard shows
+  // only cash and ignores the actual equity positions.
+  if (aggregatePositions.length > 0 && positions.length === 0) {
     positions.push(...aggregatePositions);
     accounts.push(...aggregateAccounts);
     aggregatePositions.length = 0;
