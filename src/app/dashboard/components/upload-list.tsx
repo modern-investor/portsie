@@ -190,7 +190,7 @@ export function UploadList({
       uploads
         .filter(
           (u) =>
-            (u.parse_status === "pending" || u.parse_status === "failed") &&
+            (u.parse_status === "pending" || u.parse_status === "failed" || u.parse_status === "processing") &&
             !processingIds.has(u.id) &&
             !u.confirmed_at
         )
@@ -315,12 +315,11 @@ export function UploadList({
         const isQueued = queuedIds.has(upload.id);
         const ts = timestamps[upload.id];
         const hasEnded = !!ts?.e;
-        const isProcessing =
-          processingIds.has(upload.id) ||
-          upload.parse_status === "processing";
-        // Once the extraction call has returned (end timestamp set),
-        // show the DB status instead of "Processing" while the refresh fetch is in-flight
-        const status = (isProcessing && !hasEnded)
+        // Only show live "Processing" spinner if THIS client session initiated it
+        const isActivelyProcessing = processingIds.has(upload.id);
+        const isLiveProcessing = isActivelyProcessing && !hasEnded;
+        // Determine display status
+        const status = isLiveProcessing
           ? STATUS_STYLES.processing
           : isQueued
             ? STATUS_STYLES.queued
@@ -399,7 +398,7 @@ export function UploadList({
                   </span>
                   {upload.parse_error && (
                     <span
-                      className={`truncate ${isProcessing || isQueued ? "text-gray-300 line-through" : "text-red-500"}`}
+                      className={`truncate ${isLiveProcessing || isQueued ? "text-gray-300 line-through" : "text-red-500"}`}
                       title={upload.parse_error}
                     >
                       {upload.parse_error}
@@ -429,9 +428,9 @@ export function UploadList({
               <span
                 className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}
               >
-                {isProcessing && !hasEnded && <Spinner className="h-3 w-3" />}
+                {isLiveProcessing && <Spinner className="h-3 w-3" />}
                 {isConfirmed ? "Saved" : status.label}
-                {isProcessing && !hasEnded && ts?.s && (
+                {isLiveProcessing && ts?.s && (
                   <ElapsedTimer since={ts.s} />
                 )}
                 {hasEnded && ts?.s && (
@@ -459,7 +458,7 @@ export function UploadList({
                   </button>
                 )}
 
-                {!isProcessing && !isConfirmed && (
+                {!isLiveProcessing && !isConfirmed && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
