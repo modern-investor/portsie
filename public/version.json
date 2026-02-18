@@ -1,12 +1,12 @@
 {
-  "version": "v260217.33 11:57p",
-  "release": 65,
-  "sha": "2b5ce6e8",
-  "fullSha": "2b5ce6e864ebafc217e94fc0941041a2c67f6997",
+  "version": "v260218.01 12:02a",
+  "release": 66,
+  "sha": "5900259f",
+  "fullSha": "5900259f60bb9195a6f7c310566565bbb9964859",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000063",
-  "pushedAt": "2026-02-18T05:57:12+00",
-  "commits": [{"sha": "2b5ce6e864ebafc217e94fc0941041a2c67f6997", "short_sha": "2b5ce6e8", "author": "Rahul", "message": "Merge pull request #12 from modern-investor/claude/serene-boyd"}, {"sha": "444b9945f0df0473d2d861935632bbed93991d98", "short_sha": "444b9945", "author": "rahulio", "message": "Fix dashboard total double-counting cash on top of aggregate positions"}]
+  "machine": "GitHub Actions 1000000064",
+  "pushedAt": "2026-02-18T06:02:16+00",
+  "commits": [{"sha": "5900259f60bb9195a6f7c310566565bbb9964859", "short_sha": "5900259f", "author": "rahulio", "message": "Expand ledger design doc with full justifications for every decision"}]
 }
