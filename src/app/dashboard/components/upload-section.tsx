@@ -62,8 +62,10 @@ export function UploadSection() {
     setUploads((prev) => [statement, ...prev]);
   }
 
-  // Trigger LLM processing for a single upload (auto-links account and saves data)
-  async function handleProcess(uploadId: string) {
+  // Trigger LLM processing for a single upload (auto-links account and saves data).
+  // Returns true if auto-confirm succeeded (data was written to DB).
+  async function handleProcess(uploadId: string): Promise<boolean> {
+    let autoConfirmed = false;
     setProcessingIds((prev) => new Set(prev).add(uploadId));
     setProcessCount((prev) => ({ ...prev, [uploadId]: (prev[uploadId] ?? 0) + 1 }));
     // Record processing start timestamp (keep existing q timestamp)
@@ -73,7 +75,11 @@ export function UploadSection() {
     }));
 
     try {
-      await fetch(`/api/upload/${uploadId}/extract?auto_confirm=true`, { method: "POST" });
+      const res = await fetch(`/api/upload/${uploadId}/extract?auto_confirm=true`, { method: "POST" });
+      if (res.ok) {
+        const body = await res.json();
+        autoConfirmed = !!body.autoConfirmed;
+      }
     } catch {
       // Error status will be reflected in the refreshed upload record
     } finally {
@@ -100,6 +106,7 @@ export function UploadSection() {
         return next;
       });
     }
+    return autoConfirmed;
   }
 
   // Batch process: run sequentially so only one is actively processing at a time.
@@ -118,6 +125,7 @@ export function UploadSection() {
 
     // Process sequentially so queued items stay visually distinct
     (async () => {
+      let anyAutoConfirmed = false;
       for (const id of ids) {
         // Move from queued → processing
         setQueuedIds((prev) => {
@@ -125,7 +133,8 @@ export function UploadSection() {
           next.delete(id);
           return next;
         });
-        await handleProcess(id);
+        const confirmed = await handleProcess(id);
+        if (confirmed) anyAutoConfirmed = true;
         setBatchDone((prev) => {
           const next = prev + 1;
           if (next >= ids.length) {
@@ -135,6 +144,10 @@ export function UploadSection() {
           }
           return next;
         });
+      }
+      // Auto-redirect to dashboard if any uploads were auto-confirmed
+      if (anyAutoConfirmed) {
+        setRedirectCountdown(3);
       }
     })();
   }

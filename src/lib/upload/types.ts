@@ -133,7 +133,7 @@ export interface UploadedStatement {
   file_type: UploadFileType;
   file_size_bytes: number | null;
   file_hash: string | null;
-  parse_status: "pending" | "processing" | "completed" | "partial" | "failed";
+  parse_status: "pending" | "processing" | "extracted" | "completed" | "partial" | "failed";
   parse_error: string | null;
   parsed_at: string | null;
   transactions_created: number;

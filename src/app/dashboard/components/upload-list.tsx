@@ -14,7 +14,8 @@ const STATUS_STYLES: Record<
     label: "Processing",
     className: "bg-blue-100 text-blue-700",
   },
-  completed: { label: "Extracted", className: "bg-green-100 text-green-700" },
+  extracted: { label: "Extracted", className: "bg-green-100 text-green-700" },
+  completed: { label: "Saved", className: "bg-green-100 text-green-700" },
   partial: {
     label: "Partial extraction",
     className: "bg-amber-100 text-amber-700",
@@ -74,15 +75,23 @@ function formatTime(isoStr: string): string {
 
 /** Describe what kind of data was extracted (compact) */
 function describeContent(upload: UploadedStatement): string | null {
-  const data = upload.extracted_data;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data = upload.extracted_data as any;
   if (!data) return null;
   const parts: string[] = [];
-  if (data.transactions.length > 0)
-    parts.push(`${data.transactions.length} trans`);
-  if (data.positions.length > 0)
-    parts.push(`${data.positions.length} pos`);
-  if (data.balances.length > 0)
-    parts.push(`${data.balances.length} bal`);
+  // Support both PortsieExtraction (accounts[].transactions) and legacy flat arrays
+  if (data.accounts && Array.isArray(data.accounts)) {
+    const trans = data.accounts.reduce((s: number, a: { transactions?: unknown[] }) => s + (a.transactions?.length ?? 0), 0);
+    const pos = data.accounts.reduce((s: number, a: { positions?: unknown[] }) => s + (a.positions?.length ?? 0), 0) + (data.unallocated_positions?.length ?? 0);
+    const bal = data.accounts.reduce((s: number, a: { balances?: unknown[] }) => s + (a.balances?.length ?? 0), 0);
+    if (trans > 0) parts.push(`${trans} trans`);
+    if (pos > 0) parts.push(`${pos} pos`);
+    if (bal > 0) parts.push(`${bal} bal`);
+  } else {
+    if (data.transactions?.length > 0) parts.push(`${data.transactions.length} trans`);
+    if (data.positions?.length > 0) parts.push(`${data.positions.length} pos`);
+    if (data.balances?.length > 0) parts.push(`${data.balances.length} bal`);
+  }
   return parts.length > 0 ? parts.join(", ") : null;
 }
 
@@ -319,7 +328,7 @@ export function UploadList({
         const isConfirmed = !!upload.confirmed_at;
         const isProcessable = processableIds.includes(upload.id);
         const isExpanded = reviewingId === upload.id;
-        const hasReview = upload.parse_status === "completed" || upload.parse_status === "partial";
+        const hasReview = upload.parse_status === "extracted" || upload.parse_status === "completed" || upload.parse_status === "partial";
 
         return (
           <div key={upload.id} id={`upload-${upload.id}`}>
