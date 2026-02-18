@@ -8,6 +8,8 @@ import { writeExtraction } from "@/lib/extraction/db-writer";
 import { checkExtractionIntegrity } from "@/lib/extraction/integrity-check";
 import type { PortsieExtraction, AccountMapResult } from "@/lib/extraction/schema";
 
+export const maxDuration = 300; // 5 minutes — large extractions (50+ accounts) need time for sequential DB writes
+
 /**
  * POST /api/upload/[id]/confirm
  *
