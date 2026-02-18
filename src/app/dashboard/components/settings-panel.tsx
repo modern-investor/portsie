@@ -1,13 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Brain, AlertTriangle } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LLMSettings } from "./llm-settings";
 import { ExtractionFailures } from "./extraction-failures";
 
 type SettingsTab = "llm" | "failures";
 
+const STORAGE_KEY = "portsie:settings-tab";
+const VALID_TABS: SettingsTab[] = ["llm", "failures"];
+
 export function SettingsPanel() {
-  const [tab, setTab] = useState<SettingsTab>("llm");
+  const [tab, setTab] = useState<SettingsTab>(() => {
+    if (typeof window === "undefined") return "llm";
+    const saved = localStorage.getItem(STORAGE_KEY) as SettingsTab | null;
+    return saved && VALID_TABS.includes(saved) ? saved : "llm";
+  });
   const [unresolvedCount, setUnresolvedCount] = useState(0);
 
   // Fetch unresolved failure count on mount (for badge)
@@ -27,40 +36,37 @@ export function SettingsPanel() {
     <div className="space-y-6">
       <h2 className="text-lg font-semibold">Settings</h2>
 
-      {/* Tab bar */}
-      <div className="flex gap-1 border-b">
-        <button
-          onClick={() => setTab("llm")}
-          className={`-mb-px border-b-2 px-4 py-3 text-sm font-medium transition-colors sm:py-2 ${
-            tab === "llm"
-              ? "border-gray-900 text-gray-900"
-              : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          LLM
-        </button>
-        <button
-          onClick={() => setTab("failures")}
-          className={`-mb-px flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-medium transition-colors sm:py-2 ${
-            tab === "failures"
-              ? "border-gray-900 text-gray-900"
-              : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Failures
-          {unresolvedCount > 0 && (
-            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-medium text-white">
-              {unresolvedCount}
-            </span>
-          )}
-        </button>
-      </div>
+      <Tabs
+        value={tab}
+        onValueChange={(v) => {
+          const t = v as SettingsTab;
+          setTab(t);
+          localStorage.setItem(STORAGE_KEY, t);
+        }}
+      >
+        <TabsList>
+          <TabsTrigger value="llm">
+            <Brain className="size-4" />
+            LLM
+          </TabsTrigger>
+          <TabsTrigger value="failures">
+            <AlertTriangle className="size-4" />
+            Failures
+            {unresolvedCount > 0 && (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-medium text-white">
+                {unresolvedCount}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Tab content */}
-      {tab === "llm" && <LLMSettings />}
-      {tab === "failures" && (
-        <ExtractionFailures onUnresolvedCount={setUnresolvedCount} />
-      )}
+        <TabsContent value="llm">
+          <LLMSettings />
+        </TabsContent>
+        <TabsContent value="failures">
+          <ExtractionFailures onUnresolvedCount={setUnresolvedCount} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
