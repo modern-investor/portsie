@@ -1,12 +1,12 @@
 {
-  "version": "v260218.02 12:28a",
-  "release": 67,
-  "sha": "4a7a3c5b",
-  "fullSha": "4a7a3c5bf8990cd1b545715ddc49667fe84af6ba",
+  "version": "v260218.03 1:28a",
+  "release": 68,
+  "sha": "2bd89e87",
+  "fullSha": "2bd89e872eac7c6b4e645bb7b2262bccdfb2ff0e",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000065",
-  "pushedAt": "2026-02-18T06:28:32+00",
-  "commits": [{"sha": "4a7a3c5bf8990cd1b545715ddc49667fe84af6ba", "short_sha": "4a7a3c5b", "author": "rahulio", "message": "Update ledger design doc: LLM-driven matching, DB-backed prompts, Gemini temp note"}]
+  "machine": "GitHub Actions 1000000066",
+  "pushedAt": "2026-02-18T07:28:16+00",
+  "commits": [{"sha": "2bd89e872eac7c6b4e645bb7b2262bccdfb2ff0e", "short_sha": "2bd89e87", "author": "rahulio", "message": "Add hero illustration to homepage, Quiltt integration, fix migration version collision"}]
 }
