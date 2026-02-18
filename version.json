@@ -1,12 +1,12 @@
 {
-  "version": "v260217.30 11:44p",
-  "release": 62,
-  "sha": "26877759",
-  "fullSha": "26877759f79606eadfe3c4fa6534cc5615f89786",
+  "version": "v260217.31 11:52p",
+  "release": 63,
+  "sha": "7fe330e8",
+  "fullSha": "7fe330e8e55933cbae33098841bab6bcffdc1d4d",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000060",
-  "pushedAt": "2026-02-18T05:44:11+00",
-  "commits": [{"sha": "26877759f79606eadfe3c4fa6534cc5615f89786", "short_sha": "26877759", "author": "rahulio", "message": "Fix stuck processing badge: use client-side processing state, add extracted status"}]
+  "machine": "GitHub Actions 1000000061",
+  "pushedAt": "2026-02-18T05:52:39+00",
+  "commits": [{"sha": "7fe330e8e55933cbae33098841bab6bcffdc1d4d", "short_sha": "7fe330e8", "author": "rahulio", "message": "Switch default extraction engine to Gemini 3 Flash with Claude CLI fallback"}]
 }
