@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { classifyPortfolio } from "@/lib/portfolio";
 import type { ClassifiedPortfolio, AssetClassId } from "@/lib/portfolio/types";
@@ -115,6 +115,29 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
     load();
   }, []);
 
+  // Compute the "as of" price date from positions
+  const priceDate = useMemo(() => {
+    if (!portfolioData) return null;
+    const dates = portfolioData.positions
+      .map((p) => p.priceDate)
+      .filter(Boolean) as string[];
+    if (dates.length === 0) return new Date().toISOString().slice(0, 10);
+    // Use the most common date, or the latest
+    const counts = new Map<string, number>();
+    for (const d of dates) {
+      counts.set(d, (counts.get(d) ?? 0) + 1);
+    }
+    let best = dates[0];
+    let bestCount = 0;
+    for (const [d, c] of counts) {
+      if (c > bestCount) {
+        best = d;
+        bestCount = c;
+      }
+    }
+    return best;
+  }, [portfolioData]);
+
   // ── Loading state ──
   if (loading) {
     return (
@@ -158,7 +181,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
   if (selectedClass) {
     return (
       <div className="space-y-4">
-        <PortfolioSummaryBar portfolio={portfolio} hideValues={hideValues} />
+        <PortfolioSummaryBar portfolio={portfolio} hideValues={hideValues} priceDate={priceDate} />
         <AssetClassDetail
           classId={selectedClass}
           portfolio={portfolio}
@@ -172,7 +195,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
   return (
     <div className="space-y-4">
       {/* Executive summary */}
-      <PortfolioSummaryBar portfolio={portfolio} hideValues={hideValues} />
+      <PortfolioSummaryBar portfolio={portfolio} hideValues={hideValues} priceDate={priceDate} />
 
       {/* Sub-tabs */}
       <nav className="flex gap-1">
@@ -227,7 +250,11 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
 
       {/* Positions tab — pass fetched data as props */}
       {subTab === "positions" && (
-        <PositionsTable positions={portfolioData.positions} hideValues={hideValues} />
+        <PositionsTable
+          positions={portfolioData.positions}
+          accounts={portfolioData.accounts}
+          hideValues={hideValues}
+        />
       )}
     </div>
   );

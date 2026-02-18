@@ -29,6 +29,9 @@ export interface UnifiedPosition {
   source: "schwab_api" | "manual_upload" | "manual_entry" | "quiltt" | "offline";
   accountId?: string;
   accountName?: string;
+  accountInstitution?: string;
+  accountNumber?: string;
+  priceDate?: string | null;
 }
 
 export interface UnifiedAccount {
@@ -101,12 +104,15 @@ export async function GET() {
           isAggregate: false,
         });
 
+        const maskedNumber = `****${sec.accountNumber.slice(-4)}`;
         for (const pos of sec.positions ?? []) {
           positions.push(
             schwabToUnified(
               pos,
               `schwab_${sec.accountNumber}`,
-              `Schwab ****${sec.accountNumber.slice(-4)}`
+              `Schwab ${maskedNumber}`,
+              "Charles Schwab",
+              maskedNumber
             )
           );
         }
@@ -214,6 +220,9 @@ export async function GET() {
             source: acct.data_source as UnifiedPosition["source"],
             accountId: acct.id,
             accountName: accountLabel,
+            accountInstitution: acct.institution_name ?? "Unknown",
+            accountNumber: acct.account_nickname ?? "",
+            priceDate: h.valuation_date ?? null,
           });
         }
       }
@@ -252,6 +261,9 @@ export async function GET() {
             source: acct.data_source as UnifiedPosition["source"],
             accountId: acct.id,
             accountName: accountLabel,
+            accountInstitution: acct.institution_name ?? "Unknown",
+            accountNumber: acct.account_nickname ?? "",
+            priceDate: h.valuation_date ?? null,
           });
         }
       }
@@ -299,7 +311,9 @@ export async function GET() {
 function schwabToUnified(
   pos: SchwabPosition,
   accountId: string,
-  accountName: string
+  accountName: string,
+  accountInstitution: string,
+  accountNumber: string
 ): UnifiedPosition {
   return {
     symbol: pos.instrument.symbol,
@@ -314,5 +328,8 @@ function schwabToUnified(
     source: "schwab_api",
     accountId,
     accountName,
+    accountInstitution,
+    accountNumber,
+    priceDate: new Date().toISOString().slice(0, 10),
   };
 }
