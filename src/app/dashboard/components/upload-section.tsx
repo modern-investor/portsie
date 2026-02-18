@@ -110,42 +110,44 @@ export function UploadSection({
 
     try {
       const res = await fetch(`/api/upload/${uploadId}/extract?auto_confirm=true`, { method: "POST" });
-      if (res.ok) {
-        const body = await res.json();
+      const body = await res.json().catch(() => null);
+      if (res.ok && body) {
         autoConfirmed = !!body.autoConfirmed;
       }
     } catch {
-      // Error status will be reflected in the refreshed upload record
+      // Network error — status will be reflected in the refreshed upload record
     } finally {
       // Record end timestamp
       setTimestamps((prev) => ({
         ...prev,
         [uploadId]: { ...prev[uploadId], e: new Date().toISOString() },
       }));
-      // Always refresh the upload record to get latest status
-      try {
-        const detailRes = await fetch(`/api/upload/${uploadId}`);
-        if (detailRes.ok) {
-          const updated = await detailRes.json();
-          setUploads((prev) =>
-            prev.map((u) => (u.id === uploadId ? updated : u))
-          );
+
+      // Refresh the upload record — retry once after a short delay if status is
+      // still "processing" (DB write from the extract endpoint may not have
+      // propagated yet).
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          if (attempt > 0) await new Promise((r) => setTimeout(r, 1500));
+          const detailRes = await fetch(`/api/upload/${uploadId}`);
+          if (detailRes.ok) {
+            const updated = await detailRes.json();
+            setUploads((prev) =>
+              prev.map((u) => (u.id === uploadId ? updated : u))
+            );
+            // If we got a terminal status, no need to retry
+            if (updated.parse_status !== "processing") break;
+          }
+        } catch {
+          // Silently fail — user can refresh manually
         }
-      } catch {
-        // Silently fail — user can refresh manually
       }
+
       setProcessingIds((prev) => {
         const next = new Set(prev);
         next.delete(uploadId);
         return next;
       });
-
-      // Fire quality check in background after auto-confirm
-      if (autoConfirmed) {
-        fetch(`/api/upload/${uploadId}/quality-check`, { method: "POST" }).catch(
-          () => {} // QC errors are non-blocking; status tracked via polling
-        );
-      }
     }
     return autoConfirmed;
   }

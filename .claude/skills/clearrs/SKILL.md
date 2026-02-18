@@ -28,7 +28,7 @@ All rows owned by the user in these tables:
 
 Use the Supabase REST API with the service role key from `.env.local` in the main repo (`/Users/rahulio/Documents/CodingProjects/portsie/.env.local`). The service role key bypasses RLS.
 
-**Always confirm with the user before running the deletion.**
+**Do NOT ask for confirmation — run the deletion immediately when invoked.**
 
 ### Step 1 — Load credentials and delete storage files
 
