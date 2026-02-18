@@ -1,12 +1,12 @@
 {
-  "version": "v260218.23 12:04p",
-  "release": 88,
-  "sha": "b4dd3c6e",
-  "fullSha": "b4dd3c6efd4d219c1225792f46930834df1e030f",
+  "version": "v260218.24 12:33p",
+  "release": 89,
+  "sha": "c71227ec",
+  "fullSha": "c71227ecdd378fc7a612ce24d635201a1fd4db62",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000143",
-  "pushedAt": "2026-02-18T18:04:45+00",
-  "commits": [{"sha": "b4dd3c6efd4d219c1225792f46930834df1e030f", "short_sha": "b4dd3c6e", "author": "rahulio", "message": "Fix portfolio total and account display for aggregate-only statements"}]
+  "machine": "GitHub Actions 1000000147",
+  "pushedAt": "2026-02-18T18:33:19+00",
+  "commits": [{"sha": "c71227ecdd378fc7a612ce24d635201a1fd4db62", "short_sha": "c71227ec", "author": "rahulio", "message": "Add beta notice to home page above waitlist form"}]
 }
