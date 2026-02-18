@@ -57,8 +57,8 @@ export default async function Home() {
 
           {/* Waiting list signup */}
           <div className="space-y-1.5">
-            <p className="text-muted-foreground text-sm">
-              Get on the waiting list
+            <p className="text-foreground/70 text-sm font-medium text-left">
+              We are in beta — get on the waiting list.
             </p>
             <WaitlistForm />
           </div>
