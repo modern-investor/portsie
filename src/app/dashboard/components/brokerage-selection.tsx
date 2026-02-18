@@ -89,6 +89,32 @@ function InstitutionCard({
   );
 }
 
+function SectionToggle({
+  expanded,
+  count,
+  label,
+}: {
+  expanded: boolean;
+  count: number;
+  label: string;
+}) {
+  return (
+    <div className="flex shrink-0 items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm text-gray-500 transition-colors hover:bg-gray-50">
+      {expanded ? (
+        <>
+          Hide
+          <ChevronUp className="size-4" />
+        </>
+      ) : (
+        <>
+          Show {count} {label}
+          <ChevronDown className="size-4" />
+        </>
+      )}
+    </div>
+  );
+}
+
 export function BrokerageSelection({
   onSelect,
 }: {
@@ -96,54 +122,60 @@ export function BrokerageSelection({
 }) {
   const brokerages = getBrokerages();
   const banks = getBanks();
-  const [showBanks, setShowBanks] = useState(false);
+  const [showBrokerages, setShowBrokerages] = useState(true);
+  const [showBanks, setShowBanks] = useState(true);
 
   return (
     <div className="space-y-8">
-      {/* Brokerages */}
+      {/* Brokerages — collapsible */}
       <div className="space-y-4">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Brokerages</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Connect your brokerage via API, account linking, or file upload.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {brokerages.map((b, i) => (
-            <InstitutionCard
-              key={b.id}
-              brokerage={b}
-              index={i}
-              onSelect={() => onSelect(b.id)}
-            />
-          ))}
-        </div>
+        <button
+          onClick={() => setShowBrokerages((prev) => !prev)}
+          className="flex w-full items-center gap-4"
+        >
+          <SectionToggle
+            expanded={showBrokerages}
+            count={brokerages.length}
+            label="brokerages"
+          />
+          <div className="text-left">
+            <h2 className="text-xl font-bold text-gray-900">Brokerages</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Connect your brokerage via API, account linking, or file upload.
+            </p>
+          </div>
+        </button>
+
+        {showBrokerages && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {brokerages.map((b, i) => (
+              <InstitutionCard
+                key={b.id}
+                brokerage={b}
+                index={i}
+                onSelect={() => onSelect(b.id)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Banks — collapsible */}
       <div className="space-y-4">
         <button
           onClick={() => setShowBanks((prev) => !prev)}
-          className="flex w-full items-center justify-between"
+          className="flex w-full items-center gap-4"
         >
-          <div>
+          <SectionToggle
+            expanded={showBanks}
+            count={banks.length}
+            label="banks"
+          />
+          <div className="text-left">
             <h2 className="text-xl font-bold text-gray-900">Banks</h2>
-            <p className="mt-1 text-left text-sm text-gray-500">
+            <p className="mt-1 text-sm text-gray-500">
               Link your bank accounts to track cash, deposits, and balances.
             </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm text-gray-500 transition-colors hover:bg-gray-50">
-            {showBanks ? (
-              <>
-                Hide
-                <ChevronUp className="size-4" />
-              </>
-            ) : (
-              <>
-                Show {banks.length} banks
-                <ChevronDown className="size-4" />
-              </>
-            )}
           </div>
         </button>
 
