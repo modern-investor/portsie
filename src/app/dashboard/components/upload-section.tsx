@@ -103,20 +103,34 @@ export function UploadSection({
     return () => clearInterval(interval);
   }, [uploads.map((u) => `${u.id}:${u.parse_status}`).join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch existing uploads on mount
+  // Fetch existing uploads on mount, then auto-process any pending ones
+  const hasAutoProcessed = useRef(false);
   const fetchUploads = useCallback(async () => {
     try {
       const res = await fetch("/api/upload");
       if (res.ok) {
-        const data = await res.json();
+        const data: UploadedStatement[] = await res.json();
         setUploads(data);
+        // Auto-process any pending/failed files from previous sessions (once)
+        if (!hasAutoProcessed.current) {
+          hasAutoProcessed.current = true;
+          const pendingIds = data
+            .filter((u: UploadedStatement) =>
+              (u.parse_status === "pending" || u.parse_status === "failed") && !u.confirmed_at
+            )
+            .map((u: UploadedStatement) => u.id);
+          if (pendingIds.length > 0) {
+            // Defer to next tick so state is settled
+            setTimeout(() => handleBatchProcess(pendingIds), 0);
+          }
+        }
       }
     } catch {
       // Silently fail — user can still upload new files
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchUploads();
@@ -405,7 +419,6 @@ export function UploadSection({
           timestamps={timestamps}
           processCount={processCount}
           reviewingId={reviewingId}
-          onBatchProcess={handleBatchProcess}
           onReview={handleReview}
           onDelete={handleDelete}
           onReprocess={handleReprocess}
