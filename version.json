@@ -1,12 +1,12 @@
 {
-  "version": "v260220.04 1:37p",
-  "release": 97,
-  "sha": "a7010ee1",
-  "fullSha": "a7010ee14c98671a93c05619fdb8ce9f1e9d6972",
+  "version": "v260220.05 1:46p",
+  "release": 98,
+  "sha": "dddedfae",
+  "fullSha": "dddedfae707127452d8223a7877173d0117d0a22",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000183",
-  "pushedAt": "2026-02-20T19:37:47+00",
-  "commits": [{"sha": "a7010ee14c98671a93c05619fdb8ce9f1e9d6972", "short_sha": "a7010ee1", "author": "rahulio", "message": "Add processing preset dropdown to upload page"}]
+  "machine": "GitHub Actions 1000000188",
+  "pushedAt": "2026-02-20T19:46:16+00",
+  "commits": [{"sha": "dddedfae707127452d8223a7877173d0117d0a22", "short_sha": "dddedfae", "author": "Rahul", "message": "Merge pull request #32 from modern-investor/claude/pensive-kepler"}, {"sha": "32d3141314132fc6d8b0157c545ab69372c3deaf", "short_sha": "32d31413", "author": "rahulio", "message": "Fix client-side crash on dashboard after saving large extractions"}]
 }
