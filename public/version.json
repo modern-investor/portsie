@@ -1,12 +1,12 @@
 {
-  "version": "v260220.01 1:02p",
-  "release": 94,
-  "sha": "e209e17c",
-  "fullSha": "e209e17c2263d19d0b9db362a5460673b94e231b",
+  "version": "v260220.02 1:06p",
+  "release": 95,
+  "sha": "f69d62e2",
+  "fullSha": "f69d62e2ef5aa89d4401e3c921e055d9acb32768",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000170",
-  "pushedAt": "2026-02-20T19:02:12+00",
-  "commits": [{"sha": "e209e17c2263d19d0b9db362a5460673b94e231b", "short_sha": "e209e17c", "author": "rahulio", "message": "Dashboard: add cash positions, replace donut with bar chart + treemap, add sub-asset classes"}]
+  "machine": "GitHub Actions 1000000174",
+  "pushedAt": "2026-02-20T19:06:18+00",
+  "commits": [{"sha": "f69d62e2ef5aa89d4401e3c921e055d9acb32768", "short_sha": "f69d62e2", "author": "rahulio", "message": "Merge branch 'claude/vibrant-curran'"}, {"sha": "5a383682b069e67906f709bd744b34d1f760e1b3", "short_sha": "5a383682", "author": "rahulio", "message": "Improve extraction pipeline accuracy, normalization, and reliability"}]
 }
