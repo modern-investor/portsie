@@ -219,15 +219,15 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
       >
         <TabsList>
           <TabsTrigger value="assets">
-            <PieChart className="size-4" />
+            <PieChart className="size-5" />
             Assets
           </TabsTrigger>
           <TabsTrigger value="accounts">
-            <Landmark className="size-4" />
+            <Landmark className="size-5" />
             Accounts
           </TabsTrigger>
           <TabsTrigger value="positions">
-            <List className="size-4" />
+            <List className="size-5" />
             Positions
           </TabsTrigger>
         </TabsList>
