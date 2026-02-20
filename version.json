@@ -1,12 +1,12 @@
 {
-  "version": "v260220.05 1:46p",
-  "release": 98,
-  "sha": "dddedfae",
-  "fullSha": "dddedfae707127452d8223a7877173d0117d0a22",
+  "version": "v260220.06 1:47p",
+  "release": 99,
+  "sha": "c6cbdc05",
+  "fullSha": "c6cbdc05c4271c626cae20d021a3e8ec9dc68ab2",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000188",
-  "pushedAt": "2026-02-20T19:46:16+00",
-  "commits": [{"sha": "dddedfae707127452d8223a7877173d0117d0a22", "short_sha": "dddedfae", "author": "Rahul", "message": "Merge pull request #32 from modern-investor/claude/pensive-kepler"}, {"sha": "32d3141314132fc6d8b0157c545ab69372c3deaf", "short_sha": "32d31413", "author": "rahulio", "message": "Fix client-side crash on dashboard after saving large extractions"}]
+  "machine": "GitHub Actions 1000000193",
+  "pushedAt": "2026-02-20T19:47:50+00",
+  "commits": [{"sha": "c6cbdc05c4271c626cae20d021a3e8ec9dc68ab2", "short_sha": "c6cbdc05", "author": "rahulio", "message": "Show processing settings above timestamps in upload list"}]
 }
