@@ -1,8 +1,10 @@
 export { classifyPortfolio, getCryptoSubAggregates, getTechSubAggregates } from "./classify";
-export { ASSET_CLASSES, ASSET_CLASS_LIST } from "./asset-class-config";
+export { ASSET_CLASSES, ASSET_CLASS_LIST, SUB_ASSET_CLASSES, getSubClassesForParent, classifySubAssetClass } from "./asset-class-config";
 export type {
   AssetClassId,
+  SubAssetClassId,
   AssetClassDef,
+  SubAssetClassDef,
   ClassifiedPosition,
   AssetClassSummary,
   ClassifiedPortfolio,
