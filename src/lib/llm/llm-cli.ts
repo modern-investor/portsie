@@ -92,7 +92,19 @@ async function extractViaCLILocal(
       );
     }
 
-    return { extraction: validationResult.extraction, rawResponse: cliResponse };
+    let extraction = validationResult.extraction;
+    if (validationResult.coercions.length > 0 || validationResult.warnings.length > 0) {
+      const validationNotes = [
+        ...validationResult.coercions.map((c) => `[Coercion] ${c}`),
+        ...validationResult.warnings.map((w) => `[Warning] ${w.path}: ${w.message}`),
+      ];
+      extraction = {
+        ...extraction,
+        notes: [...(extraction.notes || []), ...validationNotes],
+      };
+    }
+
+    return { extraction, rawResponse: cliResponse };
   } catch (err) {
     if (
       err instanceof Error &&
@@ -174,7 +186,19 @@ async function extractViaCLIRemote(
     );
   }
 
-  return { extraction: validationResult.extraction, rawResponse: cliResponse };
+  let extraction = validationResult.extraction;
+  if (validationResult.coercions.length > 0 || validationResult.warnings.length > 0) {
+    const validationNotes = [
+      ...validationResult.coercions.map((c) => `[Coercion] ${c}`),
+      ...validationResult.warnings.map((w) => `[Warning] ${w.path}: ${w.message}`),
+    ];
+    extraction = {
+      ...extraction,
+      notes: [...(extraction.notes || []), ...validationNotes],
+    };
+  }
+
+  return { extraction, rawResponse: cliResponse };
 }
 
 /**
@@ -199,13 +223,15 @@ function buildCLIPrompt(
       processedFile.preExtractedRows &&
       processedFile.preExtractedRows.length > 0
     ) {
-      const sampleCount = Math.min(5, processedFile.preExtractedRows.length);
-      textContent += `\n\n--- Pre-parsed data (${processedFile.preExtractedRows.length} total rows, showing first ${sampleCount}) ---\n`;
-      textContent += JSON.stringify(
-        processedFile.preExtractedRows.slice(0, sampleCount),
-        null,
-        2
-      );
+      const rows = processedFile.preExtractedRows;
+      const headCount = Math.min(20, rows.length);
+      const tailCount = rows.length > headCount ? Math.min(10, rows.length - headCount) : 0;
+      textContent += `\n\n--- Pre-parsed CSV structure (${rows.length} total rows) ---\n`;
+      textContent += `First ${headCount} rows:\n${JSON.stringify(rows.slice(0, headCount), null, 2)}`;
+      if (tailCount > 0) {
+        textContent += `\n\nLast ${tailCount} rows:\n${JSON.stringify(rows.slice(-tailCount), null, 2)}`;
+      }
+      textContent += "\n--- End pre-parsed data. Map the columns above to the schema. ---\n";
     }
 
     fileInstruction = `Here is the content of "${filename}" (${fileType.toUpperCase()}):\n\n${textContent}`;
