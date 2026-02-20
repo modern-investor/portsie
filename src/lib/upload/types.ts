@@ -162,6 +162,14 @@ export interface UploadedStatement {
   detected_account_info: DetectedAccountInfo | null;
   quality_check_id: string | null;
   qc_status_message: string | null;
+  processing_settings: {
+    preset: string;
+    label: string;
+    backend: string;
+    model: string;
+    thinkingLevel: string;
+    mediaResolution: string;
+  } | null;
   created_at: string;
   updated_at: string;
 }

@@ -6,6 +6,7 @@ import { getLLMSettings, getLLMApiKey, getLLMCliEndpoint } from "./settings";
 import { extractViaAPI } from "./llm-api";
 import { extractViaCLI } from "./llm-cli";
 import { extractViaGemini } from "./llm-gemini";
+import type { ProcessingSettings } from "./types";
 
 /**
  * Dispatch document extraction to the configured LLM backend.
@@ -27,8 +28,40 @@ export async function extractFinancialData(
   userId: string,
   processedFile: ProcessedFile,
   fileType: UploadFileType,
-  filename: string
+  filename: string,
+  processingSettings?: ProcessingSettings
 ): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
+  // ── Preset-based routing (from upload page dropdown) ──
+  if (processingSettings) {
+    if (processingSettings.backend === "cli") {
+      const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
+      return extractViaCLI(
+        processedFile, fileType, filename, cliEndpoint,
+        processingSettings.model
+      );
+    }
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    if (!geminiApiKey) {
+      console.warn("[Dispatcher] GEMINI_API_KEY not set, falling back to CLI");
+      const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
+      return extractViaCLI(processedFile, fileType, filename, cliEndpoint);
+    }
+    try {
+      return await extractViaGemini(
+        geminiApiKey, processedFile, fileType, filename,
+        processingSettings.model,
+        processingSettings.thinkingLevel,
+        processingSettings.mediaResolution
+      );
+    } catch (geminiError) {
+      const errorMsg = geminiError instanceof Error ? geminiError.message : String(geminiError);
+      console.error(`[Dispatcher] Gemini extraction failed, falling back to CLI: ${errorMsg}`);
+      const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
+      return extractViaCLI(processedFile, fileType, filename, cliEndpoint, "claude-sonnet-4-6");
+    }
+  }
+
+  // ── Legacy routing: user LLM settings ──
   const settings = await getLLMSettings(supabase, userId);
   const mode = settings?.llmMode ?? "gemini";
 

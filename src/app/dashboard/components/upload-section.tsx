@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { UploadDropzone } from "./upload-dropzone";
 import { UploadList } from "./upload-list";
+import { ProcessingPresetSelect } from "./processing-preset-select";
 import type { UploadedStatement } from "@/lib/upload/types";
 import type { PortsieExtraction } from "@/lib/extraction/schema";
+import type { ProcessingPreset } from "@/lib/llm/types";
 
 const QC_POLL_STATUSES = new Set(["qc_running", "qc_fixing"]);
 
@@ -55,6 +57,7 @@ export function UploadSection({
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   // Track IDs that were auto-confirmed in this batch for summary dialog
   const [confirmedIds, setConfirmedIds] = useState<string[]>([]);
+  const [processingPreset, setProcessingPreset] = useState<ProcessingPreset>("balanced");
   const router = useRouter();
 
   // Auto-redirect countdown after save
@@ -154,7 +157,7 @@ export function UploadSection({
     }));
 
     try {
-      const res = await fetch(`/api/upload/${uploadId}/extract?auto_confirm=true`, { method: "POST" });
+      const res = await fetch(`/api/upload/${uploadId}/extract?auto_confirm=true&preset=${processingPreset}`, { method: "POST" });
       const body = await res.json().catch(() => null);
       if (res.ok && body) {
         autoConfirmed = !!body.autoConfirmed;
@@ -391,6 +394,14 @@ export function UploadSection({
       )}
 
       <UploadDropzone onUploaded={handleFileUploaded} onBatchComplete={handleBatchProcess} />
+
+      <div className="flex items-center justify-end">
+        <ProcessingPresetSelect
+          value={processingPreset}
+          onChange={setProcessingPreset}
+          disabled={processingIds.size > 0 || queuedIds.size > 0}
+        />
+      </div>
 
       {loading ? (
         <div className="space-y-2">

@@ -22,7 +22,9 @@ export async function extractViaGemini(
   processedFile: ProcessedFile,
   fileType: UploadFileType,
   filename: string,
-  model?: string
+  model?: string,
+  thinkingLevelOverride?: "minimal" | "low" | "medium" | "high",
+  mediaResolutionOverride?: string
 ): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
   const geminiModel = model || DEFAULT_MODEL;
   const systemPrompt = buildExtractionPrompt();
@@ -84,7 +86,7 @@ export async function extractViaGemini(
   // Gemini 2.5: disable thinking so output tokens go to content, not reasoning.
   const isGemini3 = geminiModel.includes("gemini-3");
   const thinkingConfig: ThinkingConfig = isGemini3
-    ? { thinkingLevel: "medium" }
+    ? { thinkingLevel: thinkingLevelOverride ?? "low" }
     : { thinkingBudget: 0 };
 
   const requestBody: GeminiRequest = {
@@ -101,8 +103,7 @@ export async function extractViaGemini(
       // Gemini 3 docs warn temperature:0 causes looping; omit for 3.x
       ...(isGemini3 ? {} : { temperature: 0 }),
       maxOutputTokens: 65536,
-      // High resolution for PDFs with dense tables/charts (1120 tokens/page vs 560 default)
-      mediaResolution: "MEDIA_RESOLUTION_HIGH",
+      mediaResolution: mediaResolutionOverride ?? "MEDIA_RESOLUTION_HIGH",
       thinkingConfig,
     },
   };

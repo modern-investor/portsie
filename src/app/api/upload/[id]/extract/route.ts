@@ -10,6 +10,8 @@ import {
 import { writeExtraction } from "@/lib/extraction/db-writer";
 import type { UploadFileType } from "@/lib/upload/types";
 import type { PortsieExtraction } from "@/lib/extraction/schema";
+import { PROCESSING_PRESETS, DEFAULT_PRESET } from "@/lib/llm/types";
+import type { ProcessingPreset, ProcessingSettings } from "@/lib/llm/types";
 
 // LLM extraction can take several minutes for large PDF/CSV files
 export const maxDuration = 300; // 5 minutes
@@ -32,6 +34,11 @@ export async function POST(
   const { id } = await params;
   const autoConfirm =
     request.nextUrl.searchParams.get("auto_confirm") === "true";
+  const presetParam = request.nextUrl.searchParams.get("preset") as ProcessingPreset | null;
+  const processingSettings: ProcessingSettings =
+    presetParam && PROCESSING_PRESETS[presetParam]
+      ? PROCESSING_PRESETS[presetParam]
+      : PROCESSING_PRESETS[DEFAULT_PRESET];
 
   const supabase = await createClient();
   const {
@@ -99,7 +106,8 @@ export async function POST(
       user.id,
       processedFile,
       fileType,
-      statement.filename
+      statement.filename,
+      processingSettings
     );
 
     // Determine if extraction produced data
@@ -129,6 +137,7 @@ export async function POST(
         statement_start_date: extraction.document.statement_start_date,
         statement_end_date: extraction.document.statement_end_date,
         parse_error: null,
+        processing_settings: processingSettings,
       })
       .eq("id", id);
 

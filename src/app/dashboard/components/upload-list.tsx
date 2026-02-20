@@ -384,6 +384,16 @@ export function UploadList({
                     </div>
                   );
                 })()}
+                {/* Processing settings — 4th line */}
+                {upload.processing_settings && (
+                  <div className="text-xs font-mono text-gray-400">
+                    {upload.processing_settings.model}
+                    {" · "}
+                    {upload.processing_settings.thinkingLevel} thinking
+                    {" · "}
+                    {upload.processing_settings.mediaResolution === "MEDIA_RESOLUTION_HIGH" ? "high res" : "default res"}
+                  </div>
+                )}
               </div>
 
               {/* Status badge */}

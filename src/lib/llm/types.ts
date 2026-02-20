@@ -15,6 +15,56 @@ export interface LLMSettings {
   cliEndpoint: string | null;
 }
 
+// ── Processing presets (per-extraction quality/speed controls) ──
+
+export type ProcessingPreset = "fast" | "balanced" | "quality" | "max_quality";
+
+export interface ProcessingSettings {
+  preset: ProcessingPreset;
+  label: string;
+  backend: "gemini" | "cli";
+  model: string;
+  thinkingLevel: "minimal" | "low" | "medium" | "high";
+  mediaResolution: "MEDIA_RESOLUTION_DEFAULT" | "MEDIA_RESOLUTION_HIGH";
+}
+
+export const PROCESSING_PRESETS: Record<ProcessingPreset, ProcessingSettings> = {
+  fast: {
+    preset: "fast",
+    label: "Fast",
+    backend: "gemini",
+    model: "gemini-3-flash-preview",
+    thinkingLevel: "low",
+    mediaResolution: "MEDIA_RESOLUTION_DEFAULT",
+  },
+  balanced: {
+    preset: "balanced",
+    label: "Balanced",
+    backend: "gemini",
+    model: "gemini-3-flash-preview",
+    thinkingLevel: "low",
+    mediaResolution: "MEDIA_RESOLUTION_HIGH",
+  },
+  quality: {
+    preset: "quality",
+    label: "Quality",
+    backend: "gemini",
+    model: "gemini-3-flash-preview",
+    thinkingLevel: "medium",
+    mediaResolution: "MEDIA_RESOLUTION_HIGH",
+  },
+  max_quality: {
+    preset: "max_quality",
+    label: "Max Quality",
+    backend: "cli",
+    model: "claude-sonnet-4-6",
+    thinkingLevel: "high",
+    mediaResolution: "MEDIA_RESOLUTION_HIGH",
+  },
+};
+
+export const DEFAULT_PRESET: ProcessingPreset = "balanced";
+
 /** Database row shape */
 export interface LLMSettingsRecord {
   id: string;
