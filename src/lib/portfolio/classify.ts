@@ -18,6 +18,7 @@ import {
   GOLD_SYMBOLS,
   REAL_ESTATE_SYMBOLS,
   CASH_SYMBOLS,
+  classifySubAssetClass,
 } from "./asset-class-config";
 
 // ─── Symbol classification ──────────────────────────────────────────────────
@@ -151,10 +152,17 @@ export function classifyPortfolio(
       pos.assetType,
       pos.description
     );
+    const subAssetClassId = classifySubAssetClass(
+      pos.symbol,
+      assetClassId,
+      pos.assetType,
+      pos.description
+    );
     return {
       symbol: pos.symbol,
       description: pos.description ?? "",
       assetClassId,
+      subAssetClassId,
       quantity: pos.quantity - pos.shortQuantity,
       averagePrice: pos.averagePrice,
       marketValue: pos.marketValue,

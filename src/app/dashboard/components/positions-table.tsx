@@ -251,6 +251,33 @@ export function PositionsTable({ positions, accounts, hideValues }: Props) {
     new Set()
   );
 
+  // ── Synthesize cash positions from account balances ──
+  const allPositions = useMemo(() => {
+    const cashPositions: UnifiedPosition[] = [];
+    for (const acct of accounts) {
+      if (acct.cashBalance > 0 && !acct.isAggregate) {
+        cashPositions.push({
+          symbol: "CASH",
+          description: "Cash & Equivalents",
+          assetType: "CASH_EQUIVALENT",
+          assetSubtype: null,
+          quantity: 1,
+          shortQuantity: 0,
+          averagePrice: acct.cashBalance,
+          marketValue: acct.cashBalance,
+          currentDayProfitLoss: 0,
+          currentDayProfitLossPercentage: 0,
+          source: acct.source,
+          accountId: acct.id,
+          accountName: acct.name,
+          accountInstitution: acct.institution,
+          accountNumber: acct.name,
+        });
+      }
+    }
+    return [...positions, ...cashPositions];
+  }, [positions, accounts]);
+
   // ── Handlers ──
   function handleSort(field: SortField) {
     if (sortField === field) {
@@ -290,7 +317,7 @@ export function PositionsTable({ positions, accounts, hideValues }: Props) {
 
   // ── Derived data ──
 
-  if (positions.length === 0) {
+  if (allPositions.length === 0) {
     return (
       <div className="rounded-lg border p-4 text-sm text-gray-500">
         No positions found.
@@ -305,8 +332,8 @@ export function PositionsTable({ positions, accounts, hideValues }: Props) {
   // Filter by selected accounts
   const filtered =
     selectedAccountIds.size === 0
-      ? positions
-      : positions.filter(
+      ? allPositions
+      : allPositions.filter(
           (p) => p.accountId && selectedAccountIds.has(p.accountId)
         );
 
@@ -524,12 +551,12 @@ export function PositionsTable({ positions, accounts, hideValues }: Props) {
                       {/* Quantity */}
                       {!hideValues && (
                         <td className="px-2 py-2 sm:px-4 sm:py-3 tabular-nums">
-                          {pos.quantity}
+                          {pos.symbol === "CASH" && pos.assetType === "CASH_EQUIVALENT" ? "—" : pos.quantity}
                         </td>
                       )}
                       {/* Avg Price */}
                       <td className="px-2 py-2 text-right sm:px-4 sm:py-3 tabular-nums">
-                        ${pos.averagePrice.toFixed(2)}
+                        {pos.symbol === "CASH" && pos.assetType === "CASH_EQUIVALENT" ? "—" : `$${pos.averagePrice.toFixed(2)}`}
                       </td>
                       {/* Market Value */}
                       {!hideValues && (

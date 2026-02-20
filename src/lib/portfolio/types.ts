@@ -9,6 +9,53 @@ export type AssetClassId =
   | "debt"
   | "cash";
 
+/** Sub-asset class IDs for second-level categorization within each asset class. */
+export type SubAssetClassId =
+  // Tech Equities
+  | "tech_individual"
+  | "tech_etfs"
+  | "tech_funds"
+  // Tech Options
+  | "tech_options_calls"
+  | "tech_options_puts"
+  // Non-Tech Equities
+  | "broad_market_etfs"
+  | "large_cap"
+  | "consumer_staples"
+  | "financials"
+  | "healthcare"
+  | "non_tech_other"
+  // Crypto
+  | "bitcoin_etf"
+  | "ethereum_etf"
+  | "crypto_stocks"
+  | "crypto_other"
+  // Gold & Metals
+  | "gold_etfs"
+  | "gold_miners"
+  | "other_metals"
+  // Real Estate
+  | "reit_etfs"
+  | "individual_reits"
+  | "re_funds"
+  // Debt
+  | "mortgage"
+  | "credit_card"
+  | "other_loans"
+  // Cash
+  | "money_market"
+  | "cash_balance";
+
+/** Configuration for a sub-asset class. */
+export interface SubAssetClassDef {
+  id: SubAssetClassId;
+  parentId: AssetClassId;
+  label: string;
+  /** hex color for charts (slightly varied from parent). */
+  chartColor: string;
+  order: number;
+}
+
 /** Configuration for a single asset class. */
 export interface AssetClassDef {
   id: AssetClassId;
@@ -26,6 +73,8 @@ export interface ClassifiedPosition {
   symbol: string;
   description: string;
   assetClassId: AssetClassId;
+  /** Second-level classification within the asset class. */
+  subAssetClassId?: SubAssetClassId;
   quantity: number;
   averagePrice: number;
   marketValue: number;

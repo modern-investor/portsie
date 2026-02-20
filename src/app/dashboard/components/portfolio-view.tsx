@@ -8,6 +8,7 @@ import { Upload, Link2, PieChart, Landmark, List } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PortfolioSummaryBar } from "./portfolio-summary-bar";
 import { PortfolioDonutChart } from "./portfolio-donut-chart";
+import { PortfolioTreemap } from "./portfolio-treemap";
 import { AssetClassCards } from "./asset-class-cards";
 import { PortfolioInsightsCard } from "./portfolio-insights-card";
 import { AssetClassDetail } from "./asset-class-detail";
@@ -239,6 +240,14 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
                 Asset Allocation
               </h3>
               <PortfolioDonutChart
+                assetClasses={portfolio.assetClasses}
+                totalMarketValue={portfolio.totalMarketValue}
+                hideValues={hideValues}
+              />
+            </div>
+
+            <div className="rounded-lg border bg-white p-4 sm:p-6">
+              <PortfolioTreemap
                 assetClasses={portfolio.assetClasses}
                 totalMarketValue={portfolio.totalMarketValue}
                 hideValues={hideValues}
