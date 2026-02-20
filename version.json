@@ -1,12 +1,12 @@
 {
-  "version": "v260219.01 6:21a",
-  "release": 93,
-  "sha": "5f758447",
-  "fullSha": "5f7584479da0d36bb87b38702d680cc93d5811d9",
+  "version": "v260220.01 1:02p",
+  "release": 94,
+  "sha": "e209e17c",
+  "fullSha": "e209e17c2263d19d0b9db362a5460673b94e231b",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000165",
-  "pushedAt": "2026-02-19T12:21:37+00",
-  "commits": [{"sha": "5f7584479da0d36bb87b38702d680cc93d5811d9", "short_sha": "5f758447", "author": "rahulio", "message": "docs: upload pipeline code review and ingestion architecture recommendations"}]
+  "machine": "GitHub Actions 1000000170",
+  "pushedAt": "2026-02-20T19:02:12+00",
+  "commits": [{"sha": "e209e17c2263d19d0b9db362a5460673b94e231b", "short_sha": "e209e17c", "author": "rahulio", "message": "Dashboard: add cash positions, replace donut with bar chart + treemap, add sub-asset classes"}]
 }
