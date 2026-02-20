@@ -32,15 +32,21 @@ export function ConnectionsView({
 }) {
   const searchParams = useSearchParams();
   const urlTab = searchParams.get("tab");
-  const initialTab: ConnectionsSubTab =
+  // Always start with "datalinks" for SSR; localStorage applied in useEffect
+  const [subTab, setSubTab] = useState<ConnectionsSubTab>(
     urlTab === "datalinks" || urlTab === "uploads"
       ? urlTab
-      : urlTab === "institutions"
-        ? "datalinks"
-        : getStoredTab();
-  const [subTab, setSubTab] = useState<ConnectionsSubTab>(initialTab);
+      : "datalinks"
+  );
   const [setupView, setSetupView] = useState<SetupView>("list");
   const [pendingUploadCount, setPendingUploadCount] = useState(0);
+
+  // On mount, restore tab from localStorage if no URL param overrides
+  useEffect(() => {
+    if (!urlTab || (urlTab !== "datalinks" && urlTab !== "uploads")) {
+      setSubTab(getStoredTab());
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync tab when URL search params change (e.g. client-side navigation)
   useEffect(() => {

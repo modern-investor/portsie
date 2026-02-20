@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AlertTriangle, ChevronDown, ChevronUp, X } from "lucide-react";
 import type { PortfolioDiscrepancy } from "@/app/api/portfolio/positions/route";
 
@@ -19,10 +19,12 @@ function fmt(n: number): string {
 }
 
 export function IntegrityWarning({ discrepancies, hideValues }: Props) {
-  const [dismissed, setDismissed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(DISMISS_KEY) === "true";
-  });
+  const [dismissed, setDismissed] = useState(false);
+
+  // On mount, check localStorage for dismissal (avoids SSR/client hydration mismatch)
+  useEffect(() => {
+    if (localStorage.getItem(DISMISS_KEY) === "true") setDismissed(true);
+  }, []);
   const [expanded, setExpanded] = useState(false);
 
   if (dismissed || discrepancies.length === 0) return null;
