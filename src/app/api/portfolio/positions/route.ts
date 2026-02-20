@@ -227,17 +227,18 @@ export async function GET() {
 
         const acctHoldings = holdingsByAccount.get(acct.id) ?? [];
         for (const h of acctHoldings) {
+          const sym = h.symbol ?? h.name ?? "UNKNOWN";
           positions.push({
-            symbol: h.symbol ?? h.name,
+            symbol: sym || "UNKNOWN",
             description: h.description ?? "",
             assetType: h.asset_type ?? "EQUITY",
             assetSubtype: h.asset_subtype ?? null,
-            quantity: Number(h.quantity) || 0,
-            shortQuantity: Number(h.short_quantity) || 0,
-            averagePrice: Number(h.purchase_price) || 0,
-            marketValue: Number(h.market_value) || 0,
-            currentDayProfitLoss: Number(h.day_profit_loss) || 0,
-            currentDayProfitLossPercentage: Number(h.day_profit_loss_pct) || 0,
+            quantity: safeNum(h.quantity),
+            shortQuantity: safeNum(h.short_quantity),
+            averagePrice: safeNum(h.purchase_price),
+            marketValue: safeNum(h.market_value),
+            currentDayProfitLoss: safeNum(h.day_profit_loss),
+            currentDayProfitLossPercentage: safeNum(h.day_profit_loss_pct),
             source: acct.data_source as UnifiedPosition["source"],
             accountId: acct.id,
             accountName: accountLabel,
@@ -271,17 +272,18 @@ export async function GET() {
 
         const acctHoldings = holdingsByAccount.get(acct.id) ?? [];
         for (const h of acctHoldings) {
+          const sym = h.symbol ?? h.name ?? "UNKNOWN";
           aggregatePositions.push({
-            symbol: h.symbol ?? h.name,
+            symbol: sym || "UNKNOWN",
             description: h.description ?? "",
             assetType: h.asset_type ?? "EQUITY",
             assetSubtype: h.asset_subtype ?? null,
-            quantity: Number(h.quantity) || 0,
-            shortQuantity: Number(h.short_quantity) || 0,
-            averagePrice: Number(h.purchase_price) || 0,
-            marketValue: Number(h.market_value) || 0,
-            currentDayProfitLoss: Number(h.day_profit_loss) || 0,
-            currentDayProfitLossPercentage: Number(h.day_profit_loss_pct) || 0,
+            quantity: safeNum(h.quantity),
+            shortQuantity: safeNum(h.short_quantity),
+            averagePrice: safeNum(h.purchase_price),
+            marketValue: safeNum(h.market_value),
+            currentDayProfitLoss: safeNum(h.day_profit_loss),
+            currentDayProfitLossPercentage: safeNum(h.day_profit_loss_pct),
             source: acct.data_source as UnifiedPosition["source"],
             accountId: acct.id,
             accountName: accountLabel,
@@ -379,6 +381,12 @@ export async function GET() {
 }
 
 // ── Helpers ──
+
+/** Convert a DB value to a safe number (never NaN). */
+function safeNum(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
 
 function schwabToUnified(
   pos: SchwabPosition,

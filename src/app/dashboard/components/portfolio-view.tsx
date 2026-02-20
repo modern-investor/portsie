@@ -92,6 +92,12 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
 
         const data: PortfolioData = await res.json();
 
+        // Ensure arrays are present (guard against malformed API responses)
+        if (!Array.isArray(data.positions)) data.positions = [];
+        if (!Array.isArray(data.accounts)) data.accounts = [];
+        if (!Array.isArray(data.aggregatePositions)) data.aggregatePositions = [];
+        if (!Array.isArray(data.aggregateAccounts)) data.aggregateAccounts = [];
+
         // No data from any source (check both regular and aggregate)
         const hasRegularData =
           data.positions.length > 0 ||
