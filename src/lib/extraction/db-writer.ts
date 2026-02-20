@@ -301,9 +301,33 @@ async function writeAccountData(
     balancesWritten = data?.length ?? 0;
   }
 
-  // ── 4. Write transactions ──
+  // ── 4. Write transactions (deduplicate by content first) ──
   if (account.transactions.length > 0) {
-    const transactionRows = account.transactions.map((t, index) => ({
+    // Deduplicate: LLMs sometimes emit duplicate rows for the same real-world transaction
+    const seenTxKeys = new Map<string, ExtractionTransaction>();
+    for (const t of account.transactions) {
+      const key = [
+        t.transaction_date,
+        t.symbol ?? "",
+        t.action,
+        t.quantity ?? "",
+        t.price_per_share ?? "",
+        t.total_amount,
+      ].join("|");
+      if (!seenTxKeys.has(key)) {
+        seenTxKeys.set(key, t);
+      } else {
+        // Merge fees/commission into first occurrence if the dupe has them
+        const existing = seenTxKeys.get(key)!;
+        if (t.fees != null && (existing.fees == null || existing.fees === 0))
+          existing.fees = t.fees;
+        if (t.commission != null && (existing.commission == null || existing.commission === 0))
+          existing.commission = t.commission;
+      }
+    }
+    const dedupedTransactions = Array.from(seenTxKeys.values());
+
+    const transactionRows = dedupedTransactions.map((t, index) => ({
       user_id: userId,
       account_id: accountId,
       data_source: "manual_upload",

@@ -37,11 +37,14 @@ export interface ExistingAccountForMatching {
 // ── Helpers ──
 
 /**
- * Strip leading dots/ellipsis from account number for comparison.
- * "...902" → "902", "5902" → "5902"
+ * Extract digits from an account number and return both the full digits
+ * and the last 4 digits for flexible matching.
+ * Handles various masking styles: "...5902", "****5902", "XXX902", etc.
  */
-function stripPrefix(num: string): string {
-  return num.replace(/^\.+/, "").trim();
+function accountNumberDigits(num: string): { full: string; last4: string | null } {
+  const digits = num.replace(/\D/g, "");
+  const last4 = digits.length >= 4 ? digits.slice(-4) : null;
+  return { full: digits, last4 };
 }
 
 /**
@@ -80,41 +83,36 @@ function matchByNumber(
 ): { accountId: string; confidence: Confidence; reason: string } | null {
   if (!info.account_number) return null;
 
-  const detected = stripPrefix(info.account_number);
-  if (detected.length < 2) return null; // Too short to match
+  const detected = accountNumberDigits(info.account_number);
+  if (detected.full.length < 2) return null; // Too short to match
 
   for (const acct of existing) {
     if (!acct.account_number_hint) continue;
-    const hint = stripPrefix(acct.account_number_hint);
+    const hint = accountNumberDigits(acct.account_number_hint);
+    if (hint.full.length < 2) continue;
 
-    // Exact match
-    if (hint === detected) {
+    // Exact digits match
+    if (hint.full === detected.full) {
       return {
         accountId: acct.id,
         confidence: "high",
-        reason: `Exact account number match (${hint})`,
+        reason: `Exact account number match (${hint.full})`,
       };
     }
 
-    // Partial match: last 4 digits
-    if (
-      hint.length >= 4 &&
-      detected.length >= 4 &&
-      (hint.endsWith(detected.slice(-4)) || detected.endsWith(hint.slice(-4)))
-    ) {
+    // Last 4 digits match
+    if (hint.last4 && detected.last4 && hint.last4 === detected.last4) {
       return {
         accountId: acct.id,
         confidence: "high",
-        reason: `Account number match on last 4 digits (${detected.slice(-4)})`,
+        reason: `Account number match on last 4 digits (${detected.last4})`,
       };
     }
 
-    // Partial match: last 3 digits (lower confidence)
-    if (
-      hint.length >= 3 &&
-      detected.length >= 3 &&
-      (hint.endsWith(detected.slice(-3)) || detected.endsWith(hint.slice(-3)))
-    ) {
+    // Last 3 digits match (lower confidence)
+    const hintLast3 = hint.full.length >= 3 ? hint.full.slice(-3) : null;
+    const detectedLast3 = detected.full.length >= 3 ? detected.full.slice(-3) : null;
+    if (hintLast3 && detectedLast3 && hintLast3 === detectedLast3) {
       // Additional validation: institution must also match if available
       if (
         info.institution_name &&
@@ -130,7 +128,7 @@ function matchByNumber(
       return {
         accountId: acct.id,
         confidence: "medium",
-        reason: `Account number match on last 3 digits (${detected.slice(-3)})`,
+        reason: `Account number match on last 3 digits (${detectedLast3})`,
       };
     }
   }
