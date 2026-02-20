@@ -1,12 +1,12 @@
 {
-  "version": "v260220.02 1:06p",
-  "release": 95,
-  "sha": "f69d62e2",
-  "fullSha": "f69d62e2ef5aa89d4401e3c921e055d9acb32768",
+  "version": "v260220.03 1:06p",
+  "release": 96,
+  "sha": "1db07035",
+  "fullSha": "1db07035d0a6a5902a95b3a39acef11454ffa502",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000174",
-  "pushedAt": "2026-02-20T19:06:18+00",
-  "commits": [{"sha": "f69d62e2ef5aa89d4401e3c921e055d9acb32768", "short_sha": "f69d62e2", "author": "rahulio", "message": "Merge branch 'claude/vibrant-curran'"}, {"sha": "5a383682b069e67906f709bd744b34d1f760e1b3", "short_sha": "5a383682", "author": "rahulio", "message": "Improve extraction pipeline accuracy, normalization, and reliability"}]
+  "machine": "GitHub Actions 1000000177",
+  "pushedAt": "2026-02-20T19:06:44+00",
+  "commits": [{"sha": "1db07035d0a6a5902a95b3a39acef11454ffa502", "short_sha": "1db07035", "author": "Rahul", "message": "Restyle portfolio tabs: bigger, bolder, brand blue active state (#29)"}]
 }
