@@ -246,14 +246,21 @@ export function UploadReview({
     setSaving(true);
     setSaveError(null);
     try {
+      // 2-minute timeout for large multi-account documents
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 120_000);
+
       const res = await fetch(`/api/upload/${upload.id}/confirm`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
+
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to save");
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || `Save failed (${res.status})`);
       }
       // Refresh the upload record to get confirmed_at
       const detailRes = await fetch(`/api/upload/${upload.id}`);
@@ -262,7 +269,11 @@ export function UploadReview({
         onSaved?.(updated);
       }
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Failed to save");
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setSaveError("Save timed out — try again or re-extract");
+      } else {
+        setSaveError(err instanceof Error ? err.message : "Failed to save");
+      }
     } finally {
       setSaving(false);
     }
