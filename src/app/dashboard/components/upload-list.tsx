@@ -367,7 +367,17 @@ export function UploadList({
                     </span>
                   )}
                 </div>
-                {/* Processing timestamps — 3rd line */}
+                {/* Processing settings — 3rd line */}
+                {upload.processing_settings && (
+                  <div className="text-xs font-mono text-gray-400">
+                    {upload.processing_settings.model}
+                    {" · "}
+                    {upload.processing_settings.thinkingLevel} thinking
+                    {" · "}
+                    {upload.processing_settings.mediaResolution === "MEDIA_RESOLUTION_HIGH" ? "high res" : "default res"}
+                  </div>
+                )}
+                {/* Processing timestamps — 4th line */}
                 {(() => {
                   const ts = timestamps[upload.id];
                   if (!ts) return null;
@@ -384,16 +394,6 @@ export function UploadList({
                     </div>
                   );
                 })()}
-                {/* Processing settings — 4th line */}
-                {upload.processing_settings && (
-                  <div className="text-xs font-mono text-gray-400">
-                    {upload.processing_settings.model}
-                    {" · "}
-                    {upload.processing_settings.thinkingLevel} thinking
-                    {" · "}
-                    {upload.processing_settings.mediaResolution === "MEDIA_RESOLUTION_HIGH" ? "high res" : "default res"}
-                  </div>
-                )}
               </div>
 
               {/* Status badge */}
