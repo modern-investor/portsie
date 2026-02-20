@@ -408,7 +408,11 @@ async function writeAccountData(
 /**
  * Write a validated PortsieExtraction to the database.
  *
- * Pure deterministic function: takes extraction + account map, writes everything.
+ * Optimized for large multi-account documents (50+ accounts):
+ *   - Batch creates new accounts (1 INSERT instead of N)
+ *   - Batch writes balance snapshots for balance-only accounts (1 UPSERT instead of N)
+ *   - Parallelizes account summary updates (concurrent instead of sequential)
+ *   - Only processes accounts with positions/transactions individually
  *
  * @param supabase - Supabase client with user auth
  * @param userId - User's UUID
@@ -438,44 +442,143 @@ export async function writeExtraction(
     transactions_created: 0,
   };
 
-  // ── Process each account mapping ──
+  // ── Phase 1: Resolve all account IDs (batch create new accounts) ──
+  const accountIdMap = new Map<
+    number,
+    { id: string; action: "matched" | "created" }
+  >();
+  const newAccountsToCreate: Array<{
+    extractionIndex: number;
+    info: ExtractionAccount["account_info"];
+  }> = [];
+
   for (const mapping of accountMap.mappings) {
     const account = extraction.accounts[mapping.extraction_index];
     if (!account) continue;
-
-    // Skip accounts with no data at all
     const hasData =
       account.positions.length > 0 ||
       account.transactions.length > 0 ||
       account.balances.length > 0;
     if (!hasData) continue;
 
-    // Resolve account_id
-    let accountId: string;
-    let action: "matched" | "created";
-
     if (mapping.action === "match_existing" && mapping.account_id) {
-      accountId = mapping.account_id;
-      action = "matched";
+      accountIdMap.set(mapping.extraction_index, {
+        id: mapping.account_id,
+        action: "matched",
+      });
     } else {
-      accountId = await createAccount(supabase, userId, account.account_info);
-      action = "created";
-      totals.accounts_created++;
+      newAccountsToCreate.push({
+        extractionIndex: mapping.extraction_index,
+        info: account.account_info,
+      });
     }
+  }
 
-    linkedAccountIds.push(accountId);
+  // Batch insert new accounts (single DB call instead of N)
+  if (newAccountsToCreate.length > 0) {
+    const rows = newAccountsToCreate.map(({ info }) => ({
+      user_id: userId,
+      data_source: "manual_upload" as const,
+      schwab_account_number: info.account_number ?? null,
+      account_type: info.account_type ?? null,
+      account_nickname:
+        info.account_nickname ||
+        `${info.institution_name || "Unknown"} Account`,
+      institution_name: info.institution_name || "Unknown",
+      account_group: info.account_group ?? null,
+      account_category: accountTypeToCategory(info.account_type),
+      is_active: true,
+    }));
 
+    const { data, error } = await supabase
+      .from("accounts")
+      .insert(rows)
+      .select("id");
+
+    if (!error && data) {
+      for (let i = 0; i < newAccountsToCreate.length; i++) {
+        accountIdMap.set(newAccountsToCreate[i].extractionIndex, {
+          id: data[i].id,
+          action: "created",
+        });
+      }
+      totals.accounts_created = newAccountsToCreate.length;
+    } else {
+      // Fallback: create individually (handles unique constraint conflicts)
+      console.warn(
+        "Batch account creation failed, falling back to individual:",
+        error?.message
+      );
+      for (const { extractionIndex, info } of newAccountsToCreate) {
+        try {
+          const accountId = await createAccount(supabase, userId, info);
+          accountIdMap.set(extractionIndex, {
+            id: accountId,
+            action: "created",
+          });
+          totals.accounts_created++;
+        } catch (err) {
+          console.error(
+            `Failed to create account for index ${extractionIndex}:`,
+            err
+          );
+        }
+      }
+    }
+  }
+
+  // ── Phase 2: Categorize accounts ──
+  // "data accounts" have positions or transactions → need individual processing
+  // "balance-only accounts" → can batch for massive speedup
+  interface AccountEntry {
+    accountId: string;
+    action: "matched" | "created";
+    account: ExtractionAccount;
+    isNew: boolean;
+  }
+  const dataAccounts: AccountEntry[] = [];
+  const balanceOnlyAccounts: AccountEntry[] = [];
+
+  for (const mapping of accountMap.mappings) {
+    const account = extraction.accounts[mapping.extraction_index];
+    if (!account) continue;
+    const resolved = accountIdMap.get(mapping.extraction_index);
+    if (!resolved) continue;
+
+    linkedAccountIds.push(resolved.id);
+
+    const hasPositionsOrTxns =
+      account.positions.length > 0 || account.transactions.length > 0;
+    const hasData = hasPositionsOrTxns || account.balances.length > 0;
+    if (!hasData) continue;
+
+    const entry: AccountEntry = {
+      accountId: resolved.id,
+      action: resolved.action,
+      account,
+      isNew: resolved.action === "created",
+    };
+
+    if (hasPositionsOrTxns) {
+      dataAccounts.push(entry);
+    } else {
+      balanceOnlyAccounts.push(entry);
+    }
+  }
+
+  // ── Phase 3: Process data accounts individually (have positions/transactions) ──
+  for (const entry of dataAccounts) {
     try {
       const result = await writeAccountData(
         supabase,
         userId,
-        accountId,
+        entry.accountId,
         statementId,
-        account,
+        entry.account,
         extraction.document.statement_start_date,
         extraction.document.statement_end_date
       );
-      result.action = action;
+      result.action = entry.action;
       accountResults.push(result);
 
       totals.accounts_processed++;
@@ -487,14 +590,117 @@ export async function writeExtraction(
       totals.transactions_created += result.transactions_created;
     } catch (err) {
       console.error(
-        `Failed to write data for account ${accountId} (index ${mapping.extraction_index}):`,
+        `Failed to write data for account ${entry.accountId}:`,
         err
       );
-      // Continue with other accounts
     }
   }
 
-  // ── Handle unallocated (aggregate) positions ──
+  // ── Phase 4: Batch process balance-only accounts ──
+  // Instead of N sequential DB calls per account, uses 1 batch upsert + parallel summaries
+  if (balanceOnlyAccounts.length > 0) {
+    // Collect all balance rows for a single batch upsert
+    const allBalanceRows: Array<Record<string, unknown>> = [];
+
+    for (const entry of balanceOnlyAccounts) {
+      const deduped = deduplicateBalances(entry.account.balances);
+      for (const b of deduped) {
+        allBalanceRows.push({
+          user_id: userId,
+          account_id: entry.accountId,
+          snapshot_date: b.snapshot_date,
+          snapshot_type: "manual",
+          data_source: "manual_upload",
+          liquidation_value: b.liquidation_value ?? null,
+          cash_balance: b.cash_balance ?? null,
+          available_funds: b.available_funds ?? null,
+          total_cash: b.total_cash ?? null,
+          equity: b.equity ?? null,
+          long_market_value: b.long_market_value ?? null,
+          buying_power: b.buying_power ?? null,
+          uploaded_statement_id: statementId,
+        });
+      }
+
+      accountResults.push({
+        account_id: entry.accountId,
+        account_nickname:
+          entry.account.account_info.account_nickname ||
+          `${entry.account.account_info.institution_name || "Unknown"} Account`,
+        action: entry.action,
+        holdings_created: 0,
+        holdings_updated: 0,
+        holdings_closed: 0,
+        snapshots_written: 0,
+        balances_written: deduped.length,
+        transactions_created: 0,
+      });
+      totals.accounts_processed++;
+      totals.balances_written += deduped.length;
+    }
+
+    // Single batch upsert for all balance snapshots (1 DB call instead of N)
+    if (allBalanceRows.length > 0) {
+      const { error } = await supabase
+        .from("balance_snapshots")
+        .upsert(allBalanceRows, {
+          onConflict: "account_id,snapshot_date,snapshot_type",
+        });
+      if (error) {
+        console.error("Batch balance write failed:", error.message);
+      }
+    }
+
+    // Parallel update account summaries (concurrent instead of sequential)
+    await Promise.all(
+      balanceOnlyAccounts.map(async (entry) => {
+        const latestBalance =
+          entry.account.balances[entry.account.balances.length - 1];
+
+        let equityValue = 0;
+        let holdingsCount = 0;
+
+        // For existing accounts, check for prior holdings from previous uploads
+        if (!entry.isNew) {
+          const { data: holdings } = await supabase
+            .from("holdings")
+            .select("market_value")
+            .eq("account_id", entry.accountId)
+            .gt("quantity", 0);
+          equityValue = (holdings ?? []).reduce(
+            (sum, h) => sum + (Number(h.market_value) || 0),
+            0
+          );
+          holdingsCount = (holdings ?? []).length;
+        }
+
+        const totalMarketValue =
+          latestBalance?.liquidation_value ??
+          equityValue + (latestBalance?.cash_balance ?? 0);
+
+        const updateData: Record<string, unknown> = {
+          total_market_value: totalMarketValue,
+          equity_value: equityValue,
+          cash_balance: latestBalance?.cash_balance ?? null,
+          buying_power: latestBalance?.buying_power ?? null,
+          holdings_count: holdingsCount,
+          last_synced_at: new Date().toISOString(),
+        };
+
+        if (latestBalance?.liquidation_value != null) {
+          updateData.document_reported_total = latestBalance.liquidation_value;
+          updateData.document_reported_date = latestBalance.snapshot_date;
+        }
+
+        await supabase
+          .from("accounts")
+          .update(updateData)
+          .eq("id", entry.accountId);
+      })
+    );
+  }
+
+  // ── Phase 5: Handle unallocated (aggregate) positions ──
   let aggregateResult: WriteReport["aggregate_result"] = null;
 
   if (extraction.unallocated_positions.length > 0) {
@@ -516,10 +722,7 @@ export async function writeExtraction(
       linkedAccountIds.push(aggAccountId);
 
       // Compute a synthetic balance for the aggregate account by summing
-      // individual accounts' liquidation values. This ensures the aggregate
-      // account total matches the document's stated total rather than being
-      // recomputed from holdings (which may differ due to rounding, dedup,
-      // or LLM-computed vs document-stated market values).
+      // individual accounts' liquidation values
       const snapshotDate =
         extraction.document.statement_end_date ??
         extraction.unallocated_positions[0]?.snapshot_date ??
@@ -587,7 +790,7 @@ export async function writeExtraction(
     }
   }
 
-  // ── Update uploaded_statements metadata ──
+  // ── Phase 6: Update uploaded_statements metadata ──
   await supabase
     .from("uploaded_statements")
     .update({

@@ -70,8 +70,10 @@ export async function reconcileHoldings(
     }
   }
 
-  // 3. Process each incoming position
+  // 3. Process each incoming position — detect changes and collect DB operations
   const incomingSymbols = new Set<string>();
+  const newHoldingRows: Array<Record<string, unknown>> = [];
+  const updateQueue: Array<{ id: string; symbol: string; data: Record<string, unknown> }> = [];
 
   for (const [symbol, pos] of incomingMap) {
     incomingSymbols.add(symbol);
@@ -119,9 +121,6 @@ export async function reconcileHoldings(
       });
     }
 
-    // Upsert the holding — manual select+insert/update because the unique
-    // index uses an expression (COALESCE(symbol,'')) that PostgREST can't
-    // resolve via onConflict.
     const holdingData = {
       user_id: userId,
       account_id: accountId,
@@ -149,25 +148,37 @@ export async function reconcileHoldings(
       last_updated_from: `upload:${statementId}`,
     };
 
-    let error: { message: string } | null = null;
-
     if (existing) {
-      // Update existing holding
-      const { error: updateErr } = await supabase
-        .from("holdings")
-        .update(holdingData)
-        .eq("id", existing.id);
-      error = updateErr;
+      updateQueue.push({ id: existing.id, symbol, data: holdingData });
     } else {
-      // Insert new holding
-      const { error: insertErr } = await supabase
-        .from("holdings")
-        .insert(holdingData);
-      error = insertErr;
+      newHoldingRows.push(holdingData);
     }
+  }
 
+  // Batch insert new holdings (1 DB call instead of N)
+  if (newHoldingRows.length > 0) {
+    const { error } = await supabase.from("holdings").insert(newHoldingRows);
     if (error) {
-      console.error(`Failed to upsert holding ${symbol}:`, error.message);
+      // Fallback: insert individually (handles edge cases like constraint conflicts)
+      console.warn("Batch holdings insert failed, falling back to individual:", error.message);
+      for (const row of newHoldingRows) {
+        const { error: e } = await supabase.from("holdings").insert(row);
+        if (e) console.error(`Failed to insert holding ${row.symbol}:`, e.message);
+        else upserted++;
+      }
+    } else {
+      upserted += newHoldingRows.length;
+    }
+  }
+
+  // Update existing holdings individually (can't batch different WHERE clauses)
+  for (const { id, symbol, data } of updateQueue) {
+    const { error } = await supabase
+      .from("holdings")
+      .update(data)
+      .eq("id", id);
+    if (error) {
+      console.error(`Failed to update holding ${symbol}:`, error.message);
     } else {
       upserted++;
     }

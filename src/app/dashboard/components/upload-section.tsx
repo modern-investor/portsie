@@ -233,6 +233,44 @@ export function UploadSection({
           return next;
         });
       }
+      // Client-side auto-confirm fallback: if server-side auto_confirm failed
+      // (e.g., timeout on large 50+ account documents), trigger a separate
+      // confirm request for each extracted-but-not-confirmed file.
+      if (batchConfirmedIds.length === 0) {
+        const latestUploads = uploadsRef.current;
+        const extractedIds = ids.filter((fid) => {
+          const u = latestUploads.find((up) => up.id === fid);
+          return (
+            u &&
+            ["extracted", "partial"].includes(u.parse_status) &&
+            !u.confirmed_at
+          );
+        });
+
+        for (const eid of extractedIds) {
+          try {
+            const confirmRes = await fetch(`/api/upload/${eid}/confirm`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({}),
+            });
+            if (confirmRes.ok) {
+              batchConfirmedIds.push(eid);
+              // Refresh the upload record
+              const detailRes = await fetch(`/api/upload/${eid}`);
+              if (detailRes.ok) {
+                const updated = await detailRes.json();
+                setUploads((prev) =>
+                  prev.map((u) => (u.id === eid ? updated : u))
+                );
+              }
+            }
+          } catch {
+            // Client-side confirm failed — user can still manually save
+          }
+        }
+      }
+
       // After batch completes, auto-open review for the first file that has data.
       // We use the setUploads updater to read latest state (closure is stale).
       setUploads((prev) => {
@@ -240,7 +278,7 @@ export function UploadSection({
           const u = prev.find((up) => up.id === fid);
           return u && ["completed", "extracted", "partial"].includes(u.parse_status);
         });
-        if (reviewable) setReviewingId(reviewable);
+        if (reviewable && batchConfirmedIds.length === 0) setReviewingId(reviewable);
         return prev;
       });
       if (batchConfirmedIds.length > 0) {
