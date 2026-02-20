@@ -1,12 +1,12 @@
 {
-  "version": "v260220.03 1:06p",
-  "release": 96,
-  "sha": "1db07035",
-  "fullSha": "1db07035d0a6a5902a95b3a39acef11454ffa502",
+  "version": "v260220.04 1:37p",
+  "release": 97,
+  "sha": "a7010ee1",
+  "fullSha": "a7010ee14c98671a93c05619fdb8ce9f1e9d6972",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000177",
-  "pushedAt": "2026-02-20T19:06:44+00",
-  "commits": [{"sha": "1db07035d0a6a5902a95b3a39acef11454ffa502", "short_sha": "1db07035", "author": "Rahul", "message": "Restyle portfolio tabs: bigger, bolder, brand blue active state (#29)"}]
+  "machine": "GitHub Actions 1000000183",
+  "pushedAt": "2026-02-20T19:37:47+00",
+  "commits": [{"sha": "a7010ee14c98671a93c05619fdb8ce9f1e9d6972", "short_sha": "a7010ee1", "author": "rahulio", "message": "Add processing preset dropdown to upload page"}]
 }
