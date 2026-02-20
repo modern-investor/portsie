@@ -158,6 +158,7 @@ export function classifySubAssetClass(
   instrumentType: string,
   description?: string
 ): SubAssetClassId | undefined {
+  if (!symbol) return undefined;
   const sym = symbol.toUpperCase();
   const desc = (description ?? "").toUpperCase();
 

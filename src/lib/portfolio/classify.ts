@@ -32,6 +32,7 @@ function classifySymbol(
   instrumentType: string,
   description?: string
 ): { assetClassId: AssetClassId; subCategory?: string } {
+  if (!symbol) return { assetClassId: "non_tech_equities" };
   const sym = symbol.toUpperCase();
   const desc = (description ?? "").toUpperCase();
 
