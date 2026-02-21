@@ -230,28 +230,54 @@ function TransactionsTable({ transactions }: { transactions: ExtractionTransacti
   );
 }
 
+/** Format model name for display */
+function formatModelName(model: string): string {
+  const names: Record<string, string> = {
+    "claude-sonnet-4-6": "Sonnet 4.6",
+    "claude-opus-4-6": "Opus 4.6",
+    "claude-sonnet-4-5-20250929": "Sonnet 4.5",
+    "gemini-3-flash-preview": "Gemini 3 Flash",
+    "gemini-2.5-flash": "Gemini 2.5 Flash",
+  };
+  return names[model] || model;
+}
+
 /** Verification comparison section */
 function VerificationSection({
   primaryExtraction,
   verificationData,
   verificationError,
   verificationSettings,
+  processingSettings,
 }: {
   primaryExtraction: PortsieExtraction;
   verificationData: PortsieExtraction | null;
   verificationError: string | null;
   verificationSettings: { backend: string; model: string } | null;
+  processingSettings: { backend: string; model: string; preset?: string; label?: string } | null;
 }) {
+  const [showDetails, setShowDetails] = useState(false);
+
+  const primaryLabel = processingSettings
+    ? formatModelName(processingSettings.model)
+    : "Primary";
+  const verifyLabel = verificationSettings
+    ? formatModelName(verificationSettings.model)
+    : "Verification";
+
   if (verificationError) {
     return (
       <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-        <p className="font-medium">Verification failed</p>
+        <div className="flex items-center gap-2">
+          <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <p className="font-medium">Verification failed</p>
+        </div>
         <p className="mt-1 text-xs">{verificationError}</p>
-        {verificationSettings && (
-          <p className="mt-1 text-xs text-amber-600">
-            Model: {verificationSettings.model} ({verificationSettings.backend})
-          </p>
-        )}
+        <p className="mt-1 text-xs text-amber-600">
+          {primaryLabel} (primary) → {verifyLabel} (verification)
+        </p>
       </div>
     );
   }
@@ -260,43 +286,93 @@ function VerificationSection({
 
   const comparison: ComparisonResult = compareExtractions(primaryExtraction, verificationData);
 
+  const isAgreement = comparison.agreement === "full";
+  const isMinor = comparison.agreement === "minor_differences";
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-700">
-          Dual-Model Verification
-        </h4>
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-            comparison.agreement === "full"
-              ? "bg-green-100 text-green-700"
-              : comparison.agreement === "minor_differences"
-                ? "bg-amber-100 text-amber-700"
-                : "bg-red-100 text-red-700"
-          }`}
-        >
-          {comparison.agreement === "full"
-            ? "Models agree"
-            : comparison.agreement === "minor_differences"
-              ? `${comparison.summary.total} minor difference${comparison.summary.total !== 1 ? "s" : ""}`
-              : `${comparison.summary.errors} significant difference${comparison.summary.errors !== 1 ? "s" : ""}`}
-        </span>
+    <div
+      className={`rounded-md border p-3 text-sm ${
+        isAgreement
+          ? "border-green-200 bg-green-50"
+          : isMinor
+            ? "border-amber-200 bg-amber-50"
+            : "border-red-200 bg-red-50"
+      }`}
+    >
+      {/* Outcome summary line */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          {isAgreement ? (
+            <svg className="h-4 w-4 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          ) : (
+            <svg className="h-4 w-4 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          )}
+          <div>
+            <p className={`font-medium ${isAgreement ? "text-green-800" : isMinor ? "text-amber-800" : "text-red-800"}`}>
+              {isAgreement
+                ? "Models in agreement"
+                : isMinor
+                  ? "Minor discrepancies detected"
+                  : "Significant discrepancies detected"}
+            </p>
+            <p className="mt-0.5 text-xs text-gray-500">
+              {primaryLabel} → {verifyLabel}
+              {!isAgreement && (
+                <span>
+                  {" · "}
+                  {comparison.summary.errors > 0 && (
+                    <span className="font-medium text-red-600">
+                      {comparison.summary.errors} error{comparison.summary.errors !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                  {comparison.summary.errors > 0 && comparison.summary.warnings > 0 && ", "}
+                  {comparison.summary.warnings > 0 && (
+                    <span className="font-medium text-amber-600">
+                      {comparison.summary.warnings} warning{comparison.summary.warnings !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                  {(comparison.summary.errors > 0 || comparison.summary.warnings > 0) && comparison.summary.infos > 0 && ", "}
+                  {comparison.summary.infos > 0 && (
+                    <span className="text-gray-500">
+                      {comparison.summary.infos} info
+                    </span>
+                  )}
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+
+        {comparison.discrepancies.length > 0 && (
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className="shrink-0 text-xs text-gray-500 hover:text-gray-700 underline"
+          >
+            {showDetails ? "Hide details" : "Show details"}
+          </button>
+        )}
       </div>
 
-      {verificationSettings && (
-        <p className="text-xs text-gray-400">
-          Verified with: {verificationSettings.model} ({verificationSettings.backend})
+      {/* Agreement detail */}
+      {isAgreement && (
+        <p className="mt-1.5 text-xs text-green-700">
+          Both models produced identical extraction results.
         </p>
       )}
 
-      {comparison.discrepancies.length > 0 && (
-        <div className="max-h-48 overflow-auto rounded-md border">
+      {/* Discrepancy table (collapsible) */}
+      {showDetails && comparison.discrepancies.length > 0 && (
+        <div className="mt-3 max-h-48 overflow-auto rounded-md border bg-white">
           <table className="w-full text-xs">
             <thead>
               <tr className="sticky top-0 border-b bg-gray-50 text-left text-gray-500">
                 <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Issue</th>
-                <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Primary</th>
-                <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Verification</th>
+                <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">{primaryLabel}</th>
+                <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">{verifyLabel}</th>
               </tr>
             </thead>
             <tbody>
@@ -334,12 +410,6 @@ function VerificationSection({
             </tbody>
           </table>
         </div>
-      )}
-
-      {comparison.discrepancies.length === 0 && (
-        <p className="text-xs text-green-600">
-          Both models produced identical extraction results.
-        </p>
       )}
     </div>
   );
@@ -471,6 +541,17 @@ export function UploadReview({
         </div>
       )}
 
+      {/* Verification comparison — shown prominently before data tables */}
+      {(verificationData || upload.verification_error) && (
+        <VerificationSection
+          primaryExtraction={extraction}
+          verificationData={verificationData}
+          verificationError={upload.verification_error}
+          verificationSettings={upload.verification_settings}
+          processingSettings={upload.processing_settings}
+        />
+      )}
+
       {/* Summary counts */}
       <div className="flex flex-wrap gap-2 text-sm sm:gap-4">
         {isMultiAccount && (
@@ -541,16 +622,6 @@ export function UploadReview({
             ))}
           </div>
         </div>
-      )}
-
-      {/* Verification comparison */}
-      {(verificationData || upload.verification_error) && (
-        <VerificationSection
-          primaryExtraction={extraction}
-          verificationData={verificationData}
-          verificationError={upload.verification_error}
-          verificationSettings={upload.verification_settings}
-        />
       )}
 
       {/* Actions */}
