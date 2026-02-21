@@ -1,12 +1,12 @@
 {
-  "version": "v260221.06 11:16a",
-  "release": 110,
-  "sha": "b73a7cde",
-  "fullSha": "b73a7cde31ab11bc320ad50888af71f2037d2a5f",
+  "version": "v260221.07 11:18a",
+  "release": 111,
+  "sha": "5347b08e",
+  "fullSha": "5347b08e72c8834cad7feacfb56b711edcdbdf68",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000252",
-  "pushedAt": "2026-02-21T17:16:12+00",
-  "commits": [{"sha": "b73a7cde31ab11bc320ad50888af71f2037d2a5f", "short_sha": "b73a7cde", "author": "rahulio", "message": "Trust account liquidation values when positions are in aggregate account"}]
+  "machine": "GitHub Actions 1000000256",
+  "pushedAt": "2026-02-21T17:18:46+00",
+  "commits": [{"sha": "5347b08e72c8834cad7feacfb56b711edcdbdf68", "short_sha": "5347b08e", "author": "Rahul", "message": "Merge pull request #42 from modern-investor/claude/recursing-hopper"}, {"sha": "c585930ebd78e8c9329033b52f0c3c50f58a09e5", "short_sha": "c585930e", "author": "rahulio", "message": "Fix false-positive account discrepancies in dual-model verification"}]
 }
