@@ -32,15 +32,26 @@ export function ConnectionsView({
 }) {
   const searchParams = useSearchParams();
   const urlTab = searchParams.get("tab");
-  const initialTab: ConnectionsSubTab =
+  // Determine URL-based tab (consistent on server and client)
+  const urlTabResolved: ConnectionsSubTab | null =
     urlTab === "datalinks" || urlTab === "uploads"
       ? urlTab
       : urlTab === "institutions"
         ? "datalinks"
-        : getStoredTab();
-  const [subTab, setSubTab] = useState<ConnectionsSubTab>(initialTab);
+        : null;
+  // Always start with a deterministic default to avoid hydration mismatch;
+  // localStorage is read in a mount effect below.
+  const [subTab, setSubTab] = useState<ConnectionsSubTab>(urlTabResolved ?? "datalinks");
   const [setupView, setSetupView] = useState<SetupView>("list");
   const [pendingUploadCount, setPendingUploadCount] = useState(0);
+
+  // After hydration, sync with localStorage if no URL tab param
+  useEffect(() => {
+    if (!urlTabResolved) {
+      const stored = getStoredTab();
+      setSubTab(stored);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync tab when URL search params change (e.g. client-side navigation)
   useEffect(() => {
