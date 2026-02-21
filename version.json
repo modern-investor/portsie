@@ -1,12 +1,12 @@
 {
-  "version": "v260221.05 11:03a",
-  "release": 109,
-  "sha": "3b87da80",
-  "fullSha": "3b87da8066f61666be46f2962736e83c67a9d6b8",
+  "version": "v260221.06 11:16a",
+  "release": 110,
+  "sha": "b73a7cde",
+  "fullSha": "b73a7cde31ab11bc320ad50888af71f2037d2a5f",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000247",
-  "pushedAt": "2026-02-21T17:03:21+00",
-  "commits": [{"sha": "3b87da8066f61666be46f2962736e83c67a9d6b8", "short_sha": "3b87da80", "author": "rahulio", "message": "Merge branch 'claude/sweet-benz'"}, {"sha": "8fe44c62b797bff33177d1807083e19ba14fccc0", "short_sha": "8fe44c62", "author": "rahulio", "message": "Merge branch 'claude/gallant-hugle'"}, {"sha": "944d15017a7cd9e1b1d76cba39efdceb301d9a8c", "short_sha": "944d1501", "author": "rahulio", "message": "Fix hydration error and make resend import build-safe"}, {"sha": "47c439692122e12e6274d244c78873e9f72cd507", "short_sha": "47c43969", "author": "rahulio", "message": "Fix post-extraction redirect to Assets tab and trust real estate account values"}, {"sha": "9d81a7048b4ea3d4e0f7d7e34de31012ff16afc0", "short_sha": "9d81a704", "author": "rahulio", "message": "Add verification comparison log to review section"}]
+  "machine": "GitHub Actions 1000000252",
+  "pushedAt": "2026-02-21T17:16:12+00",
+  "commits": [{"sha": "b73a7cde31ab11bc320ad50888af71f2037d2a5f", "short_sha": "b73a7cde", "author": "rahulio", "message": "Trust account liquidation values when positions are in aggregate account"}]
 }
