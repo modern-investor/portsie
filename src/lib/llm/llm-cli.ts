@@ -194,18 +194,21 @@ function buildCLIPrompt(
     // Inline text content directly
     let textContent = processedFile.textContent ?? "";
 
-    // Include pre-parsed CSV samples if available
+    // Include pre-parsed CSV samples if available (head + tail for variety)
     if (
       processedFile.preExtractedRows &&
       processedFile.preExtractedRows.length > 0
     ) {
-      const sampleCount = Math.min(5, processedFile.preExtractedRows.length);
-      textContent += `\n\n--- Pre-parsed data (${processedFile.preExtractedRows.length} total rows, showing first ${sampleCount}) ---\n`;
-      textContent += JSON.stringify(
-        processedFile.preExtractedRows.slice(0, sampleCount),
-        null,
-        2
-      );
+      const rows = processedFile.preExtractedRows;
+      const headCount = Math.min(20, rows.length);
+      const tailCount = rows.length > headCount ? Math.min(10, rows.length - headCount) : 0;
+      textContent += `\n\n--- Pre-parsed CSV structure (${rows.length} total rows) ---\n`;
+      textContent += `First ${headCount} rows:\n`;
+      textContent += JSON.stringify(rows.slice(0, headCount), null, 2);
+      if (tailCount > 0) {
+        textContent += `\n\nLast ${tailCount} rows:\n`;
+        textContent += JSON.stringify(rows.slice(-tailCount), null, 2);
+      }
     }
 
     fileInstruction = `Here is the content of "${filename}" (${fileType.toUpperCase()}):\n\n${textContent}`;

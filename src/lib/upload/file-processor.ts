@@ -22,6 +22,14 @@ export interface ProcessedFile {
 }
 
 /**
+ * Strip UTF-8 BOM (byte order mark) from text content.
+ * Excel and some editors prepend \uFEFF which breaks CSV parsing.
+ */
+function stripBOM(text: string): string {
+  return text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
+}
+
+/**
  * Pre-processes a file buffer for consumption by the Claude API.
  * Different file types are handled differently:
  * - PDF: sent natively as a document content block
@@ -65,13 +73,15 @@ export function processFileForLLM(
     }
 
     case "csv": {
-      const csvText = fileBuffer.toString("utf-8");
+      const csvText = stripBOM(fileBuffer.toString("utf-8"));
       let rows: Record<string, unknown>[] = [];
       try {
         rows = csvParse(csvText, {
           columns: true,
           skip_empty_lines: true,
           trim: true,
+          relax_quotes: true,
+          relax_column_count: true,
         });
       } catch {
         // If CSV parsing fails, we still send the raw text
@@ -93,13 +103,13 @@ export function processFileForLLM(
     case "txt":
       return {
         contentType: "text",
-        textContent: fileBuffer.toString("utf-8"),
+        textContent: stripBOM(fileBuffer.toString("utf-8")),
       };
 
     case "json":
       return {
         contentType: "text",
-        textContent: fileBuffer.toString("utf-8"),
+        textContent: stripBOM(fileBuffer.toString("utf-8")),
       };
 
     default:

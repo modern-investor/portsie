@@ -173,7 +173,11 @@ For Robinhood CSV trans_code values:
 
 7. TAX DOCUMENTS (1099): For 1099-B (proceeds from sales), extract each sale as a "sell" transaction. For 1099-DIV, extract dividend totals. For 1099-INT, extract interest totals. Set document_type to "tax_1099".
 
-8. CSV EXPORTS: When processing Robinhood, Schwab, or other CSV exports, map column headers to fields precisely. Look for: Activity Date/Trade Date → transaction_date, Trans Code/Action → action, Instrument/Symbol → symbol, Quantity → quantity, Price → price_per_share, Amount → total_amount.
+8. CSV EXPORTS: When processing CSV exports, map column headers to fields precisely. Common broker column mappings:
+  - Schwab: "Date" or "Trade Date" → transaction_date, "Action" → action, "Symbol" → symbol, "Quantity" → quantity, "Price" → price_per_share, "Amount" → total_amount, "Fees & Comm" → fees
+  - Fidelity: "Run Date" → transaction_date, "Action" → action, "Symbol" → symbol, "Quantity" → quantity, "Price ($)" → price_per_share, "Amount ($)" → total_amount
+  - Robinhood: "Activity Date" → transaction_date, "Trans Code" → action, "Instrument" → symbol and description, "Quantity" → quantity, "Price" → price_per_share, "Amount" → total_amount
+  If the CSV has column headers that differ from these, use your best judgment to map them to the correct fields.
 
 9. DATES: All dates MUST be ISO format YYYY-MM-DD. Convert from MM/DD/YYYY, DD-Mon-YYYY, or any other format.
 
@@ -193,7 +197,11 @@ For Robinhood CSV trans_code values:
 
 17. DOCUMENT TOTALS: If the document shows a grand total value (e.g., "Total Value: $14,953,761.34"), extract it into document_totals.total_value. Similarly extract total day change if shown. This enables integrity validation against per-account sums.
 
-18. ASSET TYPE CLASSIFICATION: You MUST set asset_type on every position and transaction. Never leave it null, and never lazily default everything to "EQUITY". Use your knowledge of financial instruments and any context from the document (section headers, descriptions, ticker symbols) to classify each item into the correct type: "EQUITY", "ETF", "OPTION", "MUTUAL_FUND", "FIXED_INCOME", "CASH_EQUIVALENT", "REAL_ESTATE", "PRECIOUS_METAL", "COLLECTIBLE", or "OTHER_ASSET". If the document groups positions under section headers (e.g., "Equities", "ETFs & Closed End Funds"), those headers are the strongest signal for classification. For COLLECTIBLE and OTHER_ASSET, also set asset_subtype to a short descriptive label (e.g., "Jewelry", "Art", "Classic Car").`;
+18. ASSET TYPE CLASSIFICATION: You MUST set asset_type on every position and transaction. Never leave it null, and never lazily default everything to "EQUITY". Use your knowledge of financial instruments and any context from the document (section headers, descriptions, ticker symbols) to classify each item into the correct type: "EQUITY", "ETF", "OPTION", "MUTUAL_FUND", "FIXED_INCOME", "CASH_EQUIVALENT", "REAL_ESTATE", "PRECIOUS_METAL", "COLLECTIBLE", or "OTHER_ASSET". If the document groups positions under section headers (e.g., "Equities", "ETFs & Closed End Funds"), those headers are the strongest signal for classification. For COLLECTIBLE and OTHER_ASSET, also set asset_subtype to a short descriptive label (e.g., "Jewelry", "Art", "Classic Car").
+
+19. PREFER DOCUMENT VALUES: Always use the exact values shown in the document. Never substitute placeholders like "TICKER", "SYMBOL", "XXX", "---", or "N/A" for real data. If a field value cannot be determined from the document, use null. For market_value, use the document's stated value — do NOT compute quantity * price as a substitute, since the document value may differ due to rounding, lot-level pricing, or after-hours adjustments.
+
+20. ROBINHOOD TRANSACTION CODES: When processing Robinhood CSV exports, you may encounter these less common trans_code values. Map them correctly: "CIL" (Cash In Lieu) → "other", "SOFF" (Spin-Off) → "spinoff", "CRRD" (Credit/Debit) → "other", "CFRI" (Cash Fraction) → "other", "GDBP" (Gold Subscription) → "fee", "SPL" (Stock Split) → "stock_split", "FUTSWP" (Futures Sweep) → "other".`;
 
 /**
  * Build the extraction prompt. In the new architecture, this is just the

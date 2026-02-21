@@ -67,21 +67,62 @@ const ACTION_MAP: Record<string, TransactionAction> = {
   deposit: "transfer_in",
   withdrawal: "transfer_out",
   transfer: "journal",
-  "sell_to_close": "sell",
-  "buy_to_open": "buy",
-  "cash_dividend": "dividend",
-  "qualified_dividend": "dividend",
-  "bank_interest": "interest",
-  "service_fee": "fee",
-  "security_transfer": "transfer_out",
-  "stock_lending": "interest",
-  "acat_transfer": "transfer_in",
-  "roth_conversion": "journal",
-  "reinvest_shares": "reinvestment",
-  "long_term_cap_gain_reinvest": "reinvestment",
-  "journaled_shares": "journal",
-  "adr_mgmt_fee": "fee",
-  "misc_cash_entry": "other",
+  sell_to_close: "sell",
+  buy_to_open: "buy",
+  cash_dividend: "dividend",
+  qualified_dividend: "dividend",
+  bank_interest: "interest",
+  service_fee: "fee",
+  security_transfer: "journal",
+  stock_lending: "interest",
+  acat_transfer: "transfer_in",
+  roth_conversion: "journal",
+  reinvest_shares: "reinvestment",
+  long_term_cap_gain_reinvest: "reinvestment",
+  journaled_shares: "journal",
+  adr_mgmt_fee: "fee",
+  misc_cash_entry: "other",
+  // Additional LLM aliases
+  short_sale: "sell_short",
+  drip: "reinvestment",
+  dividend_reinvestment: "reinvestment",
+  internal_transfer: "journal",
+  forward_split: "stock_split",
+  reverse_split: "stock_split",
+  adr_fee: "fee",
+  acquisition: "merger",
+  spin_off: "spinoff",
+  // Robinhood CSV trans_code values
+  bto: "buy",
+  stc: "sell",
+  sto: "sell_short",
+  btc: "buy_to_cover",
+  cdiv: "dividend",
+  slip: "interest",
+  ach: "transfer_in",
+  acati: "transfer_in",
+  acato: "transfer_out",
+  jnls: "journal",
+  gold: "fee",
+  cil: "other",       // cash in lieu
+  soff: "spinoff",
+  crrd: "other",       // credit/debit
+  cfri: "other",       // cash fraction
+  gdbp: "fee",         // Robinhood Gold
+  spl: "stock_split",
+  futswp: "other",     // futures sweep
+  mtch: "other",       // match
+  "t/a": "journal",    // transfer/adjustment
+  gmpc: "other",       // GMPC
+  dcf: "other",        // DCF
+  // Schwab-specific codes
+  wire_in: "transfer_in",
+  wire_out: "transfer_out",
+  ach_in: "transfer_in",
+  ach_out: "transfer_out",
+  margin_interest: "interest",
+  foreign_tax_paid: "fee",
+  return_of_capital: "dividend",
 };
 
 // ── Helper functions ──
@@ -94,33 +135,45 @@ function coerceNumber(val: unknown): number | null {
   if (val === null || val === undefined) return null;
   if (typeof val === "number") return val;
   if (typeof val === "string") {
-    // Strip currency symbols, commas, parens for negative
-    let cleaned = val.replace(/[$,]/g, "").trim();
+    // Strip currency symbols, commas, percent signs, and spaces used as thousand separators
+    let cleaned = val.replace(/[$,%]/g, "").replace(/\s+/g, "").trim();
     if (cleaned.startsWith("(") && cleaned.endsWith(")")) {
       cleaned = "-" + cleaned.slice(1, -1);
     }
+    if (cleaned === "" || cleaned === "-") return null;
     const num = Number(cleaned);
-    if (!isNaN(num)) return num;
+    if (!isNaN(num) && isFinite(num)) return num;
   }
   return null;
 }
+
+const MONTH_MAP: Record<string, string> = {
+  jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
+  jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12",
+};
 
 function coerceDate(val: unknown): string | null {
   if (val === null || val === undefined) return null;
   if (typeof val !== "string") return null;
 
+  const trimmed = val.trim();
+
   // Already ISO format
-  if (DATE_REGEX.test(val)) return val;
+  if (DATE_REGEX.test(trimmed)) return trimmed;
+
+  // ISO with time: "YYYY-MM-DDTHH:mm:ss..." — strip time portion
+  const isoTimeMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})T/);
+  if (isoTimeMatch) return isoTimeMatch[1];
 
   // Handle "MM/DD/YYYY" format
-  const mdyMatch = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  const mdyMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (mdyMatch) {
     const [, m, d, y] = mdyMatch;
     return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
 
   // Handle "MM/DD/YYYY as of MM/DD/YYYY" — use the "as of" date
-  const asOfMatch = val.match(
+  const asOfMatch = trimmed.match(
     /\d{1,2}\/\d{1,2}\/\d{4}\s+as\s+of\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/i
   );
   if (asOfMatch) {
@@ -128,7 +181,31 @@ function coerceDate(val: unknown): string | null {
     return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
 
+  // Handle "DD-Mon-YYYY" (e.g., "19-Feb-2025")
+  const dMonYMatch = trimmed.match(/^(\d{1,2})[-\s](jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[-\s](\d{4})$/i);
+  if (dMonYMatch) {
+    const [, d, mon, y] = dMonYMatch;
+    const m = MONTH_MAP[mon.toLowerCase()];
+    if (m) return `${y}-${m}-${d.padStart(2, "0")}`;
+  }
+
+  // Handle "Mon DD, YYYY" (e.g., "Feb 19, 2025")
+  const monDYMatch = trimmed.match(/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+(\d{1,2}),?\s+(\d{4})$/i);
+  if (monDYMatch) {
+    const [, mon, d, y] = monDYMatch;
+    const m = MONTH_MAP[mon.toLowerCase()];
+    if (m) return `${y}-${m}-${d.padStart(2, "0")}`;
+  }
+
   return null;
+}
+
+function normalizeSymbol(val: unknown): string | null {
+  if (val === null || val === undefined) return null;
+  if (typeof val !== "string") return null;
+  const trimmed = val.trim();
+  if (trimmed === "" || trimmed === "---" || trimmed === "N/A") return null;
+  return trimmed.toUpperCase();
 }
 
 function normalizeAction(val: unknown): TransactionAction | null {
@@ -575,7 +652,7 @@ class ExtractionValidator {
     return {
       transaction_date: txDate,
       settlement_date: coerceDate(raw.settlement_date),
-      symbol: typeof raw.symbol === "string" ? raw.symbol : null,
+      symbol: normalizeSymbol(raw.symbol),
       cusip: typeof raw.cusip === "string" ? raw.cusip : null,
       asset_type: normalizeAssetType(raw.asset_type),
       asset_subtype: typeof raw.asset_subtype === "string" ? raw.asset_subtype : null,
@@ -610,7 +687,7 @@ class ExtractionValidator {
     }
 
     // symbol (required)
-    const symbol = typeof raw.symbol === "string" ? raw.symbol.trim() : null;
+    const symbol = normalizeSymbol(raw.symbol);
     if (!symbol) {
       this.addItemSkipped(`${path}.symbol`, "Required string", raw.symbol);
       return null;

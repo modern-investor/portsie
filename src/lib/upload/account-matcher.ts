@@ -81,37 +81,49 @@ export async function createManualAccount(
  * when the heuristic has a strong number-based match that disagrees with
  * Claude's choice, the heuristic wins.
  */
+/**
+ * Strip non-digit characters from an account number for comparison.
+ * Handles masks like "...5902", "****5902", "xxxx5902", "XX-5902".
+ */
+function digitsOnly(val: string): string {
+  return val.replace(/\D/g, "");
+}
+
 function findHeuristicNumberMatch(
   detectedInfo: DetectedAccountInfo,
   existingAccounts: ExistingAccountContext[]
 ): { accountId: string; reason: string } | null {
   if (!detectedInfo.account_number) return null;
 
-  const detected = detectedInfo.account_number.replace(/^\.+/, "");
+  const detectedRaw = detectedInfo.account_number.replace(/^\.+/, "");
+  const detectedDigits = digitsOnly(detectedRaw);
+  if (!detectedDigits) return null;
 
   for (const acct of existingAccounts) {
     if (!acct.account_number_hint) continue;
-    const hint = acct.account_number_hint.replace(/^\.+/, "");
+    const hintRaw = acct.account_number_hint.replace(/^\.+/, "");
+    const hintDigits = digitsOnly(hintRaw);
+    if (!hintDigits) continue;
 
-    // Exact match
-    if (hint === detected) {
-      return { accountId: acct.id, reason: `Exact account number match (${hint})` };
+    // Exact match (digits only)
+    if (hintDigits === detectedDigits) {
+      return { accountId: acct.id, reason: `Exact account number match (${hintDigits})` };
     }
 
     // Partial match: last 4 digits
     if (
-      hint.length >= 4 &&
-      detected.length >= 4 &&
-      (hint.endsWith(detected.slice(-4)) || detected.endsWith(hint.slice(-4)))
+      hintDigits.length >= 4 &&
+      detectedDigits.length >= 4 &&
+      hintDigits.slice(-4) === detectedDigits.slice(-4)
     ) {
       return { accountId: acct.id, reason: `Partial account number match (last 4 digits)` };
     }
 
     // Partial match: last 3 digits
     if (
-      hint.length >= 3 &&
-      detected.length >= 3 &&
-      (hint.endsWith(detected.slice(-3)) || detected.endsWith(hint.slice(-3)))
+      hintDigits.length >= 3 &&
+      detectedDigits.length >= 3 &&
+      hintDigits.slice(-3) === detectedDigits.slice(-3)
     ) {
       return { accountId: acct.id, reason: `Partial account number match (last 3 digits)` };
     }
