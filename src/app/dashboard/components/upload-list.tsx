@@ -3,6 +3,8 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import type { UploadedStatement } from "@/lib/upload/types";
 import type { PortsieExtraction } from "@/lib/extraction/schema";
+import type { ProcessingPreset } from "@/lib/llm/types";
+import { PRESET_LABELS } from "./processing-preset-select";
 import { UploadReview } from "./upload-review";
 
 const STATUS_STYLES: Record<
@@ -214,6 +216,7 @@ export function UploadList({
   batchDone,
   timestamps,
   processCount,
+  processingPreset,
   reviewingId,
   onReview,
   onDelete,
@@ -228,6 +231,7 @@ export function UploadList({
   batchDone: number;
   timestamps: Record<string, { q?: string; s?: string; e?: string }>;
   processCount: Record<string, number>;
+  processingPreset: ProcessingPreset;
   reviewingId: string | null;
   onReview: (id: string) => void;
   onDelete: (id: string) => void;
@@ -373,8 +377,13 @@ export function UploadList({
                     </span>
                   )}
                 </div>
-                {/* Processing settings — 3rd line */}
-                {upload.processing_settings && (
+                {/* Processing model — 3rd line */}
+                {(isLiveProcessing || isQueued) && (
+                  <div className="text-xs font-mono text-blue-400">
+                    {PRESET_LABELS[processingPreset]}
+                  </div>
+                )}
+                {!isLiveProcessing && !isQueued && upload.processing_settings && (
                   <div className="text-xs font-mono text-gray-400">
                     {upload.processing_settings.model}
                     {" · "}

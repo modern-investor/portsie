@@ -78,7 +78,11 @@ export function UploadDropzone({
           }
 
           onUploaded(data);
-          uploadedIds.push(data.id);
+          // Only queue for processing if this is a new upload (201),
+          // not a dedup return of an already-processed record (200)
+          if (res.status === 201) {
+            uploadedIds.push(data.id);
+          }
         } catch {
           setError((prev) =>
             prev

@@ -54,6 +54,11 @@ export async function POST(request: NextRequest) {
     .limit(1)
     .single();
 
+  // If a record with the same hash already exists, return it instead of creating a duplicate
+  if (existing) {
+    return NextResponse.json(existing, { status: 200 });
+  }
+
   // Upload to Supabase Storage under user's folder
   const filePath = `${user.id}/${Date.now()}_${file.name}`;
   const { error: storageError } = await supabase.storage
@@ -68,11 +73,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // If a duplicate exists and was already processed, carry over its results
-  const isProcessed =
-    existing &&
-    (existing.parse_status === "extracted" || existing.parse_status === "completed" || existing.parse_status === "partial");
-
   const insertData: Record<string, unknown> = {
     user_id: user.id,
     filename: file.name,
@@ -80,15 +80,7 @@ export async function POST(request: NextRequest) {
     file_type: fileType,
     file_size_bytes: file.size,
     file_hash: fileHash,
-    parse_status: isProcessed ? existing.parse_status : "pending",
-    ...(isProcessed && {
-      parsed_at: existing.parsed_at,
-      extracted_data: existing.extracted_data,
-      raw_llm_response: existing.raw_llm_response,
-      detected_account_info: existing.detected_account_info,
-      statement_start_date: existing.statement_start_date,
-      statement_end_date: existing.statement_end_date,
-    }),
+    parse_status: "pending",
   };
 
   // Create metadata record in uploaded_statements

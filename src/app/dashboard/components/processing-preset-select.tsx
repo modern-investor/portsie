@@ -2,12 +2,16 @@
 
 import type { ProcessingPreset } from "@/lib/llm/types";
 
-const PRESET_OPTIONS: { value: ProcessingPreset; label: string }[] = [
-  { value: "fast", label: "Gemini Flash 3 · standard" },
-  { value: "balanced", label: "Gemini Flash 3 · high res scan" },
-  { value: "quality", label: "Gemini Flash 3 · high res, deep thinking" },
-  { value: "max_quality", label: "Claude Sonnet 4.6 · high res, deep thinking" },
-];
+export const PRESET_LABELS: Record<ProcessingPreset, string> = {
+  fast: "Gemini Flash 3 · standard",
+  balanced: "Gemini Flash 3 · high res scan",
+  quality: "Gemini Flash 3 · high res, deep thinking",
+  max_quality: "Claude Sonnet 4.6 · high res, deep thinking",
+};
+
+const PRESET_OPTIONS: { value: ProcessingPreset; label: string }[] = (
+  Object.entries(PRESET_LABELS) as [ProcessingPreset, string][]
+).map(([value, label]) => ({ value, label }));
 
 export function ProcessingPresetSelect({
   value,
@@ -24,7 +28,7 @@ export function ProcessingPresetSelect({
         htmlFor="processing-preset"
         className="text-xs font-medium text-gray-500 whitespace-nowrap"
       >
-        Processing:
+        Processing model:
       </label>
       <select
         id="processing-preset"

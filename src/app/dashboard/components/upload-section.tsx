@@ -140,9 +140,14 @@ export function UploadSection({
     fetchUploads();
   }, [fetchUploads]);
 
-  // Handle new file uploaded
+  // Handle new file uploaded (dedup: if ID already exists, update in place)
   function handleFileUploaded(statement: UploadedStatement) {
-    setUploads((prev) => [statement, ...prev]);
+    setUploads((prev) => {
+      if (prev.some((u) => u.id === statement.id)) {
+        return prev.map((u) => (u.id === statement.id ? statement : u));
+      }
+      return [statement, ...prev];
+    });
   }
 
   // Trigger LLM processing for a single upload (auto-links account and saves data).
@@ -430,6 +435,7 @@ export function UploadSection({
           batchDone={batchDone}
           timestamps={timestamps}
           processCount={processCount}
+          processingPreset={processingPreset}
           reviewingId={reviewingId}
           onReview={handleReview}
           onDelete={handleDelete}
