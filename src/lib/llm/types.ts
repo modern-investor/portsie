@@ -13,6 +13,9 @@ export interface LLMSettings {
   llmMode: LLMMode;
   hasApiKey: boolean;
   cliEndpoint: string | null;
+  verificationEnabled: boolean;
+  verificationBackend: "gemini" | "cli";
+  verificationModel: string;
 }
 
 // ── Processing presets (per-extraction quality/speed controls) ──
@@ -72,6 +75,9 @@ export interface LLMSettingsRecord {
   llm_mode: LLMMode;
   api_key_encrypted: string | null;
   cli_endpoint: string | null;
+  verification_enabled: boolean;
+  verification_backend: string;
+  verification_model: string;
   created_at: string;
   updated_at: string;
 }

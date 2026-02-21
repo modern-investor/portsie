@@ -170,6 +170,13 @@ export interface UploadedStatement {
     thinkingLevel: string;
     mediaResolution: string;
   } | null;
+  verification_data: LLMExtractionResult | null;
+  verification_raw_response: unknown;
+  verification_settings: {
+    backend: string;
+    model: string;
+  } | null;
+  verification_error: string | null;
   created_at: string;
   updated_at: string;
 }

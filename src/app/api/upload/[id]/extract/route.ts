@@ -8,6 +8,8 @@ import {
   matchAccounts,
 } from "@/lib/extraction/account-matcher";
 import { writeExtraction } from "@/lib/extraction/db-writer";
+import { extractViaCLI } from "@/lib/llm/llm-cli";
+import { extractViaGemini } from "@/lib/llm/llm-gemini";
 import type { UploadFileType } from "@/lib/upload/types";
 import type { PortsieExtraction } from "@/lib/extraction/schema";
 import { PROCESSING_PRESETS, DEFAULT_PRESET } from "@/lib/llm/types";
@@ -83,6 +85,8 @@ export async function POST(
     .eq("id", id);
 
   try {
+    const extractionStartTime = Date.now();
+
     // Download file from Supabase Storage
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("statements")
@@ -110,6 +114,8 @@ export async function POST(
       processingSettings
     );
 
+    const primaryDurationMs = Date.now() - extractionStartTime;
+
     // Determine if extraction produced data
     const totalPositions =
       extraction.accounts.reduce((sum, a) => sum + a.positions.length, 0) +
@@ -125,6 +131,7 @@ export async function POST(
     const hasData = totalPositions > 0 || totalTransactions > 0 || totalBalances > 0;
 
     // Save extraction results — parse_status = "extracted"
+    // Also clear any previous verification data
     await supabase
       .from("uploaded_statements")
       .update({
@@ -138,10 +145,18 @@ export async function POST(
         statement_end_date: extraction.document.statement_end_date,
         parse_error: null,
         processing_settings: processingSettings,
+        verification_data: null,
+        verification_raw_response: null,
+        verification_settings: null,
+        verification_error: null,
       })
       .eq("id", id);
 
-    // ── Auto-confirm mode: chain into Stage 2.5+3 ──
+    // ── Auto-confirm mode: chain into Stage 2.5+3 (uses primary data) ──
+    let autoConfirmed = false;
+    let autoConfirmError: string | null = null;
+    let writeReport = null;
+
     if (autoConfirm && hasData) {
       try {
         const existingAccounts = await loadExistingAccountsForMatching(
@@ -149,23 +164,16 @@ export async function POST(
           user.id
         );
         const accountMap = matchAccounts(extraction, existingAccounts);
-        const writeReport = await writeExtraction(
+        writeReport = await writeExtraction(
           supabase,
           user.id,
           id,
           extraction,
           accountMap
         );
-
-        return NextResponse.json({
-          extraction,
-          autoConfirmed: true,
-          writeReport,
-          parseStatus: "completed",
-        });
+        autoConfirmed = true;
       } catch (confirmErr) {
-        // Auto-confirm failed — extraction is still saved
-        const errMsg =
+        autoConfirmError =
           confirmErr instanceof Error
             ? confirmErr.message
             : "Unknown auto-confirm error";
@@ -173,31 +181,95 @@ export async function POST(
 
         await supabase
           .from("uploaded_statements")
-          .update({ parse_error: `Auto-confirm failed: ${errMsg}` })
+          .update({ parse_error: `Auto-confirm failed: ${autoConfirmError}` })
           .eq("id", id);
-
-        return NextResponse.json({
-          extraction,
-          autoConfirmed: false,
-          autoConfirmError: errMsg,
-          parseStatus: "extracted",
-        });
       }
     }
 
-    return NextResponse.json({
+    // ── Verification extraction (runs after primary + auto-confirm) ──
+    const userSettings = await getLLMSettings(supabase, user.id);
+    const verificationEnabled = userSettings?.verificationEnabled ?? true;
+
+    if (verificationEnabled && hasData) {
+      // Skip verification if primary took > 180s (safety margin for 300s timeout)
+      if (primaryDurationMs > 180_000) {
+        console.warn(
+          `[Verification] Skipping — primary took ${Math.round(primaryDurationMs / 1000)}s (>180s limit)`
+        );
+        await supabase
+          .from("uploaded_statements")
+          .update({
+            verification_error: `Skipped — primary extraction took ${Math.round(primaryDurationMs / 1000)}s`,
+            verification_settings: {
+              backend: userSettings?.verificationBackend ?? "cli",
+              model: userSettings?.verificationModel ?? "claude-sonnet-4-6",
+            },
+          })
+          .eq("id", id);
+      } else {
+        const verBackend = userSettings?.verificationBackend ?? "cli";
+        const verModel = userSettings?.verificationModel ?? "claude-sonnet-4-6";
+
+        try {
+          let verificationResult: { extraction: PortsieExtraction; rawResponse: unknown };
+
+          if (verBackend === "gemini") {
+            const geminiApiKey = process.env.GEMINI_API_KEY;
+            if (!geminiApiKey) throw new Error("GEMINI_API_KEY not set for verification");
+            verificationResult = await extractViaGemini(
+              geminiApiKey, processedFile, fileType, statement.filename, verModel
+            );
+          } else {
+            const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
+            verificationResult = await extractViaCLI(
+              processedFile, fileType, statement.filename, cliEndpoint, verModel
+            );
+          }
+
+          await supabase
+            .from("uploaded_statements")
+            .update({
+              verification_data: verificationResult.extraction,
+              verification_raw_response: verificationResult.rawResponse,
+              verification_settings: { backend: verBackend, model: verModel },
+              verification_error: null,
+            })
+            .eq("id", id);
+        } catch (verErr) {
+          const verErrMsg = verErr instanceof Error ? verErr.message : "Unknown verification error";
+          console.error("[Verification] Extraction failed:", verErr);
+          await supabase
+            .from("uploaded_statements")
+            .update({
+              verification_error: verErrMsg,
+              verification_settings: { backend: verBackend, model: verModel },
+            })
+            .eq("id", id);
+        }
+      }
+    }
+
+    // ── Build response ──
+    const responseData: Record<string, unknown> = {
       extraction,
-      autoConfirmed: false,
-      parseStatus: hasData ? "extracted" : "partial",
-      summary: {
+      autoConfirmed,
+      parseStatus: autoConfirmed ? "completed" : hasData ? "extracted" : "partial",
+    };
+
+    if (writeReport) responseData.writeReport = writeReport;
+    if (autoConfirmError) responseData.autoConfirmError = autoConfirmError;
+    if (!autoConfirm) {
+      responseData.summary = {
         accounts: extraction.accounts.length,
         totalPositions,
         totalTransactions,
         totalBalances,
         unallocatedPositions: extraction.unallocated_positions.length,
         confidence: extraction.confidence,
-      },
-    });
+      };
+    }
+
+    return NextResponse.json(responseData);
   } catch (err) {
     const errorMessage =
       err instanceof Error ? err.message : "Unknown processing error";
