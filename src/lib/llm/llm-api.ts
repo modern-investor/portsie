@@ -99,5 +99,18 @@ export async function extractViaAPI(
     );
   }
 
-  return { extraction: validationResult.extraction, rawResponse: response };
+  // Persist validation warnings/coercions in extraction notes for traceability
+  let extraction = validationResult.extraction;
+  if (validationResult.coercions.length > 0 || validationResult.warnings.length > 0) {
+    const validationNotes = [
+      ...validationResult.coercions.map((c) => `[Coercion] ${c}`),
+      ...validationResult.warnings.map((w) => `[Warning] ${w.path}: ${w.message}`),
+    ];
+    extraction = {
+      ...extraction,
+      notes: [...(extraction.notes || []), ...validationNotes],
+    };
+  }
+
+  return { extraction, rawResponse: response };
 }

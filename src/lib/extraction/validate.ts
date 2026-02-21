@@ -82,6 +82,46 @@ const ACTION_MAP: Record<string, TransactionAction> = {
   "journaled_shares": "journal",
   "adr_mgmt_fee": "fee",
   "misc_cash_entry": "other",
+  // Common multi-word action phrases
+  "dividend_reinvestment": "reinvestment",
+  "wire_in": "transfer_in",
+  "wire_out": "transfer_out",
+  "ach_in": "transfer_in",
+  "ach_out": "transfer_out",
+  "acat_in": "transfer_in",
+  "acat_out": "transfer_out",
+  "long_term_capital_gain": "capital_gain_long",
+  "short_term_capital_gain": "capital_gain_short",
+  "cap_gain_reinvest": "reinvestment",
+  "fee_reversal": "fee",
+  "credit_interest": "interest",
+  "debit_interest": "interest",
+  "margin_interest": "interest",
+  "sweep_interest": "interest",
+  // Robinhood trans codes (data-driven from real CSVs)
+  "cil": "interest",
+  "soff": "other",
+  "crrd": "journal",
+  "cfri": "transfer_in",
+  "gdbp": "interest",
+  "futswp": "other",
+  "mtch": "interest",
+  "t/a": "other",
+  "gmpc": "other",
+  "dcf": "transfer_out",
+  "spl": "stock_split",
+  "misc": "other",
+  "bto": "buy",
+  "stc": "sell",
+  "sto": "sell_short",
+  "btc": "buy_to_cover",
+  "cdiv": "dividend",
+  "slip": "interest",
+  "ach": "transfer_in",
+  "acati": "transfer_in",
+  "acato": "transfer_out",
+  "jnls": "journal",
+  "gold": "fee",
 };
 
 // ── Helper functions ──
@@ -92,35 +132,62 @@ function isPlainObject(val: unknown): val is Record<string, unknown> {
 
 function coerceNumber(val: unknown): number | null {
   if (val === null || val === undefined) return null;
-  if (typeof val === "number") return val;
+  if (typeof val === "number") {
+    if (Number.isNaN(val)) return null;
+    return val;
+  }
   if (typeof val === "string") {
-    // Strip currency symbols, commas, parens for negative
-    let cleaned = val.replace(/[$,]/g, "").trim();
+    // Strip spaces, currency symbols, commas; handle parenthesized negatives
+    let cleaned = val.replace(/\s+/g, "").replace(/[$,]/g, "").trim();
     if (cleaned.startsWith("(") && cleaned.endsWith(")")) {
       cleaned = "-" + cleaned.slice(1, -1);
     }
-    const num = Number(cleaned);
-    if (!isNaN(num)) return num;
+    if (!cleaned || cleaned === "-") return null;
+    const num = Number(cleaned); // handles scientific notation (e.g. "1.23e-4")
+    if (!Number.isNaN(num)) return num;
   }
   return null;
 }
 
+const MONTH_ABBR: Record<string, string> = {
+  jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
+  jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12",
+};
+
 function coerceDate(val: unknown): string | null {
   if (val === null || val === undefined) return null;
   if (typeof val !== "string") return null;
+  const raw = val.trim();
 
-  // Already ISO format
-  if (DATE_REGEX.test(val)) return val;
+  // Already ISO date (with optional time suffix — strip it)
+  const isoDateOnly = raw.slice(0, 10);
+  if (DATE_REGEX.test(isoDateOnly)) return isoDateOnly;
 
-  // Handle "MM/DD/YYYY" format
-  const mdyMatch = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  // MM/DD/YYYY (with optional time suffix)
+  const mdyMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (mdyMatch) {
     const [, m, d, y] = mdyMatch;
     return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
 
-  // Handle "MM/DD/YYYY as of MM/DD/YYYY" — use the "as of" date
-  const asOfMatch = val.match(
+  // DD-Mon-YYYY or DD-MMM-YYYY (e.g. "19-Feb-2025", "5 Jan 2026")
+  const dmyAbbrMatch = raw.match(/^(\d{1,2})[-/\s]([A-Za-z]{3,9})[-/\s](\d{4})/);
+  if (dmyAbbrMatch) {
+    const [, d, mon, y] = dmyAbbrMatch;
+    const m = MONTH_ABBR[mon.toLowerCase().slice(0, 3)];
+    if (m) return `${y}-${m}-${d.padStart(2, "0")}`;
+  }
+
+  // Mon DD, YYYY (e.g. "Feb 19, 2025", "January 5, 2026")
+  const monDYMatch = raw.match(/^([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})/);
+  if (monDYMatch) {
+    const [, mon, d, y] = monDYMatch;
+    const m = MONTH_ABBR[mon.toLowerCase().slice(0, 3)];
+    if (m) return `${y}-${m}-${d.padStart(2, "0")}`;
+  }
+
+  // "MM/DD/YYYY as of MM/DD/YYYY" — use the "as of" date
+  const asOfMatch = raw.match(
     /\d{1,2}\/\d{1,2}\/\d{4}\s+as\s+of\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/i
   );
   if (asOfMatch) {
@@ -137,7 +204,14 @@ function normalizeAction(val: unknown): TransactionAction | null {
   if (TRANSACTION_ACTIONS.includes(key as TransactionAction)) {
     return key as TransactionAction;
   }
-  return ACTION_MAP[key] ?? null;
+  if (ACTION_MAP[key]) return ACTION_MAP[key];
+  // Try first token for multi-word phrases (e.g. "Dividend – Qualified" → "dividend")
+  const firstToken = key.split("_")[0];
+  if (firstToken && TRANSACTION_ACTIONS.includes(firstToken as TransactionAction)) {
+    return firstToken as TransactionAction;
+  }
+  if (firstToken && ACTION_MAP[firstToken]) return ACTION_MAP[firstToken];
+  return null;
 }
 
 function normalizeAssetType(val: unknown): AssetType {
@@ -191,6 +265,14 @@ function normalizeConfidence(val: unknown): Confidence {
     return lower as Confidence;
   }
   return "low";
+}
+
+function normalizeSymbol(val: unknown): string | null {
+  if (val === null || val === undefined) return null;
+  if (typeof val !== "string") return null;
+  const trimmed = val.trim();
+  if (!trimmed) return null;
+  return trimmed.toUpperCase();
 }
 
 function normalizeDocumentType(val: unknown): DocumentType {
@@ -575,7 +657,7 @@ class ExtractionValidator {
     return {
       transaction_date: txDate,
       settlement_date: coerceDate(raw.settlement_date),
-      symbol: typeof raw.symbol === "string" ? raw.symbol : null,
+      symbol: normalizeSymbol(raw.symbol),
       cusip: typeof raw.cusip === "string" ? raw.cusip : null,
       asset_type: normalizeAssetType(raw.asset_type),
       asset_subtype: typeof raw.asset_subtype === "string" ? raw.asset_subtype : null,
@@ -610,7 +692,7 @@ class ExtractionValidator {
     }
 
     // symbol (required)
-    const symbol = typeof raw.symbol === "string" ? raw.symbol.trim() : null;
+    const symbol = normalizeSymbol(raw.symbol);
     if (!symbol) {
       this.addItemSkipped(`${path}.symbol`, "Required string", raw.symbol);
       return null;

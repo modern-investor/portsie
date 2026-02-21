@@ -65,12 +65,15 @@ export async function extractViaGemini(
     let textPayload = processedFile.textContent!;
 
     if (processedFile.preExtractedRows && processedFile.preExtractedRows.length > 0) {
-      const sampleCount = Math.min(5, processedFile.preExtractedRows.length);
-      textPayload += `\n\n--- Pre-parsed data (${processedFile.preExtractedRows.length} total rows, showing first ${sampleCount}) ---\n`;
-      textPayload += JSON.stringify(processedFile.preExtractedRows.slice(0, sampleCount), null, 2);
-      if (processedFile.preExtractedRows.length > sampleCount) {
-        textPayload += `\n... and ${processedFile.preExtractedRows.length - sampleCount} more rows`;
+      const rows = processedFile.preExtractedRows;
+      const headCount = Math.min(20, rows.length);
+      const tailCount = rows.length > headCount ? Math.min(10, rows.length - headCount) : 0;
+      textPayload += `\n\n--- Pre-parsed CSV structure (${rows.length} total rows) ---\n`;
+      textPayload += `First ${headCount} rows:\n${JSON.stringify(rows.slice(0, headCount), null, 2)}`;
+      if (tailCount > 0) {
+        textPayload += `\n\nLast ${tailCount} rows:\n${JSON.stringify(rows.slice(-tailCount), null, 2)}`;
       }
+      textPayload += "\n--- End pre-parsed data. Map the columns above to the schema. ---\n\n";
     }
 
     parts.push({ text: textPayload });
@@ -153,8 +156,21 @@ export async function extractViaGemini(
     );
   }
 
+  // Persist validation warnings/coercions in extraction notes for traceability
+  let extraction = validationResult.extraction;
+  if (validationResult.coercions.length > 0 || validationResult.warnings.length > 0) {
+    const validationNotes = [
+      ...validationResult.coercions.map((c) => `[Coercion] ${c}`),
+      ...validationResult.warnings.map((w) => `[Warning] ${w.path}: ${w.message}`),
+    ];
+    extraction = {
+      ...extraction,
+      notes: [...(extraction.notes || []), ...validationNotes],
+    };
+  }
+
   const rawResponse = { text: fullText, finishReason, usageMetadata };
-  return { extraction: validationResult.extraction, rawResponse };
+  return { extraction, rawResponse };
 }
 
 // ── SSE stream collector ──

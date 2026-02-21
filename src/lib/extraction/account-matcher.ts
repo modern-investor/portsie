@@ -45,6 +45,16 @@ function stripPrefix(num: string): string {
 }
 
 /**
+ * Extract digits-only from an account number for normalized comparison.
+ * Handles various masking styles: "…5902", "****5902", "XXX-5902", etc.
+ */
+function accountNumberDigits(num: string): { full: string; last4: string | null } {
+  const digits = num.replace(/\D/g, "");
+  const last4 = digits.length >= 4 ? digits.slice(-4) : null;
+  return { full: digits, last4 };
+}
+
+/**
  * Normalize institution name for fuzzy matching.
  * "Charles Schwab & Co., Inc." → "charles schwab"
  */
@@ -83,11 +93,15 @@ function matchByNumber(
   const detected = stripPrefix(info.account_number);
   if (detected.length < 2) return null; // Too short to match
 
+  // Also extract digits-only for normalized comparison across masking styles
+  const detectedDigits = accountNumberDigits(info.account_number);
+
   for (const acct of existing) {
     if (!acct.account_number_hint) continue;
     const hint = stripPrefix(acct.account_number_hint);
+    const hintDigits = accountNumberDigits(acct.account_number_hint);
 
-    // Exact match
+    // Exact match (original strings after prefix strip)
     if (hint === detected) {
       return {
         accountId: acct.id,
@@ -96,16 +110,33 @@ function matchByNumber(
       };
     }
 
-    // Partial match: last 4 digits
+    // Digits-only exact match (handles different masking: "…5902" vs "****5902")
     if (
-      hint.length >= 4 &&
-      detected.length >= 4 &&
-      (hint.endsWith(detected.slice(-4)) || detected.endsWith(hint.slice(-4)))
+      detectedDigits.full.length >= 3 &&
+      hintDigits.full.length >= 3 &&
+      detectedDigits.full === hintDigits.full
     ) {
       return {
         accountId: acct.id,
         confidence: "high",
-        reason: `Account number match on last 4 digits (${detected.slice(-4)})`,
+        reason: `Account number match (digits: ${detectedDigits.full})`,
+      };
+    }
+
+    // Last 4 digits match (original or digits-only)
+    const last4Match =
+      (hint.length >= 4 &&
+        detected.length >= 4 &&
+        (hint.endsWith(detected.slice(-4)) || detected.endsWith(hint.slice(-4)))) ||
+      (detectedDigits.last4 != null &&
+        hintDigits.last4 != null &&
+        detectedDigits.last4 === hintDigits.last4);
+
+    if (last4Match) {
+      return {
+        accountId: acct.id,
+        confidence: "high",
+        reason: `Account number match on last 4 digits (${detectedDigits.last4 || detected.slice(-4)})`,
       };
     }
 

@@ -156,6 +156,27 @@ For Robinhood CSV trans_code values:
   - "ACATO" (ACAT Transfer Out) → "transfer_out"
   - "JNLS" (Journal Entry) → "journal"
   - "GOLD" (Robinhood Gold Fee) → "fee"
+  - "CIL" (Cash in Lieu) → "interest"
+  - "SOFF" (Option expiration/exercise) → "other"
+  - "CRRD" (Conversion to Roth IRA) → "journal"
+  - "CFRI" (Conversion from Traditional IRA) → "transfer_in"
+  - "GDBP" (Gold Deposit Boost Payment) → "interest"
+  - "FUTSWP" (Event Contracts Inter-Entity Cash Transfer) → "other"
+  - "MTCH" (IRA Match) → "interest"
+  - "T/A" (Transfer/ACAT) → "other"
+  - "GMPC" (Gold Plan Credit) → "other"
+  - "DCF" (Debit card transfer) → "transfer_out"
+  - "SPL" (Stock split) → "stock_split"
+  - "MISC" → "other"
+
+=== BROKER CSV COLUMN HINTS ===
+
+When you see these column headers, map them consistently:
+- Charles Schwab: "Trade Date" or "Date" → transaction_date; "Action" or "Trans Type" → action; "Symbol" or "Symbol/Description" → symbol; "Quantity" → quantity; "Amount" or "Net Amount" → total_amount.
+- Fidelity: "Run Date" or "Trade Date" → transaction_date; "Transaction Type" → action; "Symbol" → symbol; "Quantity" → quantity; "Amount" → total_amount.
+- Robinhood: "Activity Date" → transaction_date; "Trans Code" (see Robinhood trans_code list above) → action; "Instrument" or "Symbol" → symbol; "Quantity" → quantity; "Amount" → total_amount.
+
+Use the most specific date column for transaction_date (e.g. "Trade Date" over "Settlement Date" for buys/sells).
 
 === RULES ===
 
@@ -181,19 +202,23 @@ For Robinhood CSV trans_code values:
 
 11. NULL FOR UNKNOWN: If an optional field cannot be determined from the document, use null. Never guess or hallucinate values.
 
-12. CONFIDENCE: Set to "low" if the document is blurry, partial, heavily ambiguous, or if significant data may be missing. Set to "medium" if most data was extracted but some fields are uncertain. Set to "high" if all visible data was extracted cleanly.
+12. PREFER DOCUMENT VALUES: For market_value, liquidation_value, total_amount, and document/account totals, use the value AS PRINTED on the document. Do not substitute a computed value (e.g. quantity × price) when the document shows a different number — the document may reflect rounding, lot-level pricing, or after-hours adjustments.
 
-13. NOTES: Add notes for anything unusual (e.g., "Some transactions appear cut off at page boundary", "Account number partially obscured", "Aggregate position table detected — positions placed in unallocated_positions").
+13. NO PLACEHOLDERS: Do not use "Unknown", "N/A", or "TBD" in required fields when the document clearly shows a value. Use the exact ticker, description, or label from the document.
 
-14. DO NOT HALLUCINATE: Only extract what is explicitly present in the document. Never invent data.
+14. CONFIDENCE: Set to "low" if the document is blurry, partial, heavily ambiguous, or if significant data may be missing. Set to "medium" if most data was extracted but some fields are uncertain. Set to "high" if all visible data was extracted cleanly.
 
-15. RESPOND WITH JSON ONLY: No markdown fences, no explanation, no preamble, no commentary. Just the raw JSON object.
+15. NOTES: Add notes for anything unusual (e.g., "Some transactions appear cut off at page boundary", "Account number partially obscured", "Aggregate position table detected — positions placed in unallocated_positions").
 
-16. DAY CHANGE DATA: If the document shows day change columns (Day Change $, Day Change %, Price Change, etc.), extract them into day_change_amount and day_change_pct for each position. These track the single-day price movement and are separate from unrealized gain/loss. Also extract the document-level total into document_totals.
+16. DO NOT HALLUCINATE: Only extract what is explicitly present in the document. Never invent data.
 
-17. DOCUMENT TOTALS: If the document shows a grand total value (e.g., "Total Value: $14,953,761.34"), extract it into document_totals.total_value. Similarly extract total day change if shown. This enables integrity validation against per-account sums.
+17. RESPOND WITH JSON ONLY: No markdown fences, no explanation, no preamble, no commentary. Just the raw JSON object.
 
-18. ASSET TYPE CLASSIFICATION: You MUST set asset_type on every position and transaction. Never leave it null, and never lazily default everything to "EQUITY". Use your knowledge of financial instruments and any context from the document (section headers, descriptions, ticker symbols) to classify each item into the correct type: "EQUITY", "ETF", "OPTION", "MUTUAL_FUND", "FIXED_INCOME", "CASH_EQUIVALENT", "REAL_ESTATE", "PRECIOUS_METAL", "COLLECTIBLE", or "OTHER_ASSET". If the document groups positions under section headers (e.g., "Equities", "ETFs & Closed End Funds"), those headers are the strongest signal for classification. For COLLECTIBLE and OTHER_ASSET, also set asset_subtype to a short descriptive label (e.g., "Jewelry", "Art", "Classic Car").`;
+18. DAY CHANGE DATA: If the document shows day change columns (Day Change $, Day Change %, Price Change, etc.), extract them into day_change_amount and day_change_pct for each position. These track the single-day price movement and are separate from unrealized gain/loss. Also extract the document-level total into document_totals.
+
+19. DOCUMENT TOTALS: If the document shows a grand total value (e.g., "Total Value: $14,953,761.34"), extract it into document_totals.total_value. Similarly extract total day change if shown. This enables integrity validation against per-account sums.
+
+20. ASSET TYPE CLASSIFICATION: You MUST set asset_type on every position and transaction. Never leave it null, and never lazily default everything to "EQUITY". Use your knowledge of financial instruments and any context from the document (section headers, descriptions, ticker symbols) to classify each item into the correct type: "EQUITY", "ETF", "OPTION", "MUTUAL_FUND", "FIXED_INCOME", "CASH_EQUIVALENT", "REAL_ESTATE", "PRECIOUS_METAL", "COLLECTIBLE", or "OTHER_ASSET". If the document groups positions under section headers (e.g., "Equities", "ETFs & Closed End Funds"), those headers are the strongest signal for classification. For COLLECTIBLE and OTHER_ASSET, also set asset_subtype to a short descriptive label (e.g., "Jewelry", "Art", "Classic Car").`;
 
 /**
  * Build the extraction prompt. In the new architecture, this is just the

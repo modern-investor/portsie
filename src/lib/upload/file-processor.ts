@@ -65,13 +65,18 @@ export function processFileForLLM(
     }
 
     case "csv": {
-      const csvText = fileBuffer.toString("utf-8");
+      let csvText = fileBuffer.toString("utf-8");
+      // Strip BOM if present (common in Excel-exported CSVs)
+      if (csvText.charCodeAt(0) === 0xfeff) {
+        csvText = csvText.slice(1);
+      }
       let rows: Record<string, unknown>[] = [];
       try {
         rows = csvParse(csvText, {
           columns: true,
           skip_empty_lines: true,
           trim: true,
+          relax_column_count: true,
         });
       } catch {
         // If CSV parsing fails, we still send the raw text
