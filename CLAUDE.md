@@ -43,6 +43,31 @@ Adapted from [alpacapps](https://github.com/rsonnad/alpacapps). Every push to `m
 - `SUPABASE_URL` = `https://kkpciydknhdeoqyaceti.supabase.co`
 - `SUPABASE_SERVICE_ROLE_KEY` = service role JWT (set via `gh secret set`)
 
+## Post-Push Output Rules
+After every push to `main`, always include:
+1. The version (from `version.json` or the bump script output)
+2. **Clickable testing URLs** for every page/feature that was touched in the session
+
+Use the base URL `https://portsie.com` and link to the specific routes that were modified. Examples:
+- If dashboard components changed → `https://portsie.com/dashboard`
+- If login/signup changed → `https://portsie.com/login` / `https://portsie.com/signup`
+- If upload flow changed → `https://portsie.com/dashboard` (upload section)
+- If admin pages changed → `https://portsie.com/admin`
+- If Schwab setup changed → `https://portsie.com/setup/schwab`
+- If extract test reports were generated → `https://portsie.com/extracttests/`
+- If landing page changed → `https://portsie.com/`
+
+Always format as a clickable list after the version, e.g.:
+```
+Pushed to main — version vYYMMDD.NN H:MMa/p
+
+Test the changes:
+- Dashboard: https://portsie.com/dashboard
+- Upload flow: https://portsie.com/dashboard
+```
+
+If the session only touched backend/API/DB with no user-facing page, note that and link to the most relevant page for verification.
+
 ## Local Development
 ```bash
 npm install
