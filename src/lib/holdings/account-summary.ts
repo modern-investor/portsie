@@ -30,10 +30,29 @@ export async function updateAccountSummary(
   const buyingPower = balanceData?.buying_power ?? null;
 
   // Total = liquidation_value from balance if available,
-  // otherwise equity + cash
+  // otherwise equity + cash.
+  //
+  // Safety: if the balance claims a large liquidation_value but there are
+  // zero holdings and the equity computed from positions is 0, prefer the
+  // computed value (equity + cash) instead. This prevents an LLM-extracted
+  // statement total from inflating an account that has no position data.
   let totalMarketValue: number;
   if (balanceData?.liquidation_value != null) {
-    totalMarketValue = balanceData.liquidation_value;
+    const liqVal = balanceData.liquidation_value;
+    const computed = equityValue + (cashBalance ?? 0);
+    const hasPositions = holdingsCount > 0;
+    const largeMismatch =
+      !hasPositions &&
+      Math.abs(liqVal) > 1000 &&
+      Math.abs(liqVal - computed) > Math.max(Math.abs(computed) * 0.5, 1000);
+
+    if (largeMismatch) {
+      // Don't trust a multi-thousand-dollar liquidation_value when there
+      // are no positions to back it up — fall back to computed total.
+      totalMarketValue = computed;
+    } else {
+      totalMarketValue = liqVal;
+    }
   } else {
     totalMarketValue = equityValue + (cashBalance ?? 0);
   }

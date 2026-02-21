@@ -109,6 +109,23 @@ export function checkExtractionIntegrity(
       liabilityTotal += balanceLiquidation ?? 0;
     }
 
+    // Check: account has large balance but zero positions (likely extraction error)
+    if (
+      balanceLiquidation != null &&
+      Math.abs(balanceLiquidation) > 1000 &&
+      account.positions.length === 0 &&
+      !LIABILITY_ACCOUNT_TYPES.has(info.account_type ?? "")
+    ) {
+      discrepancies.push({
+        check: `Account "${label}": claims ${balanceLiquidation >= 0 ? "$" : "-$"}${Math.abs(balanceLiquidation).toLocaleString()} but has 0 positions`,
+        expected: 0,
+        computed: balanceLiquidation,
+        difference: balanceLiquidation,
+        differencePct: 100,
+        severity: "error",
+      });
+    }
+
     // Check: account balance vs sum of positions + cash
     if (balanceLiquidation != null && account.positions.length > 0) {
       const cashBalance = balance?.cash_balance ?? 0;

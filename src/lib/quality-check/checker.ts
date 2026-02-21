@@ -179,9 +179,27 @@ export function runQualityCheck(input: QualityCheckInput): CheckResult {
       Math.abs(posDiffPct) < POSITION_SUM_THRESHOLD,
   };
 
+  // ── Balance vs Holdings Check (hard) ──
+  // Detects when an account claims a large total but has no positions to back it.
+  // This catches LLM extraction errors where the statement total is extracted but
+  // individual positions are missed, leading to inflated portfolio values.
+  const balanceVsHoldingsIssues: string[] = [];
+  for (const dbAcct of dbAccounts) {
+    const dbTotal = Math.abs(dbAcct.total_market_value ?? 0);
+    const dbEquity = Math.abs(dbAcct.equity_value ?? 0);
+    const dbHoldings = dbAcct.holdings_count ?? 0;
+    // Flag if: total > $1000, zero holdings, and equity doesn't back it
+    if (dbTotal > 1000 && dbHoldings === 0 && dbEquity < dbTotal * 0.5) {
+      balanceVsHoldingsIssues.push(
+        `Account shows ${formatDollar(dbTotal)} total but has ${dbHoldings} holdings and ${formatDollar(dbEquity)} equity`
+      );
+    }
+  }
+  const balanceVsHoldingsPassed = balanceVsHoldingsIssues.length === 0;
+
   // ── Overall ──
   // Only hard checks determine overall pass/fail
-  const overallPassed = totalValueCheck.passed && positionCountCheck.passed;
+  const overallPassed = totalValueCheck.passed && positionCountCheck.passed && balanceVsHoldingsPassed;
 
   // ── Summary ──
   const issues: string[] = [];
@@ -210,6 +228,9 @@ export function runQualityCheck(input: QualityCheckInput): CheckResult {
       `Position market values sum to ${formatDollar(posMarketSum)} but equity is ${formatDollar(posEquityFromBalance)}`
     );
   }
+  if (!balanceVsHoldingsPassed) {
+    issues.push(...balanceVsHoldingsIssues);
+  }
 
   const summary = overallPassed
     ? "All quality checks passed"
@@ -221,6 +242,10 @@ export function runQualityCheck(input: QualityCheckInput): CheckResult {
     transaction_count: transactionCountCheck,
     balance_sanity: balanceSanityCheck,
     position_sum: positionSumCheck,
+    balance_vs_holdings: {
+      passed: balanceVsHoldingsPassed,
+      issues: balanceVsHoldingsIssues,
+    },
     overall_passed: overallPassed,
     summary,
   };
