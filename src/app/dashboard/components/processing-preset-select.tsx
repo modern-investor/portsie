@@ -3,10 +3,10 @@
 import type { ProcessingPreset } from "@/lib/llm/types";
 
 const PRESET_OPTIONS: { value: ProcessingPreset; label: string }[] = [
-  { value: "fast", label: "Fast — low thinking, default res" },
-  { value: "balanced", label: "Balanced — low thinking, high res" },
-  { value: "quality", label: "Quality — medium thinking, high res" },
-  { value: "max_quality", label: "Max Quality — Claude Sonnet 4.6" },
+  { value: "fast", label: "Gemini Flash 3 — fast" },
+  { value: "balanced", label: "Gemini Flash 3 — high res" },
+  { value: "quality", label: "Gemini Flash 3 — deep thinking" },
+  { value: "max_quality", label: "Claude Sonnet 4.6" },
 ];
 
 export function ProcessingPresetSelect({
