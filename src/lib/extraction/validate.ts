@@ -98,6 +98,17 @@ const ACTION_MAP: Record<string, TransactionAction> = {
   "debit_interest": "interest",
   "margin_interest": "interest",
   "sweep_interest": "interest",
+  // Additional LLM aliases (from recursing-leavitt)
+  "short_sale": "sell_short",
+  "drip": "reinvestment",
+  "internal_transfer": "journal",
+  "forward_split": "stock_split",
+  "reverse_split": "stock_split",
+  "adr_fee": "fee",
+  "acquisition": "merger",
+  "spin_off": "spinoff",
+  "foreign_tax_paid": "fee",
+  "return_of_capital": "dividend",
   // Robinhood trans codes (data-driven from real CSVs)
   "cil": "interest",
   "soff": "other",
@@ -137,14 +148,14 @@ function coerceNumber(val: unknown): number | null {
     return val;
   }
   if (typeof val === "string") {
-    // Strip spaces, currency symbols, commas; handle parenthesized negatives
-    let cleaned = val.replace(/\s+/g, "").replace(/[$,]/g, "").trim();
+    // Strip spaces, currency symbols, commas, percent signs; handle parenthesized negatives
+    let cleaned = val.replace(/\s+/g, "").replace(/[$,%]/g, "").trim();
     if (cleaned.startsWith("(") && cleaned.endsWith(")")) {
       cleaned = "-" + cleaned.slice(1, -1);
     }
     if (!cleaned || cleaned === "-") return null;
     const num = Number(cleaned); // handles scientific notation (e.g. "1.23e-4")
-    if (!Number.isNaN(num)) return num;
+    if (!Number.isNaN(num) && Number.isFinite(num)) return num;
   }
   return null;
 }
@@ -196,6 +207,14 @@ function coerceDate(val: unknown): string | null {
   }
 
   return null;
+}
+
+function normalizeSymbol(val: unknown): string | null {
+  if (val === null || val === undefined) return null;
+  if (typeof val !== "string") return null;
+  const trimmed = val.trim();
+  if (trimmed === "" || trimmed === "---" || trimmed === "N/A") return null;
+  return trimmed.toUpperCase();
 }
 
 function normalizeAction(val: unknown): TransactionAction | null {
@@ -267,14 +286,6 @@ function normalizeConfidence(val: unknown): Confidence {
     return lower as Confidence;
   }
   return "low";
-}
-
-function normalizeSymbol(val: unknown): string | null {
-  if (val === null || val === undefined) return null;
-  if (typeof val !== "string") return null;
-  const trimmed = val.trim();
-  if (!trimmed) return null;
-  return trimmed.toUpperCase();
 }
 
 function normalizeDocumentType(val: unknown): DocumentType {

@@ -54,7 +54,7 @@ export async function extractViaAPI(
     // Text content
     let textPayload = processedFile.textContent!;
 
-    // For CSV files, include pre-parsed row samples for better extraction
+    // For CSV files, include pre-parsed row samples for better extraction (head + tail)
     if (
       processedFile.preExtractedRows &&
       processedFile.preExtractedRows.length > 0

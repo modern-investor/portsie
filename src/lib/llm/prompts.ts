@@ -194,7 +194,11 @@ Use the most specific date column for transaction_date (e.g. "Trade Date" over "
 
 7. TAX DOCUMENTS (1099): For 1099-B (proceeds from sales), extract each sale as a "sell" transaction. For 1099-DIV, extract dividend totals. For 1099-INT, extract interest totals. Set document_type to "tax_1099".
 
-8. CSV EXPORTS: When processing Robinhood, Schwab, or other CSV exports, map column headers to fields precisely. Look for: Activity Date/Trade Date → transaction_date, Trans Code/Action → action, Instrument/Symbol → symbol, Quantity → quantity, Price → price_per_share, Amount → total_amount.
+8. CSV EXPORTS: When processing CSV exports, map column headers to fields precisely. Common broker column mappings:
+  - Schwab: "Date" or "Trade Date" → transaction_date, "Action" → action, "Symbol" → symbol, "Quantity" → quantity, "Price" → price_per_share, "Amount" → total_amount, "Fees & Comm" → fees
+  - Fidelity: "Run Date" → transaction_date, "Action" → action, "Symbol" → symbol, "Quantity" → quantity, "Price ($)" → price_per_share, "Amount ($)" → total_amount
+  - Robinhood: "Activity Date" → transaction_date, "Trans Code" → action, "Instrument" → symbol and description, "Quantity" → quantity, "Price" → price_per_share, "Amount" → total_amount
+  If the CSV has column headers that differ from these, use your best judgment to map them to the correct fields.
 
 9. DATES: All dates MUST be ISO format YYYY-MM-DD. Convert from MM/DD/YYYY, DD-Mon-YYYY, or any other format.
 

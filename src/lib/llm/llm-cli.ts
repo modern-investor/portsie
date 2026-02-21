@@ -220,7 +220,7 @@ function buildCLIPrompt(
     // Inline text content directly
     let textContent = processedFile.textContent ?? "";
 
-    // Include pre-parsed CSV samples if available
+    // Include pre-parsed CSV samples if available (head + tail for variety)
     if (
       processedFile.preExtractedRows &&
       processedFile.preExtractedRows.length > 0
