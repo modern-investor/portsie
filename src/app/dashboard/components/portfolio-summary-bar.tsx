@@ -52,8 +52,8 @@ export function PortfolioSummaryBar({ portfolio, hideValues, priceDate }: Props)
                   maximumFractionDigits: 2,
                 })}{" "}
                 <span className="text-sm">
-                  ({totalDayChangePct >= 0 ? "+" : ""}
-                  {totalDayChangePct.toFixed(2)}%)
+                  ({(totalDayChangePct ?? 0) >= 0 ? "+" : ""}
+                  {(totalDayChangePct ?? 0).toFixed(2)}%)
                 </span>
               </>
             )}
@@ -75,7 +75,7 @@ export function PortfolioSummaryBar({ portfolio, hideValues, priceDate }: Props)
             ) : (
               <>
                 ${cashValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
-                <span className="text-sm text-gray-500 ml-1">({cashPct.toFixed(1)}%)</span>
+                <span className="text-sm text-gray-500 ml-1">({(cashPct ?? 0).toFixed(1)}%)</span>
               </>
             )}
           </p>
@@ -91,7 +91,7 @@ export function PortfolioSummaryBar({ portfolio, hideValues, priceDate }: Props)
               ) : (
                 <>
                   -${Math.abs(liabilityValue).toLocaleString("en-US", { maximumFractionDigits: 0 })}
-                  <span className="text-sm text-gray-500 ml-1">({Math.abs(liabilityPct).toFixed(1)}%)</span>
+                  <span className="text-sm text-gray-500 ml-1">({Math.abs(liabilityPct ?? 0).toFixed(1)}%)</span>
                 </>
               )}
             </p>

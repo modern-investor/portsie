@@ -53,7 +53,7 @@ export function AssetClassDetail({ classId, portfolio, hideValues, onBack }: Pro
         <span className={`h-3 w-3 rounded-full ${dotClass}`} />
         <h2 className="text-lg font-semibold">{summary.def.label}</h2>
         <span className="text-sm text-gray-500 tabular-nums">
-          {summary.allocationPct.toFixed(1)}% of portfolio
+          {(summary.allocationPct ?? 0).toFixed(1)}% of portfolio
         </span>
       </div>
 
@@ -103,7 +103,7 @@ export function AssetClassDetail({ classId, portfolio, hideValues, onBack }: Pro
                   )}
                 </p>
                 <p className="text-xs text-gray-500 tabular-nums">
-                  {sub.allocationPct.toFixed(1)}% &middot; {sub.positions.length} holding{sub.positions.length !== 1 ? "s" : ""}
+                  {(sub.allocationPct ?? 0).toFixed(1)}% &middot; {sub.positions.length} holding{sub.positions.length !== 1 ? "s" : ""}
                 </p>
               </div>
             ))}
@@ -217,7 +217,7 @@ export function AssetClassDetail({ classId, portfolio, hideValues, onBack }: Pro
                 </td>
               )}
               <td className="px-2 py-2 text-right sm:px-4 sm:py-3 tabular-nums">
-                {summary.allocationPct.toFixed(1)}%
+                {(summary.allocationPct ?? 0).toFixed(1)}%
               </td>
               <td className="px-2 py-2 text-right sm:px-4 sm:py-3 tabular-nums text-gray-500">
                 100.0%

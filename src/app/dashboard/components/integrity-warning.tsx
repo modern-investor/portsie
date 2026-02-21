@@ -87,7 +87,7 @@ export function IntegrityWarning({ discrepancies, hideValues }: Props) {
                       <span className="text-amber-700 font-medium">
                         {hideValues
                           ? "$*****"
-                          : `$${fmt(Math.abs(d.difference))} (${d.differencePct.toFixed(1)}%)`}
+                          : `$${fmt(Math.abs(d.difference))} (${(d.differencePct ?? 0).toFixed(1)}%)`}
                       </span>
                     </div>
                   </div>

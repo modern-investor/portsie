@@ -50,7 +50,7 @@ export function PortfolioDonutChart({ assetClasses, totalMarketValue, hideValues
           >
             {entry.pct >= 8 && (
               <span className="text-xs font-semibold text-white truncate px-1">
-                {entry.pct.toFixed(1)}%
+                {(entry.pct ?? 0).toFixed(1)}%
               </span>
             )}
           </div>
@@ -88,7 +88,7 @@ export function PortfolioDonutChart({ assetClasses, totalMarketValue, hideValues
                 </div>
               </td>
               <td className="py-2 text-right tabular-nums">{entry.holdingCount}</td>
-              <td className="py-2 text-right tabular-nums font-medium">{entry.pct.toFixed(1)}%</td>
+              <td className="py-2 text-right tabular-nums font-medium">{(entry.pct ?? 0).toFixed(1)}%</td>
               {!hideValues && (
                 <td className="py-2 text-right tabular-nums">
                   ${entry.value.toLocaleString("en-US", { maximumFractionDigits: 0 })}

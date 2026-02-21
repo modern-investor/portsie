@@ -26,7 +26,7 @@ function TreemapTooltip({ active, payload, hideValues }: any) {
   return (
     <div className="rounded-lg border bg-white px-3 py-2 text-sm shadow-lg">
       <p className="font-semibold">{d.name}</p>
-      <p className="tabular-nums">{d.pct.toFixed(1)}%</p>
+      <p className="tabular-nums">{(d.pct ?? 0).toFixed(1)}%</p>
       {!hideValues && (
         <p className="text-gray-500 tabular-nums">
           ${d.value.toLocaleString("en-US", { maximumFractionDigits: 0 })}
@@ -39,7 +39,7 @@ function TreemapTooltip({ active, payload, hideValues }: any) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CustomContent(props: any) {
   const { x, y, width, height, name, color, pct } = props;
-  if (width < 2 || height < 2) return null;
+  if (!name || width < 2 || height < 2) return null;
 
   const showLabel = width > 50 && height > 30;
   const showPct = width > 40 && height > 20;
@@ -78,7 +78,7 @@ function CustomContent(props: any) {
           fill="rgba(255,255,255,0.8)"
           fontSize={Math.min(10, width / 9)}
         >
-          {pct.toFixed(1)}%
+          {(pct ?? 0).toFixed(1)}%
         </text>
       )}
     </g>

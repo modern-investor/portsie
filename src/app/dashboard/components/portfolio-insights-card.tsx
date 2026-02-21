@@ -70,7 +70,7 @@ export function PortfolioInsightsCard({ portfolio, hideValues }: Props) {
             <p className="text-xs text-gray-500">Risk Profile</p>
             <p className={`text-lg font-bold ${risk.color}`}>{risk.text}</p>
             <p className="text-xs text-gray-400 mt-0.5">
-              Cash buffer: {cashPct.toFixed(1)}%
+              Cash buffer: {(cashPct ?? 0).toFixed(1)}%
               {cashPct < 5 && " (low)"}
             </p>
           </div>
@@ -106,10 +106,10 @@ export function PortfolioInsightsCard({ portfolio, hideValues }: Props) {
             {top1 && (
               <>
                 <p className="text-sm font-medium">
-                  Largest: {top1.symbol} ({top1.allocationPct.toFixed(1)}%)
+                  Largest: {top1.symbol} ({(top1.allocationPct ?? 0).toFixed(1)}%)
                 </p>
                 <p className="text-xs text-gray-400">
-                  Top 3: {top3Pct.toFixed(1)}% of portfolio
+                  Top 3: {(top3Pct ?? 0).toFixed(1)}% of portfolio
                 </p>
               </>
             )}

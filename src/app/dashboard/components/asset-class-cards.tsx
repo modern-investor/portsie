@@ -63,7 +63,7 @@ export function AssetClassCards({ assetClasses, hideValues, onSelectClass }: Pro
 
               <div className="mt-1 flex items-center gap-3 text-xs">
                 <span className="font-medium tabular-nums">
-                  {ac.allocationPct.toFixed(1)}%
+                  {(ac.allocationPct ?? 0).toFixed(1)}%
                 </span>
                 {!hideValues && (
                   <span className={`tabular-nums ${dayChangeColor}`}>
