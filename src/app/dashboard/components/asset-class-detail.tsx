@@ -149,7 +149,7 @@ export function AssetClassDetail({ classId, portfolio, hideValues, onBack }: Pro
                 const classTotal = summary.marketValue;
                 const posClassPct = classTotal > 0 ? (pos.marketValue / classTotal) * 100 : 0;
                 cumPct += posClassPct;
-                const plColor = pos.currentDayProfitLoss >= 0 ? "text-green-600" : "text-red-600";
+                const plColor = (pos.currentDayProfitLoss ?? 0) >= 0 ? "text-green-600" : "text-red-600";
 
                 return (
                   <tr key={pos.symbol} className="border-b last:border-b-0">
@@ -171,30 +171,30 @@ export function AssetClassDetail({ classId, portfolio, hideValues, onBack }: Pro
                     )}
                     {!hideValues && (
                       <td className="px-2 py-2 text-right sm:px-4 sm:py-3 tabular-nums">
-                        ${pos.marketValue.toLocaleString("en-US", {
+                        ${(pos.marketValue ?? 0).toLocaleString("en-US", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
                       </td>
                     )}
                     <td className="px-2 py-2 text-right sm:px-4 sm:py-3 tabular-nums">
-                      {pos.allocationPct.toFixed(1)}%
+                      {(pos.allocationPct ?? 0).toFixed(1)}%
                     </td>
                     <td className="px-2 py-2 text-right sm:px-4 sm:py-3 tabular-nums text-gray-500">
                       {cumPct.toFixed(1)}%
                     </td>
                     {!hideValues && (
                       <td className={`px-2 py-2 text-right sm:px-4 sm:py-3 tabular-nums ${plColor}`}>
-                        {pos.currentDayProfitLoss >= 0 ? "+" : ""}$
-                        {pos.currentDayProfitLoss.toLocaleString("en-US", {
+                        {(pos.currentDayProfitLoss ?? 0) >= 0 ? "+" : ""}$
+                        {(pos.currentDayProfitLoss ?? 0).toLocaleString("en-US", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
                       </td>
                     )}
                     <td className={`px-2 py-2 text-right sm:px-4 sm:py-3 tabular-nums ${plColor}`}>
-                      {pos.currentDayProfitLossPercentage >= 0 ? "+" : ""}
-                      {pos.currentDayProfitLossPercentage.toFixed(2)}%
+                      {(pos.currentDayProfitLossPercentage ?? 0) >= 0 ? "+" : ""}
+                      {(pos.currentDayProfitLossPercentage ?? 0).toFixed(2)}%
                     </td>
                   </tr>
                 );
