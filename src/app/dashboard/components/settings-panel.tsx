@@ -51,7 +51,7 @@ export function SettingsPanel() {
         <TabsList>
           <TabsTrigger value="llm">
             <Brain className="size-4" />
-            LLM
+            Default Extraction Models
           </TabsTrigger>
           <TabsTrigger value="failures">
             <AlertTriangle className="size-4" />
