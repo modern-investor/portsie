@@ -12,6 +12,17 @@ export async function updateAccountSummary(
   accountId: string,
   balanceData?: ExtractedBalance
 ): Promise<void> {
+  // Fetch account category to determine if this is a position-backed account.
+  // Non-position-backed accounts (banking, credit, loan, real estate) legitimately
+  // have value without holdings, so the inflation guard should not apply to them.
+  const { data: acctData } = await supabase
+    .from("accounts")
+    .select("account_category")
+    .eq("id", accountId)
+    .single();
+  const accountCategory = acctData?.account_category ?? "brokerage";
+  const NON_POSITION_CATEGORIES = new Set(["banking", "credit", "loan", "real_estate"]);
+
   // Sum market value of active holdings
   const { data: holdings } = await supabase
     .from("holdings")
@@ -36,6 +47,8 @@ export async function updateAccountSummary(
   // zero holdings and the equity computed from positions is 0, prefer the
   // computed value (equity + cash) instead. This prevents an LLM-extracted
   // statement total from inflating an account that has no position data.
+  // Exception: non-position-backed accounts (real estate, banking, credit,
+  // loan) inherently carry value without holdings — trust their liquidation_value.
   let totalMarketValue: number;
   if (balanceData?.liquidation_value != null) {
     const liqVal = balanceData.liquidation_value;
@@ -43,6 +56,7 @@ export async function updateAccountSummary(
     const hasPositions = holdingsCount > 0;
     const largeMismatch =
       !hasPositions &&
+      !NON_POSITION_CATEGORIES.has(accountCategory) &&
       Math.abs(liqVal) > 1000 &&
       Math.abs(liqVal - computed) > Math.max(Math.abs(computed) * 0.5, 1000);
 
