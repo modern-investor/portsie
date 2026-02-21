@@ -1,12 +1,12 @@
 {
-  "version": "v260221.01 12:12a",
-  "release": 105,
-  "sha": "0b6f9a81",
-  "fullSha": "0b6f9a8144a6b7eb85a4dfac88bb7c0018c34e44",
+  "version": "v260221.02 9:41a",
+  "release": 106,
+  "sha": "70f09f64",
+  "fullSha": "70f09f640b087e6fb88c91bbc44cb3623e056a15",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000222",
-  "pushedAt": "2026-02-21T06:12:47+00",
-  "commits": [{"sha": "0b6f9a8144a6b7eb85a4dfac88bb7c0018c34e44", "short_sha": "0b6f9a81", "author": "rahulio", "message": "Fix dashboard crash: null-safe numeric fields from Schwab API"}]
+  "machine": "GitHub Actions 1000000227",
+  "pushedAt": "2026-02-21T15:41:30+00",
+  "commits": [{"sha": "70f09f640b087e6fb88c91bbc44cb3623e056a15", "short_sha": "70f09f64", "author": "rahulio", "message": "Add null safety to all .toFixed() calls across dashboard components"}]
 }
