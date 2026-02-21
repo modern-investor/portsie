@@ -1,12 +1,12 @@
 {
-  "version": "v260221.07 11:18a",
-  "release": 111,
-  "sha": "5347b08e",
-  "fullSha": "5347b08e72c8834cad7feacfb56b711edcdbdf68",
+  "version": "v260221.08 11:25a",
+  "release": 112,
+  "sha": "c7dd47d7",
+  "fullSha": "c7dd47d7a70eaf738c8a2e5b2b924fd1e62683a6",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000256",
-  "pushedAt": "2026-02-21T17:18:46+00",
-  "commits": [{"sha": "5347b08e72c8834cad7feacfb56b711edcdbdf68", "short_sha": "5347b08e", "author": "Rahul", "message": "Merge pull request #42 from modern-investor/claude/recursing-hopper"}, {"sha": "c585930ebd78e8c9329033b52f0c3c50f58a09e5", "short_sha": "c585930e", "author": "rahulio", "message": "Fix false-positive account discrepancies in dual-model verification"}]
+  "machine": "GitHub Actions 1000000261",
+  "pushedAt": "2026-02-21T17:25:28+00",
+  "commits": [{"sha": "c7dd47d7a70eaf738c8a2e5b2b924fd1e62683a6", "short_sha": "c7dd47d7", "author": "rahulio", "message": "Increase text sizes in asset allocation and treemap components"}]
 }
