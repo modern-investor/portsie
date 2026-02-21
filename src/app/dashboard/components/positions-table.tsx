@@ -503,7 +503,7 @@ export function PositionsTable({ positions, accounts, hideValues }: Props) {
                 {/* Position rows */}
                 {group.positions.map((pos, i) => {
                   const plColor =
-                    pos.currentDayProfitLoss >= 0
+                    (pos.currentDayProfitLoss ?? 0) >= 0
                       ? "text-green-600"
                       : "text-red-600";
                   const allocationPct =
@@ -556,13 +556,13 @@ export function PositionsTable({ positions, accounts, hideValues }: Props) {
                       )}
                       {/* Avg Price */}
                       <td className="px-2 py-2 text-right sm:px-4 sm:py-3 tabular-nums">
-                        {pos.symbol === "CASH" && pos.assetType === "CASH_EQUIVALENT" ? "—" : `$${pos.averagePrice.toFixed(2)}`}
+                        {pos.symbol === "CASH" && pos.assetType === "CASH_EQUIVALENT" ? "—" : `$${(pos.averagePrice ?? 0).toFixed(2)}`}
                       </td>
                       {/* Market Value */}
                       {!hideValues && (
                         <td className="px-2 py-2 text-right sm:px-4 sm:py-3 tabular-nums">
                           $
-                          {pos.marketValue.toLocaleString("en-US", {
+                          {(pos.marketValue ?? 0).toLocaleString("en-US", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
@@ -577,8 +577,8 @@ export function PositionsTable({ positions, accounts, hideValues }: Props) {
                         <td
                           className={`px-2 py-2 text-right sm:px-4 sm:py-3 tabular-nums ${plColor}`}
                         >
-                          {pos.currentDayProfitLoss >= 0 ? "+" : ""}$
-                          {pos.currentDayProfitLoss.toLocaleString("en-US", {
+                          {(pos.currentDayProfitLoss ?? 0) >= 0 ? "+" : ""}$
+                          {(pos.currentDayProfitLoss ?? 0).toLocaleString("en-US", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
@@ -588,8 +588,8 @@ export function PositionsTable({ positions, accounts, hideValues }: Props) {
                       <td
                         className={`px-2 py-2 text-right sm:px-4 sm:py-3 tabular-nums ${plColor}`}
                       >
-                        {pos.currentDayProfitLossPercentage >= 0 ? "+" : ""}
-                        {pos.currentDayProfitLossPercentage.toFixed(2)}%
+                        {(pos.currentDayProfitLossPercentage ?? 0) >= 0 ? "+" : ""}
+                        {(pos.currentDayProfitLossPercentage ?? 0).toFixed(2)}%
                       </td>
                     </tr>
                   );
