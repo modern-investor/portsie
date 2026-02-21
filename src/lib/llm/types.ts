@@ -63,7 +63,7 @@ export const PROCESSING_PRESETS: Record<ProcessingPreset, ProcessingSettings> = 
   },
 };
 
-export const DEFAULT_PRESET: ProcessingPreset = "balanced";
+export const DEFAULT_PRESET: ProcessingPreset = "fast";
 
 /** Database row shape */
 export interface LLMSettingsRecord {

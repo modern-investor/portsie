@@ -13,11 +13,13 @@ const STORAGE_KEY = "portsie:settings-tab";
 const VALID_TABS: SettingsTab[] = ["llm", "failures", "quality"];
 
 export function SettingsPanel() {
-  const [tab, setTab] = useState<SettingsTab>(() => {
-    if (typeof window === "undefined") return "llm";
+  const [tab, setTab] = useState<SettingsTab>("llm");
+
+  // Restore saved tab from localStorage after hydration to avoid React #418
+  useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY) as SettingsTab | null;
-    return saved && VALID_TABS.includes(saved) ? saved : "llm";
-  });
+    if (saved && VALID_TABS.includes(saved)) setTab(saved);
+  }, []);
   const [unresolvedCount, setUnresolvedCount] = useState(0);
   const [qcIssueCount, setQcIssueCount] = useState(0);
 

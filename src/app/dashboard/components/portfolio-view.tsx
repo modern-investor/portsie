@@ -72,11 +72,13 @@ interface Props {
 }
 
 export function PortfolioView({ hideValues, onNavigateTab }: Props) {
-  const [subTab, setSubTab] = useState<PortfolioSubTab>(() => {
-    if (typeof window === "undefined") return "assets";
+  const [subTab, setSubTab] = useState<PortfolioSubTab>("assets");
+
+  // Restore saved tab from localStorage after hydration to avoid React #418
+  useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY) as PortfolioSubTab | null;
-    return saved && VALID_TABS.includes(saved) ? saved : "assets";
-  });
+    if (saved && VALID_TABS.includes(saved)) setSubTab(saved);
+  }, []);
   const [selectedClass, setSelectedClass] = useState<AssetClassId | null>(null);
   const [portfolio, setPortfolio] = useState<ClassifiedPortfolio | null>(null);
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
