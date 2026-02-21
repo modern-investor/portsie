@@ -1,6 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ExtractedBalance } from "@/lib/upload/types";
 
+export interface UpdateAccountSummaryOptions {
+  /**
+   * When true, always use the balance's liquidation_value as total_market_value
+   * (skip the inflation guard). Set this when positions are known to be stored
+   * in an aggregate account rather than in this individual account — the account
+   * legitimately has value but no holdings rows.
+   */
+  trustLiquidationValue?: boolean;
+}
+
 /**
  * Recompute and store account-level summary columns.
  *
@@ -10,8 +20,11 @@ import type { ExtractedBalance } from "@/lib/upload/types";
 export async function updateAccountSummary(
   supabase: SupabaseClient,
   accountId: string,
-  balanceData?: ExtractedBalance
+  balanceData?: ExtractedBalance,
+  options?: UpdateAccountSummaryOptions
 ): Promise<void> {
+  const trustLiquidationValue = options?.trustLiquidationValue ?? false;
+
   // Fetch account category to determine if this is a position-backed account.
   // Non-position-backed accounts (banking, credit, loan, real estate) legitimately
   // have value without holdings, so the inflation guard should not apply to them.
@@ -47,16 +60,21 @@ export async function updateAccountSummary(
   // zero holdings and the equity computed from positions is 0, prefer the
   // computed value (equity + cash) instead. This prevents an LLM-extracted
   // statement total from inflating an account that has no position data.
-  // Exception: non-position-backed accounts (real estate, banking, credit,
-  // loan) inherently carry value without holdings — trust their liquidation_value.
+  //
+  // Exceptions that skip the guard:
+  // - trustLiquidationValue=true: positions are in an aggregate account
+  // - Non-position-backed categories (real estate, banking, credit, loan)
   let totalMarketValue: number;
   if (balanceData?.liquidation_value != null) {
     const liqVal = balanceData.liquidation_value;
     const computed = equityValue + (cashBalance ?? 0);
     const hasPositions = holdingsCount > 0;
+    const skipGuard =
+      trustLiquidationValue ||
+      NON_POSITION_CATEGORIES.has(accountCategory);
     const largeMismatch =
       !hasPositions &&
-      !NON_POSITION_CATEGORIES.has(accountCategory) &&
+      !skipGuard &&
       Math.abs(liqVal) > 1000 &&
       Math.abs(liqVal - computed) > Math.max(Math.abs(computed) * 0.5, 1000);
 
