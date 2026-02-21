@@ -376,7 +376,7 @@ export function UploadList({
                 {/* Processing settings — 3rd line */}
                 {upload.processing_settings && (
                   <div className="text-xs font-mono text-gray-400">
-                    {upload.processing_settings.model}
+                    Processing model: {upload.processing_settings.model}
                     {" · "}
                     {upload.processing_settings.thinkingLevel} thinking
                     {" · "}
