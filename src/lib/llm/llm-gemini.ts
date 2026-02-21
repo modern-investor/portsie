@@ -13,9 +13,10 @@ const DEFAULT_MODEL = "gemini-3-flash-preview";
  * Default extraction engine — same prompt as Claude backends, validated
  * through the same PortsieExtraction schema.
  *
- * For large binary files (>400 KB base64), uses the File API to upload
- * the file first, then references it by URI. This avoids Gemini's ~512 KB
- * inline request body limit.
+ * For very large binary files (>4 MB base64), uses the File API to upload
+ * the file first, then references it by URI. Files under 4 MB are sent
+ * inline in the request body, which is much faster (avoids the two-step
+ * resumable upload + ACTIVE polling overhead).
  */
 export async function extractViaGemini(
   apiKey: string,
@@ -36,11 +37,13 @@ export async function extractViaGemini(
     text: `Extract financial data from this ${fileType.toUpperCase()} file named "${filename}". You MUST extract EVERY account — do NOT summarize, abbreviate, or select a representative subset. Include ALL accounts even if there are dozens. Respond ONLY with the JSON object.`,
   });
 
-  // For large binary files, upload via File API to avoid body size limits
+  // For very large binary files (>4 MB base64 ≈ 3 MB raw), upload via
+  // File API. Smaller files use inline data — much faster since it skips
+  // the two-step resumable upload + ACTIVE-state polling.
   const base64Length = processedFile.base64Data?.length ?? 0;
   const useLargeFileUpload =
     (processedFile.contentType === "document" || processedFile.contentType === "image") &&
-    base64Length > 400_000;
+    base64Length > 4_000_000;
 
   if (useLargeFileUpload) {
     const fileUri = await uploadFileToGemini(
@@ -254,6 +257,7 @@ async function uploadFileToGemini(
         "X-Goog-Upload-Header-Content-Type": mimeType,
       },
       body: JSON.stringify({ file: { display_name: displayName } }),
+      signal: AbortSignal.timeout(30_000), // 30s timeout for init
     }
   );
 
@@ -276,6 +280,7 @@ async function uploadFileToGemini(
       "X-Goog-Upload-Command": "upload, finalize",
     },
     body: buffer,
+    signal: AbortSignal.timeout(60_000), // 60s timeout for upload
   });
 
   if (!uploadResp.ok) {

@@ -7,6 +7,7 @@ import { UploadList } from "./upload-list";
 import { ProcessingPresetSelect } from "./processing-preset-select";
 import type { UploadedStatement } from "@/lib/upload/types";
 import type { PortsieExtraction } from "@/lib/extraction/schema";
+import { DEFAULT_PRESET } from "@/lib/llm/types";
 import type { ProcessingPreset } from "@/lib/llm/types";
 
 const QC_POLL_STATUSES = new Set(["qc_running", "qc_fixing"]);
@@ -57,7 +58,7 @@ export function UploadSection({
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   // Track IDs that were auto-confirmed in this batch for summary dialog
   const [confirmedIds, setConfirmedIds] = useState<string[]>([]);
-  const [processingPreset, setProcessingPreset] = useState<ProcessingPreset>("balanced");
+  const [processingPreset, setProcessingPreset] = useState<ProcessingPreset>(DEFAULT_PRESET);
   const router = useRouter();
 
   // Auto-redirect countdown after save

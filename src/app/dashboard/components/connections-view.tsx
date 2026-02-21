@@ -32,22 +32,30 @@ export function ConnectionsView({
 }) {
   const searchParams = useSearchParams();
   const urlTab = searchParams.get("tab");
-  const initialTab: ConnectionsSubTab =
+
+  // Determine initial tab from URL params only (safe for SSR).
+  // localStorage is restored in useEffect to avoid React #418 hydration mismatch.
+  const urlDerivedTab: ConnectionsSubTab =
     urlTab === "datalinks" || urlTab === "uploads"
       ? urlTab
       : urlTab === "institutions"
         ? "datalinks"
-        : getStoredTab();
-  const [subTab, setSubTab] = useState<ConnectionsSubTab>(initialTab);
+        : "datalinks";
+  const [subTab, setSubTab] = useState<ConnectionsSubTab>(urlDerivedTab);
   const [setupView, setSetupView] = useState<SetupView>("list");
   const [pendingUploadCount, setPendingUploadCount] = useState(0);
 
-  // Sync tab when URL search params change (e.g. client-side navigation)
+  // Restore saved tab from localStorage after hydration (avoids React #418),
+  // and sync when URL search params change (e.g. client-side navigation).
   useEffect(() => {
     if (urlTab === "datalinks" || urlTab === "uploads") {
       setSubTab(urlTab);
     } else if (urlTab === "institutions") {
       setSubTab("datalinks");
+    } else {
+      // No URL param — restore from localStorage
+      const stored = getStoredTab();
+      setSubTab(stored);
     }
   }, [urlTab]);
 
