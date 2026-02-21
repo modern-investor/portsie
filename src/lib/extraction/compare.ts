@@ -36,12 +36,64 @@ export interface ComparisonResult {
 
 // ── Helpers ──
 
-/** Normalize account identifiers for fuzzy matching between models */
+/** Normalize institution name for comparison (strip common prefixes like "Charles") */
+function normalizeInstitution(name: string | null | undefined): string {
+  return (name ?? "")
+    .toLowerCase()
+    .trim()
+    .replace(/^charles\s+/, "")   // "Charles Schwab" → "schwab"
+    .replace(/^the\s+/, "");
+}
+
+/** Normalize account identifiers for strict matching between models */
 function accountKey(acct: ExtractionAccount): string {
   const num = acct.account_info.account_number?.replace(/^\.+/, "").slice(-4) ?? "";
-  const inst = (acct.account_info.institution_name ?? "").toLowerCase().trim();
+  const inst = normalizeInstitution(acct.account_info.institution_name);
   const type = acct.account_info.account_type ?? "";
   return `${inst}|${type}|${num}`;
+}
+
+/**
+ * Fuzzy-match two accounts when strict keys differ.
+ * Returns true if the accounts are likely the same despite minor LLM differences.
+ */
+function accountsFuzzyMatch(a: ExtractionAccount, b: ExtractionAccount): boolean {
+  const aInfo = a.account_info;
+  const bInfo = b.account_info;
+
+  // 1. Nickname match — if both have the same non-empty nickname, it's a match
+  const aNick = (aInfo.account_nickname ?? "").toLowerCase().trim();
+  const bNick = (bInfo.account_nickname ?? "").toLowerCase().trim();
+  if (aNick && bNick && aNick === bNick) return true;
+
+  // 2. One nickname contains the other's type + institution (e.g. "Schwab Checking")
+  const aInst = normalizeInstitution(aInfo.institution_name);
+  const bInst = normalizeInstitution(bInfo.institution_name);
+  const aType = (aInfo.account_type ?? "").toLowerCase();
+  const bType = (bInfo.account_type ?? "").toLowerCase();
+
+  if (aNick && (aNick.includes(bInst) || aNick.includes(bType))) {
+    if (bNick && (bNick.includes(aInst) || bNick.includes(aType))) return true;
+    // One has a nickname that references the other's institution/type
+    if (aType === bType || aInst === bInst) return true;
+  }
+  if (bNick && (bNick.includes(aInst) || bNick.includes(aType))) {
+    if (aType === bType || aInst === bInst) return true;
+  }
+
+  // 3. Same account number last-4 + (same type OR same institution)
+  const aNum = aInfo.account_number?.replace(/^\.+/, "").slice(-4) ?? "";
+  const bNum = bInfo.account_number?.replace(/^\.+/, "").slice(-4) ?? "";
+  if (aNum && bNum && aNum === bNum) {
+    if (aType === bType || (aInst && bInst && aInst === bInst)) return true;
+  }
+
+  // 4. Same type + similar institution (one contains the other)
+  if (aType && bType && aType === bType && aInst && bInst) {
+    if (aInst.includes(bInst) || bInst.includes(aInst)) return true;
+  }
+
+  return false;
 }
 
 /** Check if two numbers differ beyond threshold */
@@ -113,11 +165,25 @@ export function compareExtractions(
   const matched = new Map<number, number>();
   const usedVerification = new Set<number>();
 
+  // Pass 1: strict key match
   for (let pi = 0; pi < primary.accounts.length; pi++) {
     const pk = primaryKeys[pi];
     for (let vi = 0; vi < verification.accounts.length; vi++) {
       if (usedVerification.has(vi)) continue;
       if (pk === verificationKeys[vi]) {
+        matched.set(pi, vi);
+        usedVerification.add(vi);
+        break;
+      }
+    }
+  }
+
+  // Pass 2: fuzzy match for any accounts not matched in pass 1
+  for (let pi = 0; pi < primary.accounts.length; pi++) {
+    if (matched.has(pi)) continue;
+    for (let vi = 0; vi < verification.accounts.length; vi++) {
+      if (usedVerification.has(vi)) continue;
+      if (accountsFuzzyMatch(primary.accounts[pi], verification.accounts[vi])) {
         matched.set(pi, vi);
         usedVerification.add(vi);
         break;
