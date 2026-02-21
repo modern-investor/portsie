@@ -17,7 +17,7 @@ export function SiteVersion({ className = "" }: { className?: string }) {
     fetchVersionInfo().then(setInfo);
   }, []);
 
-  if (!info) return null;
+  if (!info) return <span data-site-version className={className} />;
 
   return (
     <>

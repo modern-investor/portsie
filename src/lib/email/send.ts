@@ -33,7 +33,7 @@ export async function sendTemplatedEmail({
     const text = renderTemplate(template.text_template, variables);
     const html = await wrapInEmailLayout(htmlBody);
 
-    const resend = getResendClient();
+    const resend = await getResendClient();
     const { error } = await resend.emails.send({
       from: FROM_ADDRESS,
       to,

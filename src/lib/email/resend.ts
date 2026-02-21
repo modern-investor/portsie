@@ -1,13 +1,14 @@
-import { Resend } from "resend";
+type ResendClient = InstanceType<(typeof import("resend"))["Resend"]>;
 
-let resendClient: Resend | null = null;
+let resendClient: ResendClient | null = null;
 
-export function getResendClient(): Resend {
+export async function getResendClient(): Promise<ResendClient> {
   if (!resendClient) {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
       throw new Error("RESEND_API_KEY environment variable is not set");
     }
+    const { Resend } = await import("resend");
     resendClient = new Resend(apiKey);
   }
   return resendClient;
