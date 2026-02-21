@@ -161,13 +161,22 @@ For Robinhood CSV trans_code values:
   - "CRRD" (Conversion to Roth IRA) → "journal"
   - "CFRI" (Conversion from Traditional IRA) → "transfer_in"
   - "GDBP" (Gold Deposit Boost Payment) → "interest"
-  - "FUTSWP" (Event Contracts Cash Transfer) → "other"
+  - "FUTSWP" (Event Contracts Inter-Entity Cash Transfer) → "other"
   - "MTCH" (IRA Match) → "interest"
   - "T/A" (Transfer/ACAT) → "other"
   - "GMPC" (Gold Plan Credit) → "other"
   - "DCF" (Debit Card Transfer) → "transfer_out"
   - "SPL" (Stock Split) → "stock_split"
   - "MISC" → "other"
+
+=== BROKER CSV COLUMN HINTS ===
+
+When you see these column headers, map them consistently:
+- Charles Schwab: "Trade Date" or "Date" → transaction_date; "Action" or "Trans Type" → action; "Symbol" or "Symbol/Description" → symbol; "Quantity" → quantity; "Amount" or "Net Amount" → total_amount.
+- Fidelity: "Run Date" or "Trade Date" → transaction_date; "Transaction Type" → action; "Symbol" → symbol; "Quantity" → quantity; "Amount" → total_amount.
+- Robinhood: "Activity Date" → transaction_date; "Trans Code" (see Robinhood trans_code list above) → action; "Instrument" or "Symbol" → symbol; "Quantity" → quantity; "Amount" → total_amount.
+
+Use the most specific date column for transaction_date (e.g. "Trade Date" over "Settlement Date" for buys/sells).
 
 === RULES ===
 
@@ -193,7 +202,7 @@ For Robinhood CSV trans_code values:
 
 11. NULL FOR UNKNOWN: If an optional field cannot be determined from the document, use null. Never guess or hallucinate values.
 
-12. PREFER DOCUMENT VALUES: For market_value, liquidation_value, total_amount, and document/account totals, use the value AS PRINTED on the document. Do not substitute a computed value (e.g. quantity * price) when the document shows a different number — the document may reflect rounding, lot-level pricing, or after-hours adjustments.
+12. PREFER DOCUMENT VALUES: For market_value, liquidation_value, total_amount, and document/account totals, use the value AS PRINTED on the document. Do not substitute a computed value (e.g. quantity × price) when the document shows a different number — the document may reflect rounding, lot-level pricing, or after-hours adjustments.
 
 13. NO PLACEHOLDERS: Do not use "Unknown", "N/A", or "TBD" in required fields when the document clearly shows a value. Use the exact ticker, description, or label from the document. If a field truly cannot be determined, use null (for optional fields) or document what is visible (for required fields like description).
 

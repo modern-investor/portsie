@@ -98,6 +98,7 @@ export async function extractViaAPI(
     );
   }
 
+  // Persist validation warnings/coercions in extraction notes for traceability
   let extraction = validationResult.extraction;
   if (validationResult.coercions.length > 0 || validationResult.warnings.length > 0) {
     const validationNotes = [

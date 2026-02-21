@@ -82,7 +82,7 @@ const ACTION_MAP: Record<string, TransactionAction> = {
   "journaled_shares": "journal",
   "adr_mgmt_fee": "fee",
   "misc_cash_entry": "other",
-  // Additional common variations
+  // Common multi-word action phrases
   "dividend_reinvestment": "reinvestment",
   "wire_in": "transfer_in",
   "wire_out": "transfer_out",
@@ -98,7 +98,7 @@ const ACTION_MAP: Record<string, TransactionAction> = {
   "debit_interest": "interest",
   "margin_interest": "interest",
   "sweep_interest": "interest",
-  // Robinhood trans codes (data-driven from real activity CSVs)
+  // Robinhood trans codes (data-driven from real CSVs)
   "cil": "interest",
   "soff": "other",
   "crrd": "journal",
@@ -111,6 +111,17 @@ const ACTION_MAP: Record<string, TransactionAction> = {
   "dcf": "transfer_out",
   "spl": "stock_split",
   "misc": "other",
+  "bto": "buy",
+  "stc": "sell",
+  "sto": "sell_short",
+  "btc": "buy_to_cover",
+  "cdiv": "dividend",
+  "slip": "interest",
+  "ach": "transfer_in",
+  "acati": "transfer_in",
+  "acato": "transfer_out",
+  "jnls": "journal",
+  "gold": "fee",
 };
 
 // ── Helper functions ──
@@ -126,13 +137,13 @@ function coerceNumber(val: unknown): number | null {
     return val;
   }
   if (typeof val === "string") {
-    // Strip whitespace, currency symbols, commas; handle parens for negative
+    // Strip spaces, currency symbols, commas; handle parenthesized negatives
     let cleaned = val.replace(/\s+/g, "").replace(/[$,]/g, "").trim();
     if (cleaned.startsWith("(") && cleaned.endsWith(")")) {
       cleaned = "-" + cleaned.slice(1, -1);
     }
     if (!cleaned || cleaned === "-") return null;
-    const num = Number(cleaned); // handles scientific notation (e.g. 1.23e-4)
+    const num = Number(cleaned); // handles scientific notation (e.g. "1.23e-4")
     if (!Number.isNaN(num)) return num;
   }
   return null;
@@ -148,18 +159,18 @@ function coerceDate(val: unknown): string | null {
   if (typeof val !== "string") return null;
   const raw = val.trim();
 
-  // Already ISO date (with optional time — strip time portion)
+  // Already ISO date (with optional time suffix — strip it)
   const isoDateOnly = raw.slice(0, 10);
   if (DATE_REGEX.test(isoDateOnly)) return isoDateOnly;
 
-  // MM/DD/YYYY (with optional time)
+  // MM/DD/YYYY (with optional time suffix)
   const mdyMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (mdyMatch) {
     const [, m, d, y] = mdyMatch;
     return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
 
-  // DD-Mon-YYYY or DD/Mon/YYYY or DD Mon YYYY (e.g. 19-Feb-2025)
+  // DD-Mon-YYYY or DD-MMM-YYYY (e.g. "19-Feb-2025", "5 Jan 2026")
   const dmyAbbrMatch = raw.match(/^(\d{1,2})[-/\s]([A-Za-z]{3,9})[-/\s](\d{4})/);
   if (dmyAbbrMatch) {
     const [, d, mon, y] = dmyAbbrMatch;
@@ -167,10 +178,10 @@ function coerceDate(val: unknown): string | null {
     if (m) return `${y}-${m}-${d.padStart(2, "0")}`;
   }
 
-  // Mon DD, YYYY (e.g. Feb 19, 2025)
-  const monDyMatch = raw.match(/^([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})/);
-  if (monDyMatch) {
-    const [, mon, d, y] = monDyMatch;
+  // Mon DD, YYYY (e.g. "Feb 19, 2025", "January 5, 2026")
+  const monDYMatch = raw.match(/^([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})/);
+  if (monDYMatch) {
+    const [, mon, d, y] = monDYMatch;
     const m = MONTH_ABBR[mon.toLowerCase().slice(0, 3)];
     if (m) return `${y}-${m}-${d.padStart(2, "0")}`;
   }
@@ -203,14 +214,6 @@ function normalizeAction(val: unknown): TransactionAction | null {
     if (ACTION_MAP[firstToken]) return ACTION_MAP[firstToken];
   }
   return null;
-}
-
-function normalizeSymbol(val: unknown): string | null {
-  if (val === null || val === undefined) return null;
-  if (typeof val !== "string") return null;
-  const trimmed = val.trim();
-  if (!trimmed) return null;
-  return trimmed.toUpperCase();
 }
 
 function normalizeAssetType(val: unknown): AssetType {
@@ -264,6 +267,14 @@ function normalizeConfidence(val: unknown): Confidence {
     return lower as Confidence;
   }
   return "low";
+}
+
+function normalizeSymbol(val: unknown): string | null {
+  if (val === null || val === undefined) return null;
+  if (typeof val !== "string") return null;
+  const trimmed = val.trim();
+  if (!trimmed) return null;
+  return trimmed.toUpperCase();
 }
 
 function normalizeDocumentType(val: unknown): DocumentType {

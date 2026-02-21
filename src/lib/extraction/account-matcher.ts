@@ -39,7 +39,7 @@ export interface ExistingAccountForMatching {
 /**
  * Extract digits from an account number and return both the full digits
  * and the last 4 digits for flexible matching.
- * Handles various masking styles: "...5902", "****5902", "XXX902", etc.
+ * Handles various masking styles: "...5902", "****5902", "XXX-5902", etc.
  */
 function accountNumberDigits(num: string): { full: string; last4: string | null } {
   const digits = num.replace(/\D/g, "");

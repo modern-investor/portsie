@@ -92,6 +92,7 @@ async function extractViaCLILocal(
       );
     }
 
+    // Persist validation warnings/coercions in extraction notes for traceability
     let extraction = validationResult.extraction;
     if (validationResult.coercions.length > 0 || validationResult.warnings.length > 0) {
       const validationNotes = [
@@ -186,6 +187,7 @@ async function extractViaCLIRemote(
     );
   }
 
+  // Persist validation warnings/coercions in extraction notes for traceability
   let extraction = validationResult.extraction;
   if (validationResult.coercions.length > 0 || validationResult.warnings.length > 0) {
     const validationNotes = [

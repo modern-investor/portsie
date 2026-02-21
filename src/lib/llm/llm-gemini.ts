@@ -78,7 +78,7 @@ export async function extractViaGemini(
       if (tailCount > 0) {
         textPayload += `\n\nLast ${tailCount} rows:\n${JSON.stringify(rows.slice(-tailCount), null, 2)}`;
       }
-      textPayload += "\n--- End pre-parsed data. Map the columns above to the schema. ---\n";
+      textPayload += "\n--- End pre-parsed data. Map the columns above to the schema. ---\n\n";
     }
 
     parts.push({ text: textPayload });
@@ -160,6 +160,7 @@ export async function extractViaGemini(
     );
   }
 
+  // Persist validation warnings/coercions in extraction notes for traceability
   let extraction = validationResult.extraction;
   if (validationResult.coercions.length > 0 || validationResult.warnings.length > 0) {
     const validationNotes = [
