@@ -41,8 +41,19 @@ function CustomContent(props: any) {
   const { x, y, width, height, name, color, pct } = props;
   if (!name || width < 2 || height < 2) return null;
 
-  const showLabel = width > 50 && height > 30;
-  const showPct = width > 40 && height > 20;
+  // Scale font size based on available space (both axes) with higher caps
+  const nameFontSize = Math.min(22, width / 6, height / 3);
+  const pctFontSize = Math.min(18, width / 7, height / 4);
+  const lineGap = nameFontSize * 0.3;
+
+  const showLabel = nameFontSize >= 9 && width > 40 && height > 24;
+  const showPct = showLabel && pctFontSize >= 8 && height > (nameFontSize + pctFontSize + lineGap + 8);
+
+  // Truncate name based on actual font size vs available width
+  const charsPerWidth = width / (nameFontSize * 0.6);
+  const displayName = name.length > charsPerWidth
+    ? name.slice(0, Math.max(2, Math.floor(charsPerWidth) - 2)) + "\u2026"
+    : name;
 
   return (
     <g>
@@ -59,24 +70,24 @@ function CustomContent(props: any) {
       {showLabel && (
         <text
           x={x + width / 2}
-          y={y + height / 2 - (showPct ? 7 : 0)}
+          y={y + height / 2 - (showPct ? (pctFontSize / 2 + lineGap / 2) : 0)}
           textAnchor="middle"
           dominantBaseline="middle"
           fill="#fff"
-          fontSize={Math.min(12, width / 8)}
+          fontSize={nameFontSize}
           fontWeight={600}
         >
-          {name.length > width / 7 ? name.slice(0, Math.floor(width / 7)) + "..." : name}
+          {displayName}
         </text>
       )}
-      {showPct && showLabel && (
+      {showPct && (
         <text
           x={x + width / 2}
-          y={y + height / 2 + 10}
+          y={y + height / 2 + nameFontSize / 2 + lineGap}
           textAnchor="middle"
           dominantBaseline="middle"
           fill="rgba(255,255,255,0.8)"
-          fontSize={Math.min(10, width / 9)}
+          fontSize={pctFontSize}
         >
           {(pct ?? 0).toFixed(1)}%
         </text>
@@ -144,7 +155,7 @@ export function PortfolioTreemap({ assetClasses, totalMarketValue, hideValues }:
 
   return (
     <div>
-      <h3 className="mb-3 text-sm font-semibold text-gray-500 uppercase tracking-wider">
+      <h3 className="mb-3 text-2xl font-semibold text-gray-500 uppercase tracking-wider">
         Asset Breakdown
       </h3>
       <div className="h-64 w-full">

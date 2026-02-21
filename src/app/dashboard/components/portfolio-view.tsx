@@ -244,7 +244,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
         <TabsContent value="assets">
           <div className="space-y-6">
             <div className="rounded-lg border bg-white p-4 sm:p-6">
-              <h3 className="mb-4 text-sm font-semibold text-gray-500 uppercase tracking-wider">
+              <h3 className="mb-4 text-2xl font-semibold text-gray-500 uppercase tracking-wider">
                 Asset Allocation
               </h3>
               <PortfolioDonutChart

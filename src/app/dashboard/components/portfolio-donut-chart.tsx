@@ -35,7 +35,7 @@ export function PortfolioDonutChart({ assetClasses, totalMarketValue, hideValues
   return (
     <div className="space-y-4">
       {/* 100% Stacked Horizontal Bar */}
-      <div className="rounded-lg overflow-hidden h-10 flex" role="img" aria-label="Asset allocation bar chart">
+      <div className="rounded-lg overflow-hidden h-[68px] flex" role="img" aria-label="Asset allocation bar chart">
         {data.map((entry, idx) => (
           <div
             key={entry.label}
@@ -49,7 +49,7 @@ export function PortfolioDonutChart({ assetClasses, totalMarketValue, hideValues
             onMouseLeave={() => setHoveredIndex(null)}
           >
             {entry.pct >= 8 && (
-              <span className="text-xs font-semibold text-white truncate px-1">
+              <span className="text-xl font-semibold text-white truncate px-1">
                 {(entry.pct ?? 0).toFixed(1)}%
               </span>
             )}
@@ -58,13 +58,13 @@ export function PortfolioDonutChart({ assetClasses, totalMarketValue, hideValues
       </div>
 
       {/* Category Table */}
-      <table className="w-full text-sm">
+      <table className="w-full text-2xl">
         <thead>
           <tr className="border-b text-gray-500">
-            <th className="py-2 text-left font-medium">Category</th>
-            <th className="py-2 text-right font-medium">Holdings</th>
-            <th className="py-2 text-right font-medium">Alloc %</th>
-            {!hideValues && <th className="py-2 text-right font-medium">Value</th>}
+            <th className="py-3.5 text-left font-medium">Category</th>
+            <th className="py-3.5 text-right font-medium">Holdings</th>
+            <th className="py-3.5 text-right font-medium">Alloc %</th>
+            {!hideValues && <th className="py-3.5 text-right font-medium">Value</th>}
           </tr>
         </thead>
         <tbody>
@@ -78,19 +78,19 @@ export function PortfolioDonutChart({ assetClasses, totalMarketValue, hideValues
               onMouseEnter={() => setHoveredIndex(idx)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
-              <td className="py-2">
-                <div className="flex items-center gap-2">
+              <td className="py-3.5">
+                <div className="flex items-center gap-3">
                   <span
-                    className="inline-block h-3 w-3 rounded-full shrink-0"
+                    className="inline-block h-5 w-5 rounded-full shrink-0"
                     style={{ backgroundColor: entry.color }}
                   />
                   <span className="truncate">{entry.label}</span>
                 </div>
               </td>
-              <td className="py-2 text-right tabular-nums">{entry.holdingCount}</td>
-              <td className="py-2 text-right tabular-nums font-medium">{(entry.pct ?? 0).toFixed(1)}%</td>
+              <td className="py-3.5 text-right tabular-nums">{entry.holdingCount}</td>
+              <td className="py-3.5 text-right tabular-nums font-medium">{(entry.pct ?? 0).toFixed(1)}%</td>
               {!hideValues && (
-                <td className="py-2 text-right tabular-nums">
+                <td className="py-3.5 text-right tabular-nums">
                   ${entry.value.toLocaleString("en-US", { maximumFractionDigits: 0 })}
                 </td>
               )}
@@ -98,11 +98,11 @@ export function PortfolioDonutChart({ assetClasses, totalMarketValue, hideValues
           ))}
           {/* Total row */}
           <tr className="border-t-2 font-semibold">
-            <td className="py-2">Total</td>
-            <td className="py-2 text-right tabular-nums">{totalHoldings}</td>
-            <td className="py-2 text-right tabular-nums">100%</td>
+            <td className="py-3.5">Total</td>
+            <td className="py-3.5 text-right tabular-nums">{totalHoldings}</td>
+            <td className="py-3.5 text-right tabular-nums">100%</td>
             {!hideValues && (
-              <td className="py-2 text-right tabular-nums">
+              <td className="py-3.5 text-right tabular-nums">
                 ${totalMarketValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
               </td>
             )}
