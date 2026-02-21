@@ -10,11 +10,15 @@ export function LLMSettings() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Settings state
+  // Primary settings state
   const [llmMode, setLlmMode] = useState<LLMMode>("gemini");
   const [hasApiKey, setHasApiKey] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [cliEndpoint, setCliEndpoint] = useState("");
+
+  // Verification settings state
+  const [verificationEnabled, setVerificationEnabled] = useState(true);
+  const [verificationBackend, setVerificationBackend] = useState<"gemini" | "cli">("cli");
 
   // Fetch current settings on mount
   useEffect(() => {
@@ -27,6 +31,8 @@ export function LLMSettings() {
         setLlmMode(data.llmMode ?? "gemini");
         setHasApiKey(data.hasApiKey ?? false);
         setCliEndpoint(data.cliEndpoint ?? "");
+        setVerificationEnabled(data.verificationEnabled ?? true);
+        setVerificationBackend(data.verificationBackend ?? "cli");
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -41,6 +47,9 @@ export function LLMSettings() {
       const body: Record<string, unknown> = {
         llmMode,
         cliEndpoint: cliEndpoint || null,
+        verificationEnabled,
+        verificationBackend,
+        verificationModel: verificationBackend === "cli" ? "claude-sonnet-4-6" : "gemini-3-flash-preview",
       };
       if (apiKey.trim()) {
         body.apiKey = apiKey.trim();
@@ -101,11 +110,11 @@ export function LLMSettings() {
 
   return (
     <div className="space-y-6">
-      {/* Mode Toggle */}
+      {/* Primary Extraction Model */}
       <div className="space-y-4 rounded-lg border p-4 sm:p-6">
-        <h3 className="font-medium">Processing Backend</h3>
+        <h3 className="font-medium">Primary Extraction Model</h3>
         <p className="text-sm text-gray-500">
-          Choose how uploaded financial documents are processed.
+          The main model used to extract financial data from uploaded documents.
         </p>
 
         <div className="space-y-3">
@@ -266,6 +275,83 @@ export function LLMSettings() {
           />
         </div>
       )}
+
+      {/* Verification Model */}
+      <div className="space-y-4 rounded-lg border p-4 sm:p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium">Verification Model</h3>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={verificationEnabled}
+              onChange={(e) => setVerificationEnabled(e.target.checked)}
+              className="accent-blue-600"
+            />
+            Enabled
+          </label>
+        </div>
+        <p className="text-sm text-gray-500">
+          After primary extraction, a second model independently extracts data
+          from the same document. Discrepancies are shown in the upload review.
+        </p>
+
+        {verificationEnabled && (
+          <div className="space-y-3">
+            {/* CLI / Sonnet (default verification) */}
+            <label
+              className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors ${
+                verificationBackend === "cli"
+                  ? "border-blue-500 bg-blue-50"
+                  : "hover:bg-gray-50"
+              }`}
+            >
+              <input
+                type="radio"
+                name="verificationBackend"
+                value="cli"
+                checked={verificationBackend === "cli"}
+                onChange={() => setVerificationBackend("cli")}
+                className="mt-1 accent-blue-600"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium">Claude Sonnet 4.6</p>
+                  <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+                    Default
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Claude Sonnet 4.6 via CLI wrapper. No per-token cost.
+                </p>
+              </div>
+            </label>
+
+            {/* Gemini verification */}
+            <label
+              className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors ${
+                verificationBackend === "gemini"
+                  ? "border-blue-500 bg-blue-50"
+                  : "hover:bg-gray-50"
+              }`}
+            >
+              <input
+                type="radio"
+                name="verificationBackend"
+                value="gemini"
+                checked={verificationBackend === "gemini"}
+                onChange={() => setVerificationBackend("gemini")}
+                className="mt-1 accent-blue-600"
+              />
+              <div className="flex-1">
+                <p className="text-sm font-medium">Gemini Flash</p>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Google Gemini 3 Flash. Use when primary is Claude CLI.
+                </p>
+              </div>
+            </label>
+          </div>
+        )}
+      </div>
 
       {/* Status messages */}
       {error && (

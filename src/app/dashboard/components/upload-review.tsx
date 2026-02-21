@@ -8,6 +8,8 @@ import type {
   ExtractionPosition,
   ExtractionTransaction,
 } from "@/lib/extraction/schema";
+import { compareExtractions } from "@/lib/extraction/compare";
+import type { ComparisonResult } from "@/lib/extraction/compare";
 
 const CONFIDENCE_STYLES = {
   high: { label: "High confidence", className: "text-green-700 bg-green-100" },
@@ -228,6 +230,121 @@ function TransactionsTable({ transactions }: { transactions: ExtractionTransacti
   );
 }
 
+/** Verification comparison section */
+function VerificationSection({
+  primaryExtraction,
+  verificationData,
+  verificationError,
+  verificationSettings,
+}: {
+  primaryExtraction: PortsieExtraction;
+  verificationData: PortsieExtraction | null;
+  verificationError: string | null;
+  verificationSettings: { backend: string; model: string } | null;
+}) {
+  if (verificationError) {
+    return (
+      <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+        <p className="font-medium">Verification failed</p>
+        <p className="mt-1 text-xs">{verificationError}</p>
+        {verificationSettings && (
+          <p className="mt-1 text-xs text-amber-600">
+            Model: {verificationSettings.model} ({verificationSettings.backend})
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (!verificationData) return null;
+
+  const comparison: ComparisonResult = compareExtractions(primaryExtraction, verificationData);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-semibold text-gray-700">
+          Dual-Model Verification
+        </h4>
+        <span
+          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+            comparison.agreement === "full"
+              ? "bg-green-100 text-green-700"
+              : comparison.agreement === "minor_differences"
+                ? "bg-amber-100 text-amber-700"
+                : "bg-red-100 text-red-700"
+          }`}
+        >
+          {comparison.agreement === "full"
+            ? "Models agree"
+            : comparison.agreement === "minor_differences"
+              ? `${comparison.summary.total} minor difference${comparison.summary.total !== 1 ? "s" : ""}`
+              : `${comparison.summary.errors} significant difference${comparison.summary.errors !== 1 ? "s" : ""}`}
+        </span>
+      </div>
+
+      {verificationSettings && (
+        <p className="text-xs text-gray-400">
+          Verified with: {verificationSettings.model} ({verificationSettings.backend})
+        </p>
+      )}
+
+      {comparison.discrepancies.length > 0 && (
+        <div className="max-h-48 overflow-auto rounded-md border">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="sticky top-0 border-b bg-gray-50 text-left text-gray-500">
+                <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Issue</th>
+                <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Primary</th>
+                <th className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">Verification</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comparison.discrepancies.map((d, i) => (
+                <tr
+                  key={i}
+                  className={`border-b last:border-b-0 ${
+                    d.severity === "error"
+                      ? "bg-red-50"
+                      : d.severity === "warning"
+                        ? "bg-amber-50"
+                        : ""
+                  }`}
+                >
+                  <td className="px-2 py-1.5 sm:px-3 sm:py-2">
+                    <span
+                      className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${
+                        d.severity === "error"
+                          ? "bg-red-500"
+                          : d.severity === "warning"
+                            ? "bg-amber-500"
+                            : "bg-blue-400"
+                      }`}
+                    />
+                    {d.description}
+                  </td>
+                  <td className="px-2 py-1.5 font-mono sm:px-3 sm:py-2">
+                    {d.primaryValue ?? "—"}
+                  </td>
+                  <td className="px-2 py-1.5 font-mono sm:px-3 sm:py-2">
+                    {d.verificationValue ?? "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {comparison.discrepancies.length === 0 && (
+        <p className="text-xs text-green-600">
+          Both models produced identical extraction results.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function UploadReview({
   upload,
   onReprocess,
@@ -280,12 +397,14 @@ export function UploadReview({
   const totalBalances = extraction.accounts.reduce((sum, a) => sum + a.balances.length, 0);
   const totalAccounts = extraction.accounts.length;
 
+  const verificationData = upload.verification_data as PortsieExtraction | null;
+
   return (
     <div className="space-y-4 rounded-lg border bg-white p-4 sm:p-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="truncate text-base font-semibold sm:text-lg">Review: {upload.filename}</h3>
+          <h3 className="truncate text-base font-semibold sm:text-lg">Upload Data Review: {upload.filename}</h3>
           <div className="mt-1 flex items-center gap-3 text-sm text-gray-500">
             {extraction.document.institution_name && (
               <span className="font-medium text-gray-700">{extraction.document.institution_name}</span>
@@ -424,6 +543,16 @@ export function UploadReview({
         </div>
       )}
 
+      {/* Verification comparison */}
+      {(verificationData || upload.verification_error) && (
+        <VerificationSection
+          primaryExtraction={extraction}
+          verificationData={verificationData}
+          verificationError={upload.verification_error}
+          verificationSettings={upload.verification_settings}
+        />
+      )}
+
       {/* Actions */}
       <div className="flex flex-wrap items-center gap-2 border-t pt-4 sm:gap-3">
         {upload.confirmed_at ? (
@@ -436,7 +565,7 @@ export function UploadReview({
             disabled={saving}
             className="rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
           >
-            {saving ? "Saving…" : "Confirm & Save"}
+            {saving ? "Saving..." : "Confirm & Save"}
           </button>
         )}
         {saveError && (

@@ -23,6 +23,9 @@ export async function GET() {
     llmMode: settings?.llmMode ?? "gemini",
     hasApiKey: settings?.hasApiKey ?? false,
     cliEndpoint: settings?.cliEndpoint ?? null,
+    verificationEnabled: settings?.verificationEnabled ?? true,
+    verificationBackend: settings?.verificationBackend ?? "cli",
+    verificationModel: settings?.verificationModel ?? "claude-sonnet-4-6",
   });
 }
 
@@ -38,16 +41,27 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { llmMode, apiKey, cliEndpoint } = body as {
+  const {
+    llmMode, apiKey, cliEndpoint,
+    verificationEnabled, verificationBackend, verificationModel,
+  } = body as {
     llmMode?: LLMMode;
     apiKey?: string | null;
     cliEndpoint?: string | null;
+    verificationEnabled?: boolean;
+    verificationBackend?: "gemini" | "cli";
+    verificationModel?: string;
   };
 
   // Validate mode
   const mode: LLMMode = llmMode ?? "gemini";
   if (mode !== "gemini" && mode !== "cli" && mode !== "api") {
     return NextResponse.json({ error: "Invalid LLM mode" }, { status: 400 });
+  }
+
+  // Validate verification backend
+  if (verificationBackend && verificationBackend !== "gemini" && verificationBackend !== "cli") {
+    return NextResponse.json({ error: "Invalid verification backend" }, { status: 400 });
   }
 
   // If switching to API mode without providing a new key, check for an existing one
@@ -67,7 +81,12 @@ export async function POST(request: NextRequest) {
       user.id,
       mode,
       apiKey?.trim() ?? null,
-      cliEndpoint?.trim() ?? null
+      cliEndpoint?.trim() ?? null,
+      {
+        enabled: verificationEnabled,
+        backend: verificationBackend,
+        model: verificationModel?.trim(),
+      }
     );
     return NextResponse.json({ success: true });
   } catch (error) {

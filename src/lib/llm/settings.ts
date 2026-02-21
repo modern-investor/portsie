@@ -11,7 +11,12 @@ export async function storeLLMSettings(
   userId: string,
   llmMode: LLMMode,
   apiKey: string | null,
-  cliEndpoint: string | null
+  cliEndpoint: string | null,
+  verification?: {
+    enabled?: boolean;
+    backend?: "gemini" | "cli";
+    model?: string;
+  }
 ): Promise<void> {
   // If apiKey is provided, encrypt it. If null, we need to preserve existing key.
   let apiKeyEncrypted: string | null | undefined;
@@ -27,14 +32,22 @@ export async function storeLLMSettings(
     apiKeyEncrypted = existing?.api_key_encrypted ?? null;
   }
 
+  const row: Record<string, unknown> = {
+    user_id: userId,
+    llm_mode: llmMode,
+    api_key_encrypted: apiKeyEncrypted,
+    cli_endpoint: cliEndpoint,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (verification) {
+    if (verification.enabled !== undefined) row.verification_enabled = verification.enabled;
+    if (verification.backend) row.verification_backend = verification.backend;
+    if (verification.model) row.verification_model = verification.model;
+  }
+
   const { error } = await supabase.from("llm_settings").upsert(
-    {
-      user_id: userId,
-      llm_mode: llmMode,
-      api_key_encrypted: apiKeyEncrypted,
-      cli_endpoint: cliEndpoint,
-      updated_at: new Date().toISOString(),
-    },
+    row,
     { onConflict: "user_id" }
   );
 
@@ -61,6 +74,9 @@ export async function getLLMSettings(
     llmMode: record.llm_mode,
     hasApiKey: !!record.api_key_encrypted,
     cliEndpoint: record.cli_endpoint,
+    verificationEnabled: record.verification_enabled ?? true,
+    verificationBackend: (record.verification_backend ?? "cli") as "gemini" | "cli",
+    verificationModel: record.verification_model ?? "claude-sonnet-4-6",
   };
 }
 

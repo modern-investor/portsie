@@ -202,6 +202,16 @@ function InlineSummary({ upload }: { upload: UploadedStatement }) {
           {totalBalances} bal
         </span>
       )}
+      {upload.verification_data && !upload.verification_error && (
+        <span className="rounded bg-green-50 px-1.5 py-0.5 text-green-600">
+          verified
+        </span>
+      )}
+      {upload.verification_error && (
+        <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-600" title={upload.verification_error}>
+          verify failed
+        </span>
+      )}
     </div>
   );
 }
@@ -381,6 +391,11 @@ export function UploadList({
                     {upload.processing_settings.thinkingLevel} thinking
                     {" · "}
                     {upload.processing_settings.mediaResolution === "MEDIA_RESOLUTION_HIGH" ? "high res" : "default res"}
+                    {upload.verification_settings && (
+                      <span className="ml-2 text-gray-300">
+                        | verified: {upload.verification_settings.model}
+                      </span>
+                    )}
                   </div>
                 )}
                 {/* Processing timestamps — 4th line */}
