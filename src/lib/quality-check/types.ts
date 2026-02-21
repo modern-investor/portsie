@@ -37,6 +37,11 @@ export interface CheckResult {
   };
   /** Soft check: sum of position market_value ≈ equity from balance */
   position_sum: ValueCheck;
+  /** Hard check: accounts with large totals must have holdings to back them */
+  balance_vs_holdings: {
+    passed: boolean;
+    issues: string[];
+  };
   /** True if all hard checks pass */
   overall_passed: boolean;
   /** Human-readable summary */

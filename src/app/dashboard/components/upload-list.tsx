@@ -170,11 +170,17 @@ function InlineSummary({ upload }: { upload: UploadedStatement }) {
   }, 0);
 
   const institutions = [...new Set(ext.accounts.map((a) => a.account_info.institution_name).filter(Boolean))];
+  const MAX_INSTITUTIONS = 3;
+  const displayInstitutions = institutions.slice(0, MAX_INSTITUTIONS);
+  const extraCount = institutions.length - MAX_INSTITUTIONS;
 
   return (
     <div className="ml-[52px] sm:ml-[56px] -mt-1 mb-1 flex flex-wrap items-center gap-1.5 text-xs">
-      {institutions.length > 0 && (
-        <span className="font-medium text-gray-600">{institutions.join(", ")}</span>
+      {displayInstitutions.length > 0 && (
+        <span className="font-medium text-gray-600">
+          {displayInstitutions.join(", ")}
+          {extraCount > 0 && ` +${extraCount} more`}
+        </span>
       )}
       {totalValue > 0 && (
         <span className="rounded bg-green-50 px-1.5 py-0.5 font-medium text-green-700">
