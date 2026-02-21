@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { SchwabSetupInline } from "./schwab-setup-inline";
-import { UploadSection } from "./upload-section";
 import { QuilttConnector } from "@/components/quiltt-connector";
 
 export function BrokerageSetup({
@@ -22,7 +21,10 @@ export function BrokerageSetup({
   onBack: () => void;
 }) {
   const brokerage = getBrokerageById(brokerageId);
-  const methods = brokerage?.connectionMethods ?? ["upload"];
+  // Filter out "upload" — handled by the top-level Upload card in connections view
+  const methods = (brokerage?.connectionMethods ?? ["upload"]).filter(
+    (m) => m !== "upload"
+  );
   const [activeMethod, setActiveMethod] = useState<ConnectionMethod>(
     methods[0]
   );
@@ -85,9 +87,6 @@ export function BrokerageSetup({
         />
       )}
 
-      {activeMethod === "upload" && (
-        <UploadSection brokerageContext={brokerage.name} />
-      )}
     </div>
   );
 }
