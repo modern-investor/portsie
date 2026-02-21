@@ -1,12 +1,12 @@
 {
-  "version": "v260220.11 11:41p",
-  "release": 104,
-  "sha": "8350448c",
-  "fullSha": "8350448c3314543787dafd0aa172787123fdce71",
+  "version": "v260221.01 12:12a",
+  "release": 105,
+  "sha": "0b6f9a81",
+  "fullSha": "0b6f9a8144a6b7eb85a4dfac88bb7c0018c34e44",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000217",
-  "pushedAt": "2026-02-21T05:41:24+00",
-  "commits": [{"sha": "8350448c3314543787dafd0aa172787123fdce71", "short_sha": "8350448c", "author": "rahulio", "message": "Fix duplicate upload on drag-and-drop, improve processing model display"}]
+  "machine": "GitHub Actions 1000000222",
+  "pushedAt": "2026-02-21T06:12:47+00",
+  "commits": [{"sha": "0b6f9a8144a6b7eb85a4dfac88bb7c0018c34e44", "short_sha": "0b6f9a81", "author": "rahulio", "message": "Fix dashboard crash: null-safe numeric fields from Schwab API"}]
 }
