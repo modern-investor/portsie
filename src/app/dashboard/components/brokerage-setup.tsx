@@ -21,10 +21,7 @@ export function BrokerageSetup({
   onBack: () => void;
 }) {
   const brokerage = getBrokerageById(brokerageId);
-  // Filter out "upload" — it's handled by the top-level Upload tab
-  const methods = (brokerage?.connectionMethods ?? ["upload"]).filter(
-    (m) => m !== "upload"
-  );
+  const methods = brokerage?.connectionMethods ?? ["quiltt"];
   const [activeMethod, setActiveMethod] = useState<ConnectionMethod>(
     methods[0] ?? "quiltt"
   );

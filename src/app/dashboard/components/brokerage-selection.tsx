@@ -19,7 +19,6 @@ const METHOD_BADGE: Record<
 > = {
   api: { label: "API", className: "bg-green-100 text-green-700" },
   quiltt: { label: "Link", className: "bg-blue-100 text-blue-700" },
-  upload: { label: "Upload", className: "bg-gray-100 text-gray-600" },
 };
 
 function InstitutionCard({
@@ -32,10 +31,7 @@ function InstitutionCard({
   onSelect: () => void;
 }) {
   const isGeneric = GENERIC_IDS.has(brokerage.id);
-  // Show badges for non-upload methods (upload is always implied)
-  const visibleMethods = brokerage.connectionMethods.filter(
-    (m) => m !== "upload"
-  );
+  const visibleMethods = brokerage.connectionMethods;
 
   return (
     <button
