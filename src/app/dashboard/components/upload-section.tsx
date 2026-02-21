@@ -66,6 +66,7 @@ export function UploadSection({
   useEffect(() => {
     if (redirectCountdown === null) return;
     if (redirectCountdown <= 0) {
+      localStorage.setItem("portsie:portfolio-tab", "assets");
       router.push("/dashboard");
       return;
     }
@@ -363,7 +364,10 @@ export function UploadSection({
             {/* Actions */}
             <div className="mt-5 flex items-center justify-center gap-3">
               <button
-                onClick={() => router.push("/dashboard")}
+                onClick={() => {
+                  localStorage.setItem("portsie:portfolio-tab", "assets");
+                  router.push("/dashboard");
+                }}
                 className="rounded-lg bg-green-600 px-5 py-2 text-sm font-medium text-white hover:bg-green-700"
               >
                 Go now
