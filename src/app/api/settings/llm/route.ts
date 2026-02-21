@@ -53,9 +53,8 @@ export async function POST(request: NextRequest) {
     verificationModel?: string;
   };
 
-  // Validate mode
-  const mode: LLMMode = llmMode ?? "gemini";
-  if (mode !== "gemini" && mode !== "cli" && mode !== "api") {
+  // Validate llmMode if provided
+  if (llmMode && llmMode !== "gemini" && llmMode !== "cli" && llmMode !== "api") {
     return NextResponse.json({ error: "Invalid LLM mode" }, { status: 400 });
   }
 
@@ -64,15 +63,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid verification backend" }, { status: 400 });
   }
 
+  // Read existing settings so partial updates don't clobber other fields
+  const existing = await getLLMSettings(supabase, user.id);
+  const mode: LLMMode = llmMode ?? existing?.llmMode ?? "gemini";
+
   // If switching to API mode without providing a new key, check for an existing one
-  if (mode === "api" && !apiKey) {
-    const existing = await getLLMSettings(supabase, user.id);
-    if (!existing?.hasApiKey) {
-      return NextResponse.json(
-        { error: "API key required for API mode" },
-        { status: 400 }
-      );
-    }
+  if (mode === "api" && !apiKey && !existing?.hasApiKey) {
+    return NextResponse.json(
+      { error: "API key required for API mode" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -81,11 +81,11 @@ export async function POST(request: NextRequest) {
       user.id,
       mode,
       apiKey?.trim() ?? null,
-      cliEndpoint?.trim() ?? null,
+      cliEndpoint !== undefined ? (cliEndpoint?.trim() ?? null) : (existing?.cliEndpoint ?? null),
       {
-        enabled: verificationEnabled,
-        backend: verificationBackend,
-        model: verificationModel?.trim(),
+        enabled: verificationEnabled ?? existing?.verificationEnabled,
+        backend: verificationBackend ?? existing?.verificationBackend,
+        model: verificationModel?.trim() ?? existing?.verificationModel,
       }
     );
     return NextResponse.json({ success: true });

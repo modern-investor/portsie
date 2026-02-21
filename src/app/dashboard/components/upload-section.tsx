@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { UploadDropzone } from "./upload-dropzone";
 import { UploadList } from "./upload-list";
 import { ProcessingPresetSelect } from "./processing-preset-select";
+import { VerificationSelect } from "./verification-select";
 import type { UploadedStatement } from "@/lib/upload/types";
 import type { PortsieExtraction } from "@/lib/extraction/schema";
 import { DEFAULT_PRESET } from "@/lib/llm/types";
@@ -396,10 +397,13 @@ export function UploadSection({
 
       <UploadDropzone onUploaded={handleFileUploaded} onBatchComplete={handleBatchProcess} />
 
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-4">
         <ProcessingPresetSelect
           value={processingPreset}
           onChange={setProcessingPreset}
+          disabled={processingIds.size > 0 || queuedIds.size > 0}
+        />
+        <VerificationSelect
           disabled={processingIds.size > 0 || queuedIds.size > 0}
         />
       </div>
