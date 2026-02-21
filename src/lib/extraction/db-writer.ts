@@ -4,20 +4,14 @@
  * Pure function: takes a validated PortsieExtraction + AccountMapResult
  * and writes everything to the database deterministically.
  *
- * For each account mapping:
- *   1. Resolve account_id (existing or INSERT new)
- *   2. Reconcile holdings (new/update/close)
- *   3. Write position_snapshots (immutable, deduped)
- *   4. Write balance_snapshots (immutable, deduped)
- *   5. Write transactions (upsert by external_transaction_id)
- *   6. Update account summary (recompute totals from holdings)
- *
- * For unallocated_positions:
- *   7. Find or create aggregate account
- *   8. Write holdings + position_snapshots
- *
- * Final:
- *   9. Update uploaded_statements metadata
+ * Optimized for large extractions (50+ accounts) by batching DB operations:
+ *   Phase 1: Resolve all account IDs (batch create new accounts)
+ *   Phase 2: Collect all snapshot/balance/transaction rows across accounts
+ *   Phase 3: Bulk upsert per table (1 query per table, not 1 per account)
+ *   Phase 4: Reconcile holdings for accounts with positions (parallelized)
+ *   Phase 5: Handle unallocated/aggregate positions
+ *   Phase 6: Update account summaries (parallelized)
+ *   Phase 7: Update uploaded_statements metadata
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -81,6 +75,56 @@ async function createAccount(
   }
 
   return data!.id;
+}
+
+/**
+ * Batch-create multiple new accounts. Returns a map from extraction_index to account_id.
+ */
+async function batchCreateAccounts(
+  supabase: SupabaseClient,
+  userId: string,
+  newAccountMappings: { index: number; info: ExtractionAccount["account_info"] }[]
+): Promise<Map<number, string>> {
+  const result = new Map<number, string>();
+  if (newAccountMappings.length === 0) return result;
+
+  // Insert all accounts in one batch
+  const rows = newAccountMappings.map((m) => ({
+    user_id: userId,
+    data_source: "manual_upload",
+    schwab_account_number: m.info.account_number ?? null,
+    account_type: m.info.account_type ?? null,
+    account_nickname:
+      m.info.account_nickname ||
+      `${m.info.institution_name || "Unknown"} Account`,
+    institution_name: m.info.institution_name || "Unknown",
+    account_group: m.info.account_group ?? null,
+    account_category: accountTypeToCategory(m.info.account_type),
+    is_active: true,
+  }));
+
+  const { data, error } = await supabase
+    .from("accounts")
+    .insert(rows)
+    .select("id");
+
+  if (error) {
+    // Fallback: create accounts individually (handles unique constraint violations)
+    for (const m of newAccountMappings) {
+      const id = await createAccount(supabase, userId, m.info);
+      result.set(m.index, id);
+    }
+    return result;
+  }
+
+  // Map results back by index order
+  for (let i = 0; i < newAccountMappings.length; i++) {
+    if (data[i]) {
+      result.set(newAccountMappings[i].index, data[i].id);
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -164,7 +208,6 @@ function deduplicatePositions(positions: ExtractionPosition[]): ExtractionPositi
 
 /**
  * Deduplicate transactions by content key (date, symbol, action, quantity, price, amount).
- * Prevents double-counting when the LLM returns duplicate rows for the same real-world transaction.
  */
 function deduplicateTransactions(
   transactions: ExtractionTransaction[]
@@ -182,7 +225,6 @@ function deduplicateTransactions(
     if (!seen.has(key)) {
       seen.set(key, t);
     } else {
-      // Merge fees/commission into first occurrence if the duplicate has them
       const existing = seen.get(key)!;
       if (t.fees != null && (existing.fees == null || existing.fees === 0))
         existing.fees = t.fees;
@@ -202,7 +244,6 @@ function deduplicateBalances(balances: ExtractionBalance[]): ExtractionBalance[]
   for (const b of balances) {
     const existing = map.get(b.snapshot_date);
     if (existing) {
-      // Merge: prefer non-null values from the newer entry
       existing.liquidation_value = b.liquidation_value ?? existing.liquidation_value;
       existing.cash_balance = b.cash_balance ?? existing.cash_balance;
       existing.available_funds = b.available_funds ?? existing.available_funds;
@@ -218,197 +259,94 @@ function deduplicateBalances(balances: ExtractionBalance[]): ExtractionBalance[]
   return Array.from(map.values());
 }
 
-// ── Per-account writer ──
+// ── Row builders (no DB calls) ──
 
-/**
- * Write all data for a single account to the DB.
- */
-async function writeAccountData(
-  supabase: SupabaseClient,
+function buildPositionRows(
   userId: string,
   accountId: string,
   statementId: string,
-  account: ExtractionAccount,
-  statementStartDate: string | null,
-  statementEndDate: string | null
-): Promise<AccountWriteResult> {
-  let holdingsCreated = 0;
-  let holdingsUpdated = 0;
-  let holdingsClosed = 0;
-  let snapshotsWritten = 0;
-  let balancesWritten = 0;
-  let transactionsCreated = 0;
-
-  // ── 1. Reconcile holdings (source of truth) ──
-  if (account.positions.length > 0) {
-    // The reconcileHoldings function expects the old ExtractedPosition type,
-    // but our ExtractionPosition is structurally compatible
-    const reconciliation = await reconcileHoldings(
-      supabase,
-      userId,
-      accountId,
-      account.positions as unknown as import("@/lib/upload/types").ExtractedPosition[],
-      statementId
-    );
-    holdingsCreated = reconciliation.changes.filter(
-      (c) => c.type === "new_position"
-    ).length;
-    holdingsClosed = reconciliation.closed;
-    holdingsUpdated = reconciliation.upserted;
-  }
-
-  // ── 2. Write position snapshots (immutable history) ──
-  if (account.positions.length > 0) {
-    const deduped = deduplicatePositions(account.positions);
-    const positionRows = deduped.map((p) => ({
-      user_id: userId,
-      account_id: accountId,
-      snapshot_date: p.snapshot_date,
-      snapshot_type: "manual",
-      data_source: "manual_upload",
-      symbol: p.symbol,
-      name: p.symbol,
-      cusip: p.cusip ?? null,
-      asset_type: p.asset_type ?? null,
-      asset_subtype: p.asset_subtype ?? null,
-      asset_category: "tradeable",
-      description: p.description ?? null,
-      quantity: p.quantity,
-      quantity_unit: "shares",
-      short_quantity: p.short_quantity ?? 0,
-      purchase_price: p.average_cost_basis ?? null,
-      average_cost_basis: p.average_cost_basis ?? null,
-      market_price_per_share: p.market_price_per_share ?? null,
-      market_value: p.market_value ?? null,
-      cost_basis_total: p.cost_basis_total ?? null,
-      unrealized_profit_loss: p.unrealized_profit_loss ?? null,
-      unrealized_profit_loss_pct: p.unrealized_profit_loss_pct ?? null,
-      valuation_source: "statement",
-      uploaded_statement_id: statementId,
-    }));
-
-    const { data, error } = await supabase
-      .from("position_snapshots")
-      .upsert(positionRows, {
-        onConflict: "account_id,snapshot_date,symbol,snapshot_type",
-      })
-      .select("id");
-
-    if (error) {
-      throw new Error(`Failed to write position snapshots: ${error.message}`);
-    }
-    snapshotsWritten = data?.length ?? 0;
-  }
-
-  // ── 3. Write balance snapshots (immutable history) ──
-  if (account.balances.length > 0) {
-    const deduped = deduplicateBalances(account.balances);
-    const balanceRows = deduped.map((b) => ({
-      user_id: userId,
-      account_id: accountId,
-      snapshot_date: b.snapshot_date,
-      snapshot_type: "manual",
-      data_source: "manual_upload",
-      liquidation_value: b.liquidation_value ?? null,
-      cash_balance: b.cash_balance ?? null,
-      available_funds: b.available_funds ?? null,
-      total_cash: b.total_cash ?? null,
-      equity: b.equity ?? null,
-      long_market_value: b.long_market_value ?? null,
-      buying_power: b.buying_power ?? null,
-      uploaded_statement_id: statementId,
-    }));
-
-    const { data, error } = await supabase
-      .from("balance_snapshots")
-      .upsert(balanceRows, {
-        onConflict: "account_id,snapshot_date,snapshot_type",
-      })
-      .select("id");
-
-    if (error) {
-      throw new Error(`Failed to write balance snapshots: ${error.message}`);
-    }
-    balancesWritten = data?.length ?? 0;
-  }
-
-  // ── 4. Write transactions (deduplicate by content first) ──
-  if (account.transactions.length > 0) {
-    const dedupedTransactions = deduplicateTransactions(account.transactions);
-    const transactionRows = dedupedTransactions.map((t, index) => ({
-      user_id: userId,
-      account_id: accountId,
-      data_source: "manual_upload",
-      external_transaction_id: `upload_${statementId}_${accountId}_${index}`,
-      transaction_date: t.transaction_date,
-      settlement_date: t.settlement_date ?? null,
-      symbol: t.symbol ?? null,
-      cusip: t.cusip ?? null,
-      asset_type: t.asset_type ?? null,
-      asset_subtype: t.asset_subtype ?? null,
-      description: t.description,
-      action: t.action,
-      quantity: t.quantity ?? null,
-      price_per_share: t.price_per_share ?? null,
-      total_amount: t.total_amount,
-      fees: t.fees ?? 0,
-      commission: t.commission ?? 0,
-      uploaded_statement_id: statementId,
-    }));
-
-    const { data, error } = await supabase
-      .from("transactions")
-      .upsert(transactionRows, {
-        onConflict: "account_id,external_transaction_id",
-      })
-      .select("id");
-
-    if (error) {
-      throw new Error(`Failed to write transactions: ${error.message}`);
-    }
-    transactionsCreated = data?.length ?? 0;
-  }
-
-  // ── 5. Update account summary (recompute from holdings + balances) ──
-  const latestBalance =
-    account.balances.length > 0
-      ? account.balances[account.balances.length - 1]
-      : undefined;
-
-  // updateAccountSummary expects the old ExtractedBalance type,
-  // but our ExtractionBalance is structurally compatible
-  await updateAccountSummary(
-    supabase,
-    accountId,
-    latestBalance as unknown as import("@/lib/upload/types").ExtractedBalance | undefined
-  );
-
-  // Store document-reported total for integrity validation
-  if (latestBalance?.liquidation_value != null) {
-    await supabase
-      .from("accounts")
-      .update({
-        document_reported_total: latestBalance.liquidation_value,
-        document_reported_date: latestBalance.snapshot_date,
-      })
-      .eq("id", accountId);
-  }
-
-  const accountNickname =
-    account.account_info.account_nickname ||
-    `${account.account_info.institution_name || "Unknown"} Account`;
-
-  return {
+  positions: ExtractionPosition[]
+): Record<string, unknown>[] {
+  const deduped = deduplicatePositions(positions);
+  return deduped.map((p) => ({
+    user_id: userId,
     account_id: accountId,
-    account_nickname: accountNickname,
-    action: "matched", // Will be overridden by caller
-    holdings_created: holdingsCreated,
-    holdings_updated: holdingsUpdated,
-    holdings_closed: holdingsClosed,
-    snapshots_written: snapshotsWritten,
-    balances_written: balancesWritten,
-    transactions_created: transactionsCreated,
-  };
+    snapshot_date: p.snapshot_date,
+    snapshot_type: "manual",
+    data_source: "manual_upload",
+    symbol: p.symbol,
+    name: p.symbol,
+    cusip: p.cusip ?? null,
+    asset_type: p.asset_type ?? null,
+    asset_subtype: p.asset_subtype ?? null,
+    asset_category: "tradeable",
+    description: p.description ?? null,
+    quantity: p.quantity,
+    quantity_unit: "shares",
+    short_quantity: p.short_quantity ?? 0,
+    purchase_price: p.average_cost_basis ?? null,
+    average_cost_basis: p.average_cost_basis ?? null,
+    market_price_per_share: p.market_price_per_share ?? null,
+    market_value: p.market_value ?? null,
+    cost_basis_total: p.cost_basis_total ?? null,
+    unrealized_profit_loss: p.unrealized_profit_loss ?? null,
+    unrealized_profit_loss_pct: p.unrealized_profit_loss_pct ?? null,
+    valuation_source: "statement",
+    uploaded_statement_id: statementId,
+  }));
+}
+
+function buildBalanceRows(
+  userId: string,
+  accountId: string,
+  statementId: string,
+  balances: ExtractionBalance[]
+): Record<string, unknown>[] {
+  const deduped = deduplicateBalances(balances);
+  return deduped.map((b) => ({
+    user_id: userId,
+    account_id: accountId,
+    snapshot_date: b.snapshot_date,
+    snapshot_type: "manual",
+    data_source: "manual_upload",
+    liquidation_value: b.liquidation_value ?? null,
+    cash_balance: b.cash_balance ?? null,
+    available_funds: b.available_funds ?? null,
+    total_cash: b.total_cash ?? null,
+    equity: b.equity ?? null,
+    long_market_value: b.long_market_value ?? null,
+    buying_power: b.buying_power ?? null,
+    uploaded_statement_id: statementId,
+  }));
+}
+
+function buildTransactionRows(
+  userId: string,
+  accountId: string,
+  statementId: string,
+  transactions: ExtractionTransaction[]
+): Record<string, unknown>[] {
+  const deduped = deduplicateTransactions(transactions);
+  return deduped.map((t, index) => ({
+    user_id: userId,
+    account_id: accountId,
+    data_source: "manual_upload",
+    external_transaction_id: `upload_${statementId}_${accountId}_${index}`,
+    transaction_date: t.transaction_date,
+    settlement_date: t.settlement_date ?? null,
+    symbol: t.symbol ?? null,
+    cusip: t.cusip ?? null,
+    asset_type: t.asset_type ?? null,
+    asset_subtype: t.asset_subtype ?? null,
+    description: t.description,
+    action: t.action,
+    quantity: t.quantity ?? null,
+    price_per_share: t.price_per_share ?? null,
+    total_amount: t.total_amount,
+    fees: t.fees ?? 0,
+    commission: t.commission ?? 0,
+    uploaded_statement_id: statementId,
+  }));
 }
 
 // ── Public API ──
@@ -416,14 +354,8 @@ async function writeAccountData(
 /**
  * Write a validated PortsieExtraction to the database.
  *
- * Pure deterministic function: takes extraction + account map, writes everything.
- *
- * @param supabase - Supabase client with user auth
- * @param userId - User's UUID
- * @param statementId - uploaded_statements.id
- * @param extraction - Validated PortsieExtraction from Stage 2
- * @param accountMap - Account mappings from Stage 2.5
- * @returns WriteReport with per-account results and totals
+ * Optimized for large extractions: batches DB writes across all accounts
+ * to minimize round-trips (3 bulk upserts instead of N*3 individual ones).
  */
 export async function writeExtraction(
   supabase: SupabaseClient,
@@ -446,63 +378,224 @@ export async function writeExtraction(
     transactions_created: 0,
   };
 
-  // ── Process each account mapping ──
+  // ── Phase 1: Resolve all account IDs ──
+  // Separate existing matches from new accounts, then batch-create new ones
+  const accountIdByIndex = new Map<number, string>();
+  const newAccountsToCreate: { index: number; info: ExtractionAccount["account_info"] }[] = [];
+
   for (const mapping of accountMap.mappings) {
     const account = extraction.accounts[mapping.extraction_index];
     if (!account) continue;
 
-    // Skip accounts with no data at all
+    // Skip accounts with no data
     const hasData =
       account.positions.length > 0 ||
       account.transactions.length > 0 ||
       account.balances.length > 0;
     if (!hasData) continue;
 
-    // Resolve account_id
-    let accountId: string;
-    let action: "matched" | "created";
-
     if (mapping.action === "match_existing" && mapping.account_id) {
-      accountId = mapping.account_id;
-      action = "matched";
+      accountIdByIndex.set(mapping.extraction_index, mapping.account_id);
     } else {
-      accountId = await createAccount(supabase, userId, account.account_info);
-      action = "created";
-      totals.accounts_created++;
-    }
-
-    linkedAccountIds.push(accountId);
-
-    try {
-      const result = await writeAccountData(
-        supabase,
-        userId,
-        accountId,
-        statementId,
-        account,
-        extraction.document.statement_start_date,
-        extraction.document.statement_end_date
-      );
-      result.action = action;
-      accountResults.push(result);
-
-      totals.accounts_processed++;
-      totals.holdings_created += result.holdings_created;
-      totals.holdings_updated += result.holdings_updated;
-      totals.holdings_closed += result.holdings_closed;
-      totals.snapshots_written += result.snapshots_written;
-      totals.balances_written += result.balances_written;
-      totals.transactions_created += result.transactions_created;
-    } catch (err) {
-      console.error(
-        `Failed to write data for account ${accountId} (index ${mapping.extraction_index}):`,
-        err
-      );
-      // Continue with other accounts
+      newAccountsToCreate.push({
+        index: mapping.extraction_index,
+        info: account.account_info,
+      });
     }
   }
 
-  // ── Handle unallocated (aggregate) positions ──
+  // Batch create all new accounts (1 INSERT instead of N)
+  if (newAccountsToCreate.length > 0) {
+    const created = await batchCreateAccounts(supabase, userId, newAccountsToCreate);
+    for (const [index, id] of created) {
+      accountIdByIndex.set(index, id);
+    }
+    totals.accounts_created = newAccountsToCreate.length;
+  }
+
+  // Build linked account IDs list
+  for (const [, id] of accountIdByIndex) {
+    linkedAccountIds.push(id);
+  }
+
+  // ── Phase 2: Collect all rows across all accounts ──
+  const allPositionRows: Record<string, unknown>[] = [];
+  const allBalanceRows: Record<string, unknown>[] = [];
+  const allTransactionRows: Record<string, unknown>[] = [];
+
+  // Track per-account stats for the report
+  const accountsWithPositions: { accountId: string; account: ExtractionAccount; mapping: AccountMapping }[] = [];
+
+  for (const mapping of accountMap.mappings) {
+    const account = extraction.accounts[mapping.extraction_index];
+    if (!account) continue;
+
+    const accountId = accountIdByIndex.get(mapping.extraction_index);
+    if (!accountId) continue;
+
+    // Collect position snapshot rows
+    if (account.positions.length > 0) {
+      allPositionRows.push(
+        ...buildPositionRows(userId, accountId, statementId, account.positions)
+      );
+      accountsWithPositions.push({ accountId, account, mapping });
+    }
+
+    // Collect balance snapshot rows
+    if (account.balances.length > 0) {
+      allBalanceRows.push(
+        ...buildBalanceRows(userId, accountId, statementId, account.balances)
+      );
+    }
+
+    // Collect transaction rows
+    if (account.transactions.length > 0) {
+      allTransactionRows.push(
+        ...buildTransactionRows(userId, accountId, statementId, account.transactions)
+      );
+    }
+  }
+
+  // ── Phase 3: Bulk upsert per table (1 query per table) ──
+  if (allPositionRows.length > 0) {
+    const { data, error } = await supabase
+      .from("position_snapshots")
+      .upsert(allPositionRows, {
+        onConflict: "account_id,snapshot_date,symbol,snapshot_type",
+      })
+      .select("id");
+
+    if (error) {
+      throw new Error(`Failed to write position snapshots: ${error.message}`);
+    }
+    totals.snapshots_written = data?.length ?? 0;
+  }
+
+  if (allBalanceRows.length > 0) {
+    const { data, error } = await supabase
+      .from("balance_snapshots")
+      .upsert(allBalanceRows, {
+        onConflict: "account_id,snapshot_date,snapshot_type",
+      })
+      .select("id");
+
+    if (error) {
+      throw new Error(`Failed to write balance snapshots: ${error.message}`);
+    }
+    totals.balances_written = data?.length ?? 0;
+  }
+
+  if (allTransactionRows.length > 0) {
+    const { data, error } = await supabase
+      .from("transactions")
+      .upsert(allTransactionRows, {
+        onConflict: "account_id,external_transaction_id",
+      })
+      .select("id");
+
+    if (error) {
+      throw new Error(`Failed to write transactions: ${error.message}`);
+    }
+    totals.transactions_created = data?.length ?? 0;
+  }
+
+  // ── Phase 4: Reconcile holdings (only for accounts with positions) ──
+  // Run in parallel batches for speed
+  const CONCURRENCY = 5;
+  for (let i = 0; i < accountsWithPositions.length; i += CONCURRENCY) {
+    const batch = accountsWithPositions.slice(i, i + CONCURRENCY);
+    const results = await Promise.all(
+      batch.map(async ({ accountId, account, mapping }) => {
+        try {
+          const reconciliation = await reconcileHoldings(
+            supabase,
+            userId,
+            accountId,
+            account.positions as unknown as import("@/lib/upload/types").ExtractedPosition[],
+            statementId
+          );
+
+          const action: "matched" | "created" =
+            mapping.action === "match_existing" && mapping.account_id
+              ? "matched"
+              : "created";
+
+          const accountNickname =
+            account.account_info.account_nickname ||
+            `${account.account_info.institution_name || "Unknown"} Account`;
+
+          return {
+            result: {
+              account_id: accountId,
+              account_nickname: accountNickname,
+              action,
+              holdings_created: reconciliation.changes.filter(
+                (c) => c.type === "new_position"
+              ).length,
+              holdings_updated: reconciliation.upserted,
+              holdings_closed: reconciliation.closed,
+              snapshots_written: 0, // Already counted in bulk phase
+              balances_written: 0,
+              transactions_created: 0,
+            } as AccountWriteResult,
+            reconciliation,
+          };
+        } catch (err) {
+          console.error(
+            `Failed to reconcile holdings for account ${accountId}:`,
+            err
+          );
+          return null;
+        }
+      })
+    );
+
+    for (const r of results) {
+      if (!r) continue;
+      accountResults.push(r.result);
+      totals.accounts_processed++;
+      totals.holdings_created += r.result.holdings_created;
+      totals.holdings_updated += r.result.holdings_updated;
+      totals.holdings_closed += r.result.holdings_closed;
+    }
+  }
+
+  // Also add AccountWriteResults for accounts that only had balances/transactions (no positions)
+  for (const mapping of accountMap.mappings) {
+    const account = extraction.accounts[mapping.extraction_index];
+    if (!account) continue;
+    const accountId = accountIdByIndex.get(mapping.extraction_index);
+    if (!accountId) continue;
+
+    // Skip if already processed in the positions phase
+    if (accountsWithPositions.some((a) => a.accountId === accountId)) continue;
+
+    const hasData =
+      account.balances.length > 0 || account.transactions.length > 0;
+    if (!hasData) continue;
+
+    const action: "matched" | "created" =
+      mapping.action === "match_existing" && mapping.account_id
+        ? "matched"
+        : "created";
+
+    accountResults.push({
+      account_id: accountId,
+      account_nickname:
+        account.account_info.account_nickname ||
+        `${account.account_info.institution_name || "Unknown"} Account`,
+      action,
+      holdings_created: 0,
+      holdings_updated: 0,
+      holdings_closed: 0,
+      snapshots_written: 0,
+      balances_written: 0,
+      transactions_created: 0,
+    });
+    totals.accounts_processed++;
+  }
+
+  // ── Phase 5: Handle unallocated (aggregate) positions ──
   let aggregateResult: WriteReport["aggregate_result"] = null;
 
   if (extraction.unallocated_positions.length > 0) {
@@ -510,7 +603,6 @@ export async function writeExtraction(
       const institutionName =
         extraction.document.institution_name ?? "Unknown";
 
-      // Use provided aggregate account or find/create one
       let aggAccountId: string;
       if (accountMap.aggregate_account_id) {
         aggAccountId = accountMap.aggregate_account_id;
@@ -523,11 +615,7 @@ export async function writeExtraction(
       }
       linkedAccountIds.push(aggAccountId);
 
-      // Compute a synthetic balance for the aggregate account by summing
-      // individual accounts' liquidation values. This ensures the aggregate
-      // account total matches the document's stated total rather than being
-      // recomputed from holdings (which may differ due to rounding, dedup,
-      // or LLM-computed vs document-stated market values).
+      // Compute synthetic balance for aggregate account
       const snapshotDate =
         extraction.document.statement_end_date ??
         extraction.unallocated_positions[0]?.snapshot_date ??
@@ -541,6 +629,14 @@ export async function writeExtraction(
           aggCash += bal.cash_balance ?? 0;
         }
       }
+
+      // Build aggregate position rows and balance rows
+      const aggPositionRows = buildPositionRows(
+        userId,
+        aggAccountId,
+        statementId,
+        extraction.unallocated_positions
+      );
 
       const aggBalances: ExtractionBalance[] =
         aggLiquidationValue !== 0
@@ -558,44 +654,119 @@ export async function writeExtraction(
             ]
           : [];
 
-      // Build a synthetic account for the aggregate positions
-      const aggAccount: ExtractionAccount = {
-        account_info: {
-          account_number: null,
-          account_type: null,
-          institution_name: institutionName,
-          account_nickname: `${institutionName} (Aggregate)`,
-          account_group: null,
-        },
-        transactions: [],
-        positions: extraction.unallocated_positions,
-        balances: aggBalances,
-      };
-
-      const result = await writeAccountData(
-        supabase,
+      const aggBalanceRows = buildBalanceRows(
         userId,
         aggAccountId,
         statementId,
-        aggAccount,
-        extraction.document.statement_start_date,
-        extraction.document.statement_end_date
+        aggBalances
       );
 
-      aggregateResult = {
-        account_id: aggAccountId,
-        positions_written: result.snapshots_written,
-      };
+      // Bulk upsert aggregate positions and balances
+      if (aggPositionRows.length > 0) {
+        const { data, error } = await supabase
+          .from("position_snapshots")
+          .upsert(aggPositionRows, {
+            onConflict: "account_id,snapshot_date,symbol,snapshot_type",
+          })
+          .select("id");
 
-      totals.holdings_created += result.holdings_created;
-      totals.holdings_updated += result.holdings_updated;
-      totals.snapshots_written += result.snapshots_written;
+        if (error) {
+          throw new Error(`Failed to write aggregate position snapshots: ${error.message}`);
+        }
+        totals.snapshots_written += data?.length ?? 0;
+
+        aggregateResult = {
+          account_id: aggAccountId,
+          positions_written: data?.length ?? 0,
+        };
+      }
+
+      if (aggBalanceRows.length > 0) {
+        const { error } = await supabase
+          .from("balance_snapshots")
+          .upsert(aggBalanceRows, {
+            onConflict: "account_id,snapshot_date,snapshot_type",
+          });
+
+        if (error) {
+          console.error("Failed to write aggregate balance snapshots:", error.message);
+        }
+      }
+
+      // Reconcile holdings for aggregate account
+      await reconcileHoldings(
+        supabase,
+        userId,
+        aggAccountId,
+        extraction.unallocated_positions as unknown as import("@/lib/upload/types").ExtractedPosition[],
+        statementId
+      );
+
+      // Update aggregate account summary
+      const aggBalanceData = aggBalances[0];
+      await updateAccountSummary(
+        supabase,
+        aggAccountId,
+        aggBalanceData as unknown as import("@/lib/upload/types").ExtractedBalance | undefined
+      );
     } catch (err) {
       console.error("Failed to write unallocated/aggregate positions:", err);
     }
   }
 
-  // ── Update uploaded_statements metadata ──
+  // ── Phase 6: Update account summaries (parallelized) ──
+  const summaryUpdates: { accountId: string; balance?: ExtractionBalance }[] = [];
+
+  for (const mapping of accountMap.mappings) {
+    const account = extraction.accounts[mapping.extraction_index];
+    if (!account) continue;
+    const accountId = accountIdByIndex.get(mapping.extraction_index);
+    if (!accountId) continue;
+
+    const hasData =
+      account.positions.length > 0 ||
+      account.transactions.length > 0 ||
+      account.balances.length > 0;
+    if (!hasData) continue;
+
+    const latestBalance =
+      account.balances.length > 0
+        ? account.balances[account.balances.length - 1]
+        : undefined;
+
+    summaryUpdates.push({ accountId, balance: latestBalance });
+  }
+
+  // Run account summary updates in parallel batches
+  for (let i = 0; i < summaryUpdates.length; i += CONCURRENCY) {
+    const batch = summaryUpdates.slice(i, i + CONCURRENCY);
+    await Promise.all(
+      batch.map(async ({ accountId, balance }) => {
+        try {
+          await updateAccountSummary(
+            supabase,
+            accountId,
+            balance as unknown as import("@/lib/upload/types").ExtractedBalance | undefined
+          );
+
+          // Store document-reported total for integrity validation
+          if (balance?.liquidation_value != null) {
+            await supabase
+              .from("accounts")
+              .update({
+                document_reported_total: balance.liquidation_value,
+                document_reported_date: balance.snapshot_date,
+              })
+              .eq("id", accountId);
+          }
+        } catch (err) {
+          console.error(`Failed to update account summary for ${accountId}:`, err);
+        }
+      })
+    );
+  }
+
+  // ── Phase 7: Update uploaded_statements metadata ──
   await supabase
     .from("uploaded_statements")
     .update({

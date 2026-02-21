@@ -12,6 +12,9 @@ import type { Holding, ReconciliationChange } from "./types";
  * 3. If incoming data is a full snapshot (has positions), any existing holding
  *    NOT in the incoming set is marked as closed (quantity=0).
  * 4. Returns all changes detected.
+ *
+ * Uses batched DB writes: one bulk INSERT for new holdings, parallel UPDATEs
+ * for existing holdings, and one bulk UPDATE for closed positions.
  */
 export async function reconcileHoldings(
   supabase: SupabaseClient,
@@ -70,8 +73,10 @@ export async function reconcileHoldings(
     }
   }
 
-  // 3. Process each incoming position
+  // 3. Classify each incoming position as new or update
   const incomingSymbols = new Set<string>();
+  const newHoldingRows: Record<string, unknown>[] = [];
+  const updateOps: { id: string; data: Record<string, unknown> }[] = [];
 
   for (const [symbol, pos] of incomingMap) {
     incomingSymbols.add(symbol);
@@ -119,9 +124,6 @@ export async function reconcileHoldings(
       });
     }
 
-    // Upsert the holding — manual select+insert/update because the unique
-    // index uses an expression (COALESCE(symbol,'')) that PostgREST can't
-    // resolve via onConflict.
     const holdingData = {
       user_id: userId,
       account_id: accountId,
@@ -149,33 +151,46 @@ export async function reconcileHoldings(
       last_updated_from: `upload:${statementId}`,
     };
 
-    let error: { message: string } | null = null;
-
     if (existing) {
-      // Update existing holding
-      const { error: updateErr } = await supabase
-        .from("holdings")
-        .update(holdingData)
-        .eq("id", existing.id);
-      error = updateErr;
+      updateOps.push({ id: existing.id, data: holdingData });
     } else {
-      // Insert new holding
-      const { error: insertErr } = await supabase
-        .from("holdings")
-        .insert(holdingData);
-      error = insertErr;
-    }
-
-    if (error) {
-      console.error(`Failed to upsert holding ${symbol}:`, error.message);
-    } else {
-      upserted++;
+      newHoldingRows.push(holdingData);
     }
   }
 
-  // 4. Detect closed positions — existing holdings not in incoming data
-  // Only do this if the incoming data represents a full account snapshot
+  // 4. Batch INSERT all new holdings (1 query instead of N)
+  if (newHoldingRows.length > 0) {
+    const { error } = await supabase.from("holdings").insert(newHoldingRows);
+    if (error) {
+      console.error(`Failed to batch insert ${newHoldingRows.length} holdings:`, error.message);
+    } else {
+      upserted += newHoldingRows.length;
+    }
+  }
+
+  // 5. Parallel UPDATE existing holdings (concurrent but limited)
+  if (updateOps.length > 0) {
+    const CONCURRENCY = 10;
+    for (let i = 0; i < updateOps.length; i += CONCURRENCY) {
+      const batch = updateOps.slice(i, i + CONCURRENCY);
+      const results = await Promise.all(
+        batch.map(({ id, data }) =>
+          supabase.from("holdings").update(data).eq("id", id)
+        )
+      );
+      for (const { error } of results) {
+        if (error) {
+          console.error("Failed to update holding:", error.message);
+        } else {
+          upserted++;
+        }
+      }
+    }
+  }
+
+  // 6. Batch close positions not in incoming data (1 query using .in())
   if (incomingPositions.length > 0) {
+    const closedIds: string[] = [];
     for (const [symbol, existing] of holdingsBySymbol) {
       if (!incomingSymbols.has(symbol) && Number(existing.quantity) > 0) {
         changes.push({
@@ -189,20 +204,21 @@ export async function reconcileHoldings(
           },
           current: { quantity: 0, market_value: 0 },
         });
-
-        // Set quantity to 0 (keep row for audit trail)
-        await supabase
-          .from("holdings")
-          .update({
-            quantity: 0,
-            short_quantity: 0,
-            market_value: 0,
-            last_updated_from: `upload:${statementId}`,
-          })
-          .eq("id", existing.id);
-
-        closed++;
+        closedIds.push(existing.id);
       }
+    }
+
+    if (closedIds.length > 0) {
+      await supabase
+        .from("holdings")
+        .update({
+          quantity: 0,
+          short_quantity: 0,
+          market_value: 0,
+          last_updated_from: `upload:${statementId}`,
+        })
+        .in("id", closedIds);
+      closed = closedIds.length;
     }
   }
 
