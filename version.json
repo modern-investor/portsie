@@ -1,12 +1,12 @@
 {
-  "version": "v260220.07 10:28p",
-  "release": 100,
-  "sha": "a062b911",
-  "fullSha": "a062b911b6fae101546a99dde06409ab0fa640ad",
+  "version": "v260220.08 10:46p",
+  "release": 101,
+  "sha": "970b5f2d",
+  "fullSha": "970b5f2daddb3b0e3961b3f18961d7eba60b417e",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000197",
-  "pushedAt": "2026-02-21T04:28:04+00",
-  "commits": [{"sha": "a062b911b6fae101546a99dde06409ab0fa640ad", "short_sha": "a062b911", "author": "rahulio", "message": "Merge branch 'claude/recursing-leavitt'"}, {"sha": "d6c645f9bcea47adbbd522a6ce6ebd0e9e6d1b9a", "short_sha": "d6c645f9", "author": "rahulio", "message": "Merge branch 'claude/kind-feistel'"}, {"sha": "6f2e82d96c4276af68e48c2c5d5d94883dec7844", "short_sha": "6f2e82d9", "author": "rahulio", "message": "Merge branch 'claude/objective-poincare'"}, {"sha": "34b76546b9a7db780ed7521b498ef34f450562f7", "short_sha": "34b76546", "author": "rahulio", "message": "Merge branch 'claude/xenodochial-haibt'"}, {"sha": "1b7edc42844f4e2eb7edd3ff4cda300ea107681e", "short_sha": "1b7edc42", "author": "rahulio", "message": "Merge branch 'claude/pensive-mcclintock'"}, {"sha": "373daae71cf247779737efe12dc6525aacea8c28", "short_sha": "373daae7", "author": "rahulio", "message": "Merge branch 'claude/bold-kilby'"}, {"sha": "ea67fc072a53f5edac44c7923ec0dbc7f0a38387", "short_sha": "ea67fc07", "author": "rahulio", "message": "Merge branch 'claude/hopeful-hawking'"}, {"sha": "12929ff43c14b1f7b71d54099e1a399dc6397dd8", "short_sha": "12929ff4", "author": "rahulio", "message": "Update CLAUDE.md and add fix_inflated_accounts migration"}, {"sha": "28ba26768cea825d80d3527c81c8fdaa7690bc44", "short_sha": "28ba2676", "author": "rahulio", "message": "Add ingestion architecture recommendations and upload pipeline review docs"}, {"sha": "04d9992fee018e5157547d8a5e68d21517d54dac", "short_sha": "04d9992f", "author": "rahulio", "message": "Remove upload section from brokerage setup component"}, {"sha": "6c953d165058e22695ca38d661bba285c3eafca0", "short_sha": "6c953d16", "author": "rahulio", "message": "Improve extraction validation, prompts, and backend error handling"}, {"sha": "f929898a5fa90ea7733d39bff3c552a63efb9ff8", "short_sha": "f929898a", "author": "rahulio", "message": "Remove upload method from brokerage connection options"}, {"sha": "3990c1a308e0d885800ab3bf3f57fd050e64d9f6", "short_sha": "3990c1a3", "author": "rahulio", "message": "Add balance-vs-holdings quality check and fix inflated accounts"}, {"sha": "a51319c0068ee05f91662a5e3ef7ed857bb78049", "short_sha": "a51319c0", "author": "rahulio", "message": "Improve extraction prompts, validation, and pipeline robustness"}, {"sha": "6b20477733e9dba4855a4cf54d9e310bba0dccd8", "short_sha": "6b204777", "author": "rahulio", "message": "Fix landing page logo dimensions for proper aspect ratio"}, {"sha": "a3c331921bca9ce9a81dfd895bc9dee2e34f73e8", "short_sha": "a3c33192", "author": "rahulio", "message": "Fix hydration errors and optimize extraction pipeline"}]
+  "machine": "GitHub Actions 1000000203",
+  "pushedAt": "2026-02-21T04:46:09+00",
+  "commits": [{"sha": "970b5f2daddb3b0e3961b3f18961d7eba60b417e", "short_sha": "970b5f2d", "author": "rahulio", "message": "Merge branch 'claude/bold-kilby'"}, {"sha": "285a00112b1f69f61b85cc2627352ab4f39b239a", "short_sha": "285a0011", "author": "rahulio", "message": "Show model names in processing preset dropdown"}]
 }
