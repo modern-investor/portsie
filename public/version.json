@@ -1,12 +1,12 @@
 {
-  "version": "v260221.02 9:41a",
-  "release": 106,
-  "sha": "70f09f64",
-  "fullSha": "70f09f640b087e6fb88c91bbc44cb3623e056a15",
+  "version": "v260221.03 10:21a",
+  "release": 107,
+  "sha": "9dccc11c",
+  "fullSha": "9dccc11c8a7e9f14456d94599c24ad43c8c01e90",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000227",
-  "pushedAt": "2026-02-21T15:41:30+00",
-  "commits": [{"sha": "70f09f640b087e6fb88c91bbc44cb3623e056a15", "short_sha": "70f09f64", "author": "rahulio", "message": "Add null safety to all .toFixed() calls across dashboard components"}]
+  "machine": "GitHub Actions 1000000233",
+  "pushedAt": "2026-02-21T16:21:25+00",
+  "commits": [{"sha": "9dccc11c8a7e9f14456d94599c24ad43c8c01e90", "short_sha": "9dccc11c", "author": "Rahul", "message": "Merge pull request #39 from modern-investor/claude/flamboyant-shtern"}, {"sha": "4b9e5506353e0aba8a2c9c3ceba09da309a7c469", "short_sha": "4b9e5506", "author": "rahulio", "message": "Add dual-model verification system for document extraction"}]
 }
