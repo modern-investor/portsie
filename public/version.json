@@ -1,12 +1,12 @@
 {
-  "version": "v260220.09 10:59p",
-  "release": 102,
-  "sha": "9cb89789",
-  "fullSha": "9cb897893ee4b3f5223fccf74cfd5a62a3c25c27",
+  "version": "v260220.10 11:22p",
+  "release": 103,
+  "sha": "71d231f2",
+  "fullSha": "71d231f26d77668a020df617c69455441ad39ba0",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000207",
-  "pushedAt": "2026-02-21T04:59:17+00",
-  "commits": [{"sha": "9cb897893ee4b3f5223fccf74cfd5a62a3c25c27", "short_sha": "9cb89789", "author": "rahulio", "message": "Make processing preset labels more descriptive"}]
+  "machine": "GitHub Actions 1000000212",
+  "pushedAt": "2026-02-21T05:22:16+00",
+  "commits": [{"sha": "71d231f26d77668a020df617c69455441ad39ba0", "short_sha": "71d231f2", "author": "rahulio", "message": "Batch DB writes in extraction confirm to fix 504 timeout"}]
 }
