@@ -5,6 +5,7 @@ import type { AutoLinkResult } from "./account-matcher";
 import { findOrCreateAggregateAccount } from "./account-matcher";
 import { reconcileHoldings } from "@/lib/holdings/reconcile";
 import { updateAccountSummary } from "@/lib/holdings/account-summary";
+import type { UpdateAccountSummaryOptions } from "@/lib/holdings/account-summary";
 
 /**
  * Writes confirmed extraction results to the canonical database tables.
@@ -22,7 +23,8 @@ export async function writeExtractedData(
   userId: string,
   accountId: string,
   statementId: string,
-  extractedData: LLMExtractionResult
+  extractedData: LLMExtractionResult,
+  options?: { summaryOptions?: UpdateAccountSummaryOptions }
 ): Promise<ReconciliationResult> {
   let transactionsCreated = 0;
   let snapshotsWritten = 0;
@@ -225,7 +227,7 @@ export async function writeExtractedData(
   const latestBalance = extractedData.balances.length > 0
     ? extractedData.balances[extractedData.balances.length - 1]
     : undefined;
-  await updateAccountSummary(supabase, accountId, latestBalance);
+  await updateAccountSummary(supabase, accountId, latestBalance, options?.summaryOptions);
 
   // ── 6. Update the uploaded_statements record ──
   await supabase
@@ -288,6 +290,12 @@ export async function writeMultiAccountData(
   let totalHoldingsClosed = 0;
   const linkedAccountIds: string[] = [];
 
+  // When positions are unallocated (going to aggregate account), individual
+  // accounts won't have holdings rows but their balance liquidation_value is
+  // still correct. Tell updateAccountSummary to trust it.
+  const hasUnallocatedPositions =
+    (extractedData.unallocated_positions?.length ?? 0) > 0;
+
   for (let i = 0; i < accounts.length; i++) {
     const acct: ExtractedAccount = accounts[i];
     const linkResult = accountMap.get(i);
@@ -316,12 +324,16 @@ export async function writeMultiAccountData(
 
     if (hasData) {
       try {
+        // If this account has no positions but there are unallocated positions,
+        // trust the balance's liquidation_value (positions are in the aggregate).
+        const trustLiq = hasUnallocatedPositions && acct.positions.length === 0;
         const result = await writeExtractedData(
           supabase,
           userId,
           accountId,
           statementId,
-          singleAccountData
+          singleAccountData,
+          trustLiq ? { summaryOptions: { trustLiquidationValue: true } } : undefined
         );
 
         accountResults.push({
