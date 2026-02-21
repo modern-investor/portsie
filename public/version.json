@@ -1,12 +1,12 @@
 {
-  "version": "v260220.10 11:22p",
-  "release": 103,
-  "sha": "71d231f2",
-  "fullSha": "71d231f26d77668a020df617c69455441ad39ba0",
+  "version": "v260220.11 11:41p",
+  "release": 104,
+  "sha": "8350448c",
+  "fullSha": "8350448c3314543787dafd0aa172787123fdce71",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000212",
-  "pushedAt": "2026-02-21T05:22:16+00",
-  "commits": [{"sha": "71d231f26d77668a020df617c69455441ad39ba0", "short_sha": "71d231f2", "author": "rahulio", "message": "Batch DB writes in extraction confirm to fix 504 timeout"}]
+  "machine": "GitHub Actions 1000000217",
+  "pushedAt": "2026-02-21T05:41:24+00",
+  "commits": [{"sha": "8350448c3314543787dafd0aa172787123fdce71", "short_sha": "8350448c", "author": "rahulio", "message": "Fix duplicate upload on drag-and-drop, improve processing model display"}]
 }
