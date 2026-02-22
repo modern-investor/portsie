@@ -1,12 +1,12 @@
 {
-  "version": "v260221.08 11:25a",
-  "release": 112,
-  "sha": "c7dd47d7",
-  "fullSha": "c7dd47d7a70eaf738c8a2e5b2b924fd1e62683a6",
+  "version": "v260222.01 9:19a",
+  "release": 113,
+  "sha": "16fe21b5",
+  "fullSha": "16fe21b586141888b090be6a53281f4042210eef",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000261",
-  "pushedAt": "2026-02-21T17:25:28+00",
-  "commits": [{"sha": "c7dd47d7a70eaf738c8a2e5b2b924fd1e62683a6", "short_sha": "c7dd47d7", "author": "rahulio", "message": "Increase text sizes in asset allocation and treemap components"}]
+  "machine": "GitHub Actions 1000000266",
+  "pushedAt": "2026-02-22T15:19:51+00",
+  "commits": [{"sha": "16fe21b586141888b090be6a53281f4042210eef", "short_sha": "16fe21b5", "author": "rahulio", "message": "Fix Recharts console error: use explicit pixel height for ResponsiveContainer"}]
 }
