@@ -158,8 +158,8 @@ export function PortfolioTreemap({ assetClasses, totalMarketValue, hideValues }:
       <h3 className="mb-3 text-2xl font-semibold text-gray-500 uppercase tracking-wider">
         Asset Breakdown
       </h3>
-      <div className="h-64 w-full">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="w-full">
+        <ResponsiveContainer width="100%" height={256}>
           <Treemap
             data={data}
             dataKey="value"
