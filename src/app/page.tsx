@@ -57,8 +57,7 @@ export default async function Home() {
 
           {/* Beta notice */}
           <p className="text-left text-base font-semibold text-foreground">
-            We&apos;re in beta — join our waiting list and we&apos;ll tell you
-            when we&apos;re ready for you.
+            We&apos;re in early beta — join our waiting list.
           </p>
 
           {/* Waiting list signup */}
