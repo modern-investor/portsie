@@ -101,27 +101,11 @@ export async function GET() {
         const sec = acct.securitiesAccount;
         const bal = sec.currentBalances;
 
-        accounts.push({
-          id: `schwab_${sec.accountNumber}`,
-          name: `****${sec.accountNumber.slice(-4)}`,
-          institution: "Charles Schwab",
-          type: sec.type,
-          source: "schwab_api",
-          cashBalance: bal?.cashBalance ?? 0,
-          liquidationValue:
-            bal?.liquidationValue ??
-            acct.aggregatedBalance?.liquidationValue ??
-            0,
-          holdingsCount: sec.positions?.length ?? 0,
-          lastSyncedAt: new Date().toISOString(),
-          accountGroup: null,
-          isAggregate: false,
-          accountCategory: "brokerage",
-        });
-
+        // Build positions for this account first so we can compute a reliable total
+        const acctPositions: UnifiedPosition[] = [];
         const maskedNumber = `****${sec.accountNumber.slice(-4)}`;
         for (const pos of sec.positions ?? []) {
-          positions.push(
+          acctPositions.push(
             schwabToUnified(
               pos,
               `schwab_${sec.accountNumber}`,
@@ -131,6 +115,43 @@ export async function GET() {
             )
           );
         }
+        positions.push(...acctPositions);
+
+        // Compute liquidation value from positions + cash.
+        // The Schwab API's currentBalances.liquidationValue can return the
+        // uninvested cash amount instead of the full account value for certain
+        // account types (IRAs, 401k). Computing from positions is more reliable
+        // since we already have all position data.
+        const cashBalance = bal?.cashBalance ?? 0;
+        const positionsTotal = acctPositions.reduce(
+          (sum, p) => sum + p.marketValue,
+          0
+        );
+        const computedLiquidation = positionsTotal + cashBalance;
+
+        // Use computed value when we have positions; fall back to API value for
+        // accounts without positions (e.g. checking/savings).
+        const liquidationValue =
+          acctPositions.length > 0
+            ? computedLiquidation
+            : bal?.liquidationValue ??
+              acct.aggregatedBalance?.liquidationValue ??
+              cashBalance;
+
+        accounts.push({
+          id: `schwab_${sec.accountNumber}`,
+          name: `****${sec.accountNumber.slice(-4)}`,
+          institution: "Charles Schwab",
+          type: sec.type,
+          source: "schwab_api",
+          cashBalance,
+          liquidationValue,
+          holdingsCount: acctPositions.length,
+          lastSyncedAt: new Date().toISOString(),
+          accountGroup: null,
+          isAggregate: false,
+          accountCategory: schwabAccountCategory(sec.type),
+        });
       }
     }
   } catch (err) {
@@ -381,6 +402,13 @@ export async function GET() {
 }
 
 // ── Helpers ──
+
+/** Map Schwab API account type to our account category. */
+function schwabAccountCategory(schwabType: string): string {
+  const t = schwabType.toUpperCase();
+  if (t === "CASH" || t === "CHECKING" || t === "SAVINGS") return "banking";
+  return "brokerage";
+}
 
 /** Convert a DB value to a safe number (never NaN). */
 function safeNum(v: unknown): number {

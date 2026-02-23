@@ -82,9 +82,9 @@ export function AccountOverview({ accounts, aggregateAccounts, hideValues }: Pro
         );
 
         return (
-          <div key={groupName} className="space-y-3">
+          <div key={groupName}>
             {/* Group header */}
-            <div className="flex items-baseline justify-between border-b border-gray-200 pb-1">
+            <div className="flex items-baseline justify-between border-b border-gray-200 pb-1 mb-1">
               <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
                 {groupName}
               </h3>
@@ -94,21 +94,23 @@ export function AccountOverview({ accounts, aggregateAccounts, hideValues }: Pro
             </div>
 
             {/* Group accounts */}
-            {groupAccounts.map((account) => (
-              <AccountCard
-                key={account.id}
-                account={account}
-                formatDollar={formatDollar}
-              />
-            ))}
+            <div className="divide-y divide-gray-100">
+              {groupAccounts.map((account) => (
+                <AccountCard
+                  key={account.id}
+                  account={account}
+                  formatDollar={formatDollar}
+                />
+              ))}
+            </div>
           </div>
         );
       })}
 
       {/* Aggregate accounts (separate section with dashed border) */}
       {aggregateAccounts && aggregateAccounts.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-baseline justify-between border-b border-dashed border-gray-300 pb-1">
+        <div>
+          <div className="flex items-baseline justify-between border-b border-dashed border-gray-300 pb-1 mb-1">
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
               Aggregate Views
             </h3>
@@ -117,14 +119,16 @@ export function AccountOverview({ accounts, aggregateAccounts, hideValues }: Pro
             </span>
           </div>
 
-          {aggregateAccounts.map((account) => (
-            <AccountCard
-              key={account.id}
-              account={account}
-              formatDollar={formatDollar}
-              isAggregate
-            />
-          ))}
+          <div className="divide-y divide-gray-100">
+            {aggregateAccounts.map((account) => (
+              <AccountCard
+                key={account.id}
+                account={account}
+                formatDollar={formatDollar}
+                isAggregate
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -142,54 +146,54 @@ function AccountCard({
   formatDollar: (value: number, fractionDigits?: number) => React.ReactNode;
   isAggregate?: boolean;
 }) {
+  const sourceLabel =
+    account.source === "schwab_api"
+      ? "Schwab API"
+      : account.source === "manual_upload"
+        ? "Upload"
+        : account.source === "quiltt"
+          ? "Quiltt"
+          : "Manual";
+
   return (
     <div
-      className={`rounded-lg border p-4 ${
-        isAggregate ? "border-dashed border-gray-300 bg-gray-50/50" : ""
+      className={`flex items-center gap-4 py-2 px-1 ${
+        isAggregate ? "bg-gray-50/50" : ""
       }`}
     >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-gray-500">
-            {account.institution} &middot; {account.type}
-          </p>
-          <p className="text-2xl font-bold">
-            {formatDollar(account.liquidationValue)}
-          </p>
-        </div>
-        <div className="text-right">
-          <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-            {account.source === "schwab_api"
-              ? "Schwab API"
-              : account.source === "manual_upload"
-                ? "Upload"
-                : account.source === "quiltt"
-                  ? "Quiltt"
-                  : account.source === "offline"
-                    ? "Manual"
-                    : "Manual"}
-          </span>
-          {isAggregate && (
-            <span className="ml-1.5 inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600">
-              Aggregate
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="mt-3 flex flex-col gap-1 text-sm text-gray-500 sm:flex-row sm:gap-6">
-        <span>{account.name}</span>
-        {account.cashBalance > 0 && (
-          <span>Cash: {formatDollar(account.cashBalance)}</span>
-        )}
-        {account.holdingsCount > 0 && (
-          <span>Holdings: {account.holdingsCount}</span>
-        )}
-        {account.lastSyncedAt && (
-          <span className="text-xs text-gray-400">
-            Last synced: {new Date(account.lastSyncedAt).toLocaleDateString()}
+      {/* Institution · Type */}
+      <span className="min-w-0 shrink-0 w-48 text-sm text-gray-500 truncate">
+        {account.institution} &middot; {account.type}
+      </span>
+
+      {/* Account name */}
+      <span className="min-w-0 flex-1 text-sm text-gray-700 truncate">
+        {account.name}
+      </span>
+
+      {/* Balance */}
+      <span className="shrink-0 text-sm font-semibold text-right w-28 tabular-nums">
+        {formatDollar(account.liquidationValue)}
+      </span>
+
+      {/* Last synced */}
+      <span className="hidden sm:block shrink-0 w-28 text-xs text-gray-400 text-right">
+        {account.lastSyncedAt
+          ? new Date(account.lastSyncedAt).toLocaleDateString()
+          : "—"}
+      </span>
+
+      {/* Source badge */}
+      <span className="shrink-0 w-20 text-right">
+        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+          {sourceLabel}
+        </span>
+        {isAggregate && (
+          <span className="ml-1 inline-flex items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-600">
+            Agg
           </span>
         )}
-      </div>
+      </span>
     </div>
   );
 }
