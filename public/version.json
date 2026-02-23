@@ -1,12 +1,12 @@
 {
-  "version": "v260222.01 9:19a",
-  "release": 113,
-  "sha": "16fe21b5",
-  "fullSha": "16fe21b586141888b090be6a53281f4042210eef",
+  "version": "v260223.01 3:20a",
+  "release": 114,
+  "sha": "ffcd304f",
+  "fullSha": "ffcd304f4e725d60816a5fb7b7fd914dbd22cdae",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000266",
-  "pushedAt": "2026-02-22T15:19:51+00",
-  "commits": [{"sha": "16fe21b586141888b090be6a53281f4042210eef", "short_sha": "16fe21b5", "author": "rahulio", "message": "Fix Recharts console error: use explicit pixel height for ResponsiveContainer"}]
+  "machine": "GitHub Actions 1000000272",
+  "pushedAt": "2026-02-23T09:20:29+00",
+  "commits": [{"sha": "ffcd304f4e725d60816a5fb7b7fd914dbd22cdae", "short_sha": "ffcd304f", "author": "rahulio", "message": "Allow unauthenticated access to /legal routes"}]
 }
