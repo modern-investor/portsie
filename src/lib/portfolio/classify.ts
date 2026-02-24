@@ -6,6 +6,7 @@ import type {
   SubAggregate,
   PortfolioInputPosition,
   PortfolioInputAccount,
+  SubAssetClassId,
 } from "./types";
 import {
   ASSET_CLASS_LIST,
@@ -189,8 +190,23 @@ export function classifyPortfolio(
     let extraMV = 0;
 
     if (def.id === "cash") {
-      // Include brokerage cash + banking/offline account values
+      // Include brokerage cash + banking/offline account values as a synthetic position
       extraMV = totalCash + bankingValue;
+      if (extraMV !== 0) {
+        positions = [...positions, {
+          symbol: "CASH",
+          description: "Cash Balance",
+          assetClassId: "cash",
+          subAssetClassId: "cash_balance",
+          quantity: extraMV,
+          averagePrice: 1,
+          marketValue: extraMV,
+          currentDayProfitLoss: 0,
+          currentDayProfitLossPercentage: 0,
+          allocationPct: totalMarketValue > 0 ? (extraMV / totalMarketValue) * 100 : 0,
+          instrumentType: "CASH",
+        }];
+      }
     }
 
     // Include liability total in the debt asset class
@@ -200,7 +216,8 @@ export function classifyPortfolio(
 
     positions = [...positions].sort((a, b) => Math.abs(b.marketValue) - Math.abs(a.marketValue));
 
-    const marketValue = positions.reduce((s, p) => s + p.marketValue, 0) + extraMV;
+    const marketValue = positions.reduce((s, p) => s + p.marketValue, 0)
+      + (def.id === "debt" ? extraMV : 0);
     const dayChange = positions.reduce((s, p) => s + p.currentDayProfitLoss, 0);
 
     return {
