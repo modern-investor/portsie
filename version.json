@@ -1,12 +1,12 @@
 {
-  "version": "v260224.13 4:05p",
-  "release": 128,
-  "sha": "500b8c43",
-  "fullSha": "500b8c43b4419a82b48c674bf75d0ff426b0292c",
+  "version": "v260224.14 4:10p",
+  "release": 129,
+  "sha": "2eaf80b4",
+  "fullSha": "2eaf80b4073228c8530c8bf858f8fe0db7848a02",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000341",
-  "pushedAt": "2026-02-24T22:05:50+00",
-  "commits": [{"sha": "500b8c43b4419a82b48c674bf75d0ff426b0292c", "short_sha": "500b8c43", "author": "rahulio", "message": "Fix Supabase client crash when env vars missing in worktrees"}]
+  "machine": "GitHub Actions 1000000346",
+  "pushedAt": "2026-02-24T22:10:15+00",
+  "commits": [{"sha": "2eaf80b4073228c8530c8bf858f8fe0db7848a02", "short_sha": "2eaf80b4", "author": "rahulio", "message": "Add Price column to allocation table expanded rows"}]
 }
