@@ -5,7 +5,7 @@ import { classifyPortfolio } from "@/lib/portfolio";
 import type { ClassifiedPortfolio, AssetClassId } from "@/lib/portfolio/types";
 import type { PortfolioData } from "@/app/api/portfolio/positions/route";
 import type { ViewSuggestion } from "@/lib/portfolio/ai-views-types";
-import { Upload, Link2, PieChart, Landmark, List, X, Sparkles, Trash2, RefreshCw } from "lucide-react";
+import { Upload, Link2, PieChart, Landmark, List, X, Sparkles, Trash2, RefreshCw, PanelRight } from "lucide-react";
 import type { PriceRefreshResult } from "@/lib/market";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PortfolioSummaryBar } from "./portfolio-summary-bar";
@@ -234,11 +234,12 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
 
   // ── AI Panel handlers ──
 
-  // Default AI panel to open (no toggle button; panel has its own close button)
-  useEffect(() => {
-    if (localStorage.getItem(PANEL_STORAGE_KEY) === null) {
-      setShowAiPanel(true);
-    }
+  const toggleAiPanel = useCallback(() => {
+    setShowAiPanel((prev) => {
+      const next = !prev;
+      localStorage.setItem(PANEL_STORAGE_KEY, String(next));
+      return next;
+    });
   }, []);
 
   // Helper to persist tabs to localStorage
@@ -405,7 +406,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
                 ))}
               </TabsList>
 
-              {/* Refresh prices */}
+              {/* Refresh prices + AI panel toggle */}
               <div className="flex items-center gap-1.5">
                 {refreshMessage && (
                   <span className="text-xs text-gray-500 hidden sm:inline">
@@ -419,6 +420,17 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
                   className="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 transition-colors"
                 >
                   <RefreshCw className={`size-4 ${refreshing ? "animate-spin" : ""}`} />
+                </button>
+                <button
+                  onClick={toggleAiPanel}
+                  title={showAiPanel ? "Hide AI panel" : "Show AI panel"}
+                  className={`hidden md:inline-flex items-center justify-center rounded-md p-2 transition-colors ${
+                    showAiPanel
+                      ? "text-amber-600 bg-amber-50 hover:bg-amber-100"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                  }`}
+                >
+                  <PanelRight className="size-4" />
                 </button>
               </div>
             </div>
