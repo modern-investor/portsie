@@ -1,12 +1,12 @@
 {
-  "version": "v260224.15 4:36p",
-  "release": 130,
-  "sha": "d25cc674",
-  "fullSha": "d25cc674fbe96bd6cc4f0121eba8f78c702925c8",
+  "version": "v260224.16 4:38p",
+  "release": 131,
+  "sha": "490a9f9d",
+  "fullSha": "490a9f9daf015445f3751c53f950cfdfa3f0e42e",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000352",
-  "pushedAt": "2026-02-24T22:36:35+00",
-  "commits": [{"sha": "d25cc674fbe96bd6cc4f0121eba8f78c702925c8", "short_sha": "d25cc674", "author": "rahulio", "message": "Update privacy policy with full protection details and add privacy@ email forwarding"}]
+  "machine": "GitHub Actions 1000000356",
+  "pushedAt": "2026-02-24T22:38:24+00",
+  "commits": [{"sha": "490a9f9daf015445f3751c53f950cfdfa3f0e42e", "short_sha": "490a9f9d", "author": "rahulio", "message": "AI Views: persist Gemini errors, fall back to Sonnet views"}]
 }
