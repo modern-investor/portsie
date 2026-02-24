@@ -1,12 +1,12 @@
 {
-  "version": "v260224.08 3:21p",
-  "release": 123,
-  "sha": "1ef16b65",
-  "fullSha": "1ef16b652d3b5ab7c4c43fcb6240833698c82d59",
+  "version": "v260224.09 3:39p",
+  "release": 124,
+  "sha": "8fc827cb",
+  "fullSha": "8fc827cb9c4f7a66ba62e0273089713a0841b987",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000312",
-  "pushedAt": "2026-02-24T21:21:26+00",
-  "commits": [{"sha": "1ef16b652d3b5ab7c4c43fcb6240833698c82d59", "short_sha": "1ef16b65", "author": "rahulio", "message": "Add expandable asset allocation rows and rename component"}]
+  "machine": "GitHub Actions 1000000318",
+  "pushedAt": "2026-02-24T21:39:03+00",
+  "commits": [{"sha": "8fc827cb9c4f7a66ba62e0273089713a0841b987", "short_sha": "8fc827cb", "author": "rahulio", "message": "Fix font preload warning and Gemini thinking parts corrupting AI Views"}]
 }
