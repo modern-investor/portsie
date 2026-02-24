@@ -5,7 +5,7 @@ import { classifyPortfolio } from "@/lib/portfolio";
 import type { ClassifiedPortfolio, AssetClassId } from "@/lib/portfolio/types";
 import type { PortfolioData } from "@/app/api/portfolio/positions/route";
 import type { ViewSuggestion } from "@/lib/portfolio/ai-views-types";
-import { Upload, Link2, PieChart, Landmark, List, X, Sparkles } from "lucide-react";
+import { Upload, Link2, PieChart, Landmark, List, X, Sparkles, Trash2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PortfolioSummaryBar } from "./portfolio-summary-bar";
 import { PortfolioDonutChart } from "./portfolio-donut-chart";
@@ -25,6 +25,7 @@ type PortfolioSubTab = "assets" | "accounts" | "positions" | `ai-view-${string}`
 
 const STORAGE_KEY = "portsie:portfolio-tab";
 const PANEL_STORAGE_KEY = "portsie:ai-panel-open";
+const AI_TABS_STORAGE_KEY = "portsie:ai-view-tabs";
 const VALID_STATIC_TABS = ["assets", "accounts", "positions"];
 
 // ─── AI View Tab ────────────────────────────────────────────────────────────
@@ -106,10 +107,22 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
   const [aiViewTabs, setAiViewTabs] = useState<AIViewTab[]>([]);
   const [showAiPanel, setShowAiPanel] = useState(false);
 
-  // Restore AI panel visibility
+  // Restore AI panel visibility and persisted view tabs
   useEffect(() => {
-    const saved = localStorage.getItem(PANEL_STORAGE_KEY);
-    if (saved === "true") setShowAiPanel(true);
+    const savedPanel = localStorage.getItem(PANEL_STORAGE_KEY);
+    if (savedPanel === "true") setShowAiPanel(true);
+
+    try {
+      const savedTabs = localStorage.getItem(AI_TABS_STORAGE_KEY);
+      if (savedTabs) {
+        const parsed: AIViewTab[] = JSON.parse(savedTabs);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAiViewTabs(parsed);
+        }
+      }
+    } catch {
+      // Invalid JSON — ignore
+    }
   }, []);
 
   useEffect(() => {
@@ -184,6 +197,11 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
     });
   }, []);
 
+  // Helper to persist tabs to localStorage
+  const persistTabs = useCallback((tabs: AIViewTab[]) => {
+    localStorage.setItem(AI_TABS_STORAGE_KEY, JSON.stringify(tabs));
+  }, []);
+
   const openAiView = useCallback(
     (suggestion: ViewSuggestion) => {
       if (!suggestion.componentCode || suggestion.codeStatus !== "complete") return;
@@ -195,29 +213,33 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
         return;
       }
 
-      // Add new tab
+      // Add new tab and persist
       const newTab: AIViewTab = {
         id: suggestion.id,
         title: suggestion.title,
         code: suggestion.componentCode,
         correlationData: suggestion.correlationData,
       };
-      setAiViewTabs((prev) => [...prev, newTab]);
+      const updatedTabs = [...aiViewTabs, newTab];
+      setAiViewTabs(updatedTabs);
+      persistTabs(updatedTabs);
       setSubTab(`ai-view-${suggestion.id}`);
     },
-    [aiViewTabs]
+    [aiViewTabs, persistTabs]
   );
 
   const closeAiTab = useCallback(
     (tabId: string) => {
-      setAiViewTabs((prev) => prev.filter((t) => t.id !== tabId));
+      const updatedTabs = aiViewTabs.filter((t) => t.id !== tabId);
+      setAiViewTabs(updatedTabs);
+      persistTabs(updatedTabs);
       // If we're closing the current tab, switch back to assets
       if (subTab === `ai-view-${tabId}`) {
         setSubTab("assets");
         localStorage.setItem(STORAGE_KEY, "assets");
       }
     },
-    [subTab]
+    [subTab, aiViewTabs, persistTabs]
   );
 
   // ── Loading state ──
@@ -395,13 +417,29 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
           {/* Dynamic AI view tab contents */}
           {aiViewTabs.map((tab) => (
             <TabsContent key={tab.id} value={`ai-view-${tab.id}`}>
-              <DynamicViewWrapper
-                code={tab.code}
-                portfolioData={portfolioData}
-                classifiedPortfolio={portfolio}
-                hideValues={hideValues}
-                correlationData={tab.correlationData}
-              />
+              <div className="space-y-3">
+                {/* View header with delete button */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="size-4 text-amber-500" />
+                    <span className="text-sm font-medium text-gray-700">{tab.title}</span>
+                  </div>
+                  <button
+                    onClick={() => closeAiTab(tab.id)}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-white px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+                  >
+                    <Trash2 className="size-3" />
+                    Delete View
+                  </button>
+                </div>
+                <DynamicViewWrapper
+                  code={tab.code}
+                  portfolioData={portfolioData}
+                  classifiedPortfolio={portfolio}
+                  hideValues={hideValues}
+                  correlationData={tab.correlationData}
+                />
+              </div>
             </TabsContent>
           ))}
         </Tabs>

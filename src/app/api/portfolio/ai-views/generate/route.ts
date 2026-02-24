@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { classifyPortfolio } from "@/lib/portfolio";
 import type { PortfolioData } from "@/app/api/portfolio/positions/route";
-import type { AIViewSuggestionRow, RawSuggestion, ViewSuggestion } from "@/lib/portfolio/ai-views-types";
+import type { AIViewSuggestionRow, RawSuggestion } from "@/lib/portfolio/ai-views-types";
 import { rowToSuggestion } from "@/lib/portfolio/ai-views-types";
 import { serializePortfolioForLLM, computePortfolioHash } from "@/lib/portfolio/serialize";
 import {
@@ -34,18 +34,7 @@ export async function POST() {
   }
 
   try {
-    // ── Step 1: Fetch portfolio data ──
-    // Call our own positions API internally via the same Supabase session
-    const origin = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    const posRes = await fetch(`${origin}/api/portfolio/positions`, {
-      headers: {
-        cookie: "", // Server-side: session handled by supabase client
-      },
-    });
-
-    // Alternatively, since we're server-side, re-use the supabase client to fetch directly
-    // But the positions route has complex logic, so let's call the internal function approach.
-    // For now, we'll inline a simplified fetch using the admin client.
+    // ── Step 1: Fetch portfolio data directly from DB ──
     const portfolioData = await fetchPortfolioDataDirect(supabase, user.id);
 
     if (!portfolioData || portfolioData.positions.length === 0 && portfolioData.accounts.length === 0) {
