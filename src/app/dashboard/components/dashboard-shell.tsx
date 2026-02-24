@@ -31,7 +31,7 @@ export function DashboardShell({
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-4 space-y-4 sm:px-6 sm:py-6 sm:space-y-6">
+    <div className="mx-auto max-w-7xl px-4 py-4 space-y-4 sm:px-6 sm:py-6 sm:space-y-6">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-lg font-semibold sm:text-xl">Dashboard</h1>
