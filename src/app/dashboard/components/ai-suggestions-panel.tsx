@@ -69,6 +69,7 @@ export function AISuggestionsPanel({
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [providerErrors, setProviderErrors] = useState<Record<string, string>>({});
 
   // Restore provider preference
   useEffect(() => {
@@ -109,6 +110,7 @@ export function AISuggestionsPanel({
       }
       const data = await res.json();
       setSuggestions(data.suggestions ?? []);
+      setProviderErrors(data.providerErrors ?? {});
     } catch (err) {
       setError(err instanceof Error ? err.message : "Generation failed");
     } finally {
@@ -257,9 +259,16 @@ export function AISuggestionsPanel({
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-gray-400 text-center py-2">
-                  No {provider === "gemini" ? "Gemini" : "Sonnet"} suggestions available
-                </p>
+                <div className="text-center py-2">
+                  <p className="text-xs text-gray-400">
+                    No {provider === "gemini" ? "Gemini" : "Sonnet"} suggestions available
+                  </p>
+                  {providerErrors[provider] && (
+                    <p className="mt-1 text-xs text-red-400 break-words">
+                      {providerErrors[provider]}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}
