@@ -9,7 +9,7 @@ import { Upload, Link2, PieChart, Landmark, List, X, Sparkles, Trash2, RefreshCw
 import type { PriceRefreshResult } from "@/lib/market";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PortfolioSummaryBar } from "./portfolio-summary-bar";
-import { PortfolioDonutChart } from "./portfolio-donut-chart";
+import { AssetAllocationTable } from "./asset-allocation-table";
 import { PortfolioTreemap } from "./portfolio-treemap";
 import { AssetClassCards } from "./asset-class-cards";
 import { PortfolioInsightsCard } from "./portfolio-insights-card";
@@ -462,7 +462,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
               {/* Subtab content */}
               {assetsSubTab === "allocation" && (
                 <div className="rounded-lg border bg-white p-4 sm:p-6">
-                  <PortfolioDonutChart
+                  <AssetAllocationTable
                     assetClasses={portfolio.assetClasses}
                     totalMarketValue={portfolio.totalMarketValue}
                     hideValues={hideValues}

@@ -139,6 +139,8 @@ async function collectSSEText(response: Response): Promise<string> {
         const candidate = chunk.candidates?.[0];
         if (candidate?.content?.parts) {
           for (const part of candidate.content.parts) {
+            // Skip thinking parts (Gemini 3 with thinkingLevel enabled)
+            if (part.thought) continue;
             if (part.text) fullText += part.text;
           }
         }

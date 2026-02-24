@@ -87,14 +87,21 @@ export async function POST() {
     const sonnetSuggestions = sonnetResult.status === "fulfilled" ? sonnetResult.value : [];
     const correlationData = correlationResult.status === "fulfilled" ? correlationResult.value : null;
 
+    const providerErrors: Record<string, string> = {};
     if (geminiResult.status === "rejected") {
-      console.error("[ai-views] Gemini suggestions failed:", geminiResult.reason);
+      const msg = geminiResult.reason instanceof Error ? geminiResult.reason.message : String(geminiResult.reason);
+      console.error("[ai-views] Gemini suggestions failed:", msg);
+      providerErrors.gemini = msg;
     }
     if (sonnetResult.status === "rejected") {
-      console.error("[ai-views] Sonnet suggestions failed:", sonnetResult.reason);
+      const msg = sonnetResult.reason instanceof Error ? sonnetResult.reason.message : String(sonnetResult.reason);
+      console.error("[ai-views] Sonnet suggestions failed:", msg);
+      providerErrors.sonnet = msg;
     }
     if (correlationResult.status === "rejected") {
-      console.error("[ai-views] Correlation analysis failed:", correlationResult.reason);
+      const msg = correlationResult.reason instanceof Error ? correlationResult.reason.message : String(correlationResult.reason);
+      console.error("[ai-views] Correlation analysis failed:", msg);
+      providerErrors.correlation = msg;
     }
 
     // ── Step 5: Generate code for all views via Opus (batched 3 at a time) ──
@@ -213,7 +220,11 @@ export async function POST() {
     const suggestions = (insertedRows ?? []).map(rowToSuggestion);
     console.log(`[ai-views] Generated ${suggestions.length} views for user ${user.id}`);
 
-    return NextResponse.json({ suggestions, cached: false });
+    return NextResponse.json({
+      suggestions,
+      cached: false,
+      ...(Object.keys(providerErrors).length > 0 && { providerErrors }),
+    });
   } catch (err) {
     console.error("[ai-views generate] Pipeline error:", err);
     return NextResponse.json(

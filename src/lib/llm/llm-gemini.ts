@@ -217,6 +217,8 @@ async function collectSSEStream(response: Response): Promise<{
         const candidate = chunk.candidates?.[0];
         if (candidate?.content?.parts) {
           for (const part of candidate.content.parts) {
+            // Skip thinking parts (Gemini 3 with thinkingLevel enabled)
+            if ((part as { thought?: boolean }).thought) continue;
             if (part.text) fullText += part.text;
           }
         }

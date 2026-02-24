@@ -1,12 +1,12 @@
 {
-  "version": "v260224.06 3:15p",
-  "release": 121,
-  "sha": "c1d01a79",
-  "fullSha": "c1d01a79045abf83eab876ad2606c0b093946d42",
+  "version": "v260224.11 3:46p",
+  "release": 126,
+  "sha": "1e43f883",
+  "fullSha": "1e43f8837d9c55dcb2779afc484c2e13358903db",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000303",
-  "pushedAt": "2026-02-24T21:15:22+00",
-  "commits": [{"sha": "c1d01a79045abf83eab876ad2606c0b093946d42", "short_sha": "c1d01a79", "author": "Rahul", "message": "Merge pull request #43 from modern-investor/claude/relaxed-solomon"}, {"sha": "ef685a669ca6bff278f678d60077d5a4e4308768", "short_sha": "ef685a66", "author": "rahulio", "message": "Add email forwarding webhook for Resend inbound emails"}]
+  "machine": "GitHub Actions 1000000331",
+  "pushedAt": "2026-02-24T21:46:28+00",
+  "commits": [{"sha": "1e43f8837d9c55dcb2779afc484c2e13358903db", "short_sha": "1e43f883", "author": "rahulio", "message": "Surface Gemini/Sonnet provider errors in AI Views panel"}]
 }
