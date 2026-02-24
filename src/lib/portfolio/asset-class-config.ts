@@ -54,7 +54,7 @@ export const ASSET_CLASSES: Record<AssetClassId, AssetClassDef> = {
   },
   cash: {
     id: "cash",
-    label: "Cash",
+    label: "Cash and Equivalents",
     color: "slate",
     chartColor: "#64748b",
     order: 8,

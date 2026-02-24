@@ -208,7 +208,7 @@ export function classifyPortfolio(
       marketValue,
       dayChange,
       allocationPct: totalMarketValue > 0 ? (marketValue / totalMarketValue) * 100 : 0,
-      holdingCount: positions.length + (extraMV !== 0 ? 1 : 0),
+      holdingCount: positions.length,
       positions,
     };
   }).filter((ac) => ac.marketValue !== 0 || ac.holdingCount > 0);
