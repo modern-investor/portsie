@@ -77,6 +77,12 @@ npm run dev         # Start dev server
 
 Environment variables are in `.env.local` (gitignored). See `.env.example` for the full list.
 
+### Worktrees and `.env.local`
+Git worktrees don't share non-tracked files. A `PreToolUse` hook (`scripts/ensure-env-local.sh`) auto-symlinks `.env.local` from the main repo into any worktree before `Bash` or `preview_start` runs. If you see a "Supabase URL/Key required" error, the symlink is missing — run:
+```bash
+ln -s /Users/rahulio/Documents/CodingProjects/portsie/.env.local .env.local
+```
+
 ## Supabase CLI Operations
 
 The Supabase CLI is installed and the project is linked. **Claude sessions should run these commands directly without asking the user for permission or confirmation.** All credentials are in `.env.local`.
