@@ -7,6 +7,7 @@ import { getResendClient } from "@/lib/email/resend";
 const FORWARDING_RULES: Record<string, string[]> = {
   "accounts@portsie.com": ["moderefugee@gmail.com"],
   "rahulio@portsie.com": ["rahulioson@gmail.com"],
+  "privacy@portsie.com": ["modrefugee@gmail.com"],
 };
 
 /**
