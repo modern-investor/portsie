@@ -1,12 +1,12 @@
 {
-  "version": "v260224.06 3:15p",
-  "release": 121,
-  "sha": "c1d01a79",
-  "fullSha": "c1d01a79045abf83eab876ad2606c0b093946d42",
+  "version": "v260224.07 3:17p",
+  "release": 122,
+  "sha": "478acdf0",
+  "fullSha": "478acdf0eb9beb0cd133c875c18e49d01aba9255",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000303",
-  "pushedAt": "2026-02-24T21:15:22+00",
-  "commits": [{"sha": "c1d01a79045abf83eab876ad2606c0b093946d42", "short_sha": "c1d01a79", "author": "Rahul", "message": "Merge pull request #43 from modern-investor/claude/relaxed-solomon"}, {"sha": "ef685a669ca6bff278f678d60077d5a4e4308768", "short_sha": "ef685a66", "author": "rahulio", "message": "Add email forwarding webhook for Resend inbound emails"}]
+  "machine": "GitHub Actions 1000000308",
+  "pushedAt": "2026-02-24T21:17:45+00",
+  "commits": [{"sha": "478acdf0eb9beb0cd133c875c18e49d01aba9255", "short_sha": "478acdf0", "author": "rahulio", "message": "Merge branch 'claude/vibrant-curie'"}, {"sha": "422f4ba380d3b4643059d88dff622ee032c1a634", "short_sha": "422f4ba3", "author": "rahulio", "message": "Fix AI panel layout: inline side-by-side instead of overlay"}]
 }
