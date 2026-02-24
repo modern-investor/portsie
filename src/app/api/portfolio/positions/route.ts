@@ -319,6 +319,53 @@ export async function GET() {
     console.error("Holdings data fetch failed:", err);
   }
 
+  // ── 3. Enrich with cached market prices (no external API calls) ──
+  try {
+    const allSymbols = [
+      ...new Set([
+        ...positions.map((p) => p.symbol),
+        ...aggregatePositions.map((p) => p.symbol),
+      ]),
+    ].filter((s) => s && s !== "UNKNOWN" && s !== "CASH");
+
+    if (allSymbols.length > 0) {
+      const { data: cachedPrices } = await supabase
+        .from("market_prices")
+        .select("symbol, close_price, price_date")
+        .in("symbol", allSymbols)
+        .order("price_date", { ascending: false });
+
+      if (cachedPrices && cachedPrices.length > 0) {
+        // Deduplicate to latest per symbol
+        const latestPrices = new Map<string, { price: number; date: string }>();
+        for (const p of cachedPrices) {
+          if (!latestPrices.has(p.symbol)) {
+            latestPrices.set(p.symbol, {
+              price: Number(p.close_price),
+              date: p.price_date,
+            });
+          }
+        }
+
+        // Update positions if cached price is newer than what we have
+        const enrichPositions = (arr: UnifiedPosition[]) => {
+          for (const pos of arr) {
+            const cached = latestPrices.get(pos.symbol);
+            if (!cached || cached.price <= 0) continue;
+            if (!pos.priceDate || cached.date > pos.priceDate) {
+              pos.marketValue = pos.quantity * cached.price;
+              pos.priceDate = cached.date;
+            }
+          }
+        };
+        enrichPositions(positions);
+        enrichPositions(aggregatePositions);
+      }
+    }
+  } catch {
+    // Market price enrichment is best-effort
+  }
+
   // Merge aggregate positions into primary when individual accounts don't have
   // their own holdings. This happens when an uploaded statement puts all positions
   // as "unallocated" — they end up in the aggregate account while individual

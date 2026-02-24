@@ -11,6 +11,7 @@ Portfolio investment tracker built with Next.js 16, Supabase, and Tailwind CSS 4
 - **Brokerage**: Charles Schwab API (per-user OAuth)
 - **LLM (extraction)**: Google Gemini 3 Flash (default), Claude Sonnet 4.6 via CLI (fallback), Anthropic API (user override)
 - **LLM (test/compare)**: Claude Opus 4.6, Sonnet 4.5, Gemini 2.5 Flash via extraction test runner
+- **Market data**: Finnhub (primary, 60 req/min free), Alpha Vantage (fallback, 25 req/day free)
 - **File parsing**: `xlsx` (Excel→CSV), `csv-parse` (CSV rows)
 
 ## Supabase Project
@@ -253,6 +254,49 @@ The `cli-wrapper/` directory contains a standalone HTTP service deployed to `/op
 - `POST /api/upload/[id]/process` — trigger LLM extraction
 - `POST /api/upload/[id]/confirm` — confirm data, write to canonical tables
 - `GET/POST/DELETE /api/settings/llm` — LLM settings CRUD
+
+## Market Data Integration
+
+Real-time stock quotes for portfolio valuation via two providers with automatic fallback.
+
+### Architecture
+```
+Dashboard "Refresh Prices" button
+  → POST /api/market/prices
+  → refreshPrices() orchestrator
+  → Finnhub (primary) → Alpha Vantage (fallback)
+  → Upsert market_prices (service_role) + Update holdings
+```
+
+### Providers
+| Provider | Role | Rate Limit | Env Var |
+|----------|------|------------|---------|
+| **Finnhub** | Primary | 60 calls/min | `FINNHUB_API_KEY` |
+| **Alpha Vantage** | Fallback | 25 calls/day | `ALPHA_VANTAGE_API_KEY` |
+
+### Caching Strategy
+- Prices stored in `market_prices` table (public, not user-scoped)
+- Unique constraint on `(symbol, price_date)` — one price per symbol per day
+- On refresh: skip symbols already fetched today, only call APIs for stale symbols
+- Cache is shared across all users (User A fetches AAPL → User B gets it free)
+- Positions API enriches holdings with cached prices on every load (no API calls)
+
+### Key Files
+- `src/lib/market/finnhub.ts` — Finnhub API client
+- `src/lib/market/alpha-vantage.ts` — Alpha Vantage API client
+- `src/lib/market/price-refresher.ts` — Orchestration: cache check → fetch → upsert → update holdings
+- `src/lib/market/config.ts` — Provider URLs and rate limits
+- `src/lib/market/types.ts` — Shared type definitions
+- `src/app/api/market/prices/route.ts` — POST (refresh) + GET (read cached) endpoints
+
+### API Routes
+- `POST /api/market/prices` — Trigger price refresh for user's holdings
+- `GET /api/market/prices?symbols=AAPL,MSFT` — Read cached prices (no API calls)
+
+### Environment Variables
+- `FINNHUB_API_KEY` — Finnhub API key (finnhub.io, accounts@portsie.com)
+- `FINNHUB_WEBHOOK_SECRET` — Finnhub webhook secret (optional, for future real-time push)
+- `ALPHA_VANTAGE_API_KEY` — Alpha Vantage API key (alphavantage.co)
 
 ## Extraction Test System (A/B Testing)
 

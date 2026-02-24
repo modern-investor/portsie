@@ -5,7 +5,8 @@ import { classifyPortfolio } from "@/lib/portfolio";
 import type { ClassifiedPortfolio, AssetClassId } from "@/lib/portfolio/types";
 import type { PortfolioData } from "@/app/api/portfolio/positions/route";
 import type { ViewSuggestion } from "@/lib/portfolio/ai-views-types";
-import { Upload, Link2, PieChart, Landmark, List, X, Sparkles, Trash2 } from "lucide-react";
+import { Upload, Link2, PieChart, Landmark, List, X, Sparkles, Trash2, RefreshCw } from "lucide-react";
+import type { PriceRefreshResult } from "@/lib/market";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PortfolioSummaryBar } from "./portfolio-summary-bar";
 import { PortfolioDonutChart } from "./portfolio-donut-chart";
@@ -103,6 +104,10 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
   const [error, setError] = useState("");
   const [isEmpty, setIsEmpty] = useState(false);
 
+  // ── Price refresh state ──
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshMessage, setRefreshMessage] = useState<string | null>(null);
+
   // ── AI Views state ──
   const [aiViewTabs, setAiViewTabs] = useState<AIViewTab[]>([]);
   const [showAiPanel, setShowAiPanel] = useState(false);
@@ -163,6 +168,44 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
     }
 
     load();
+  }, []);
+
+  // ── Refresh prices handler ──
+  const handleRefreshPrices = useCallback(async () => {
+    setRefreshing(true);
+    setRefreshMessage(null);
+    try {
+      const res = await fetch("/api/market/prices", { method: "POST" });
+      if (!res.ok) throw new Error("Failed to refresh prices");
+      const data: PriceRefreshResult = await res.json();
+
+      const parts: string[] = [];
+      if (data.updated.length > 0) parts.push(`${data.updated.length} updated`);
+      if (data.cached.length > 0) parts.push(`${data.cached.length} cached`);
+      if (data.failed.length > 0) parts.push(`${data.failed.length} failed`);
+      if (data.skipped.length > 0) parts.push(`${data.skipped.length} skipped`);
+      setRefreshMessage(parts.join(", ") || "No tradeable symbols");
+
+      // Re-fetch portfolio data to reflect updated prices
+      const posRes = await fetch("/api/portfolio/positions");
+      if (posRes.ok) {
+        const posData: PortfolioData = await posRes.json();
+        if (!Array.isArray(posData.positions)) posData.positions = [];
+        if (!Array.isArray(posData.accounts)) posData.accounts = [];
+        if (!Array.isArray(posData.aggregatePositions)) posData.aggregatePositions = [];
+        if (!Array.isArray(posData.aggregateAccounts)) posData.aggregateAccounts = [];
+        setPortfolioData(posData);
+        setPortfolio(classifyPortfolio(posData.positions, posData.accounts));
+      }
+
+      // Auto-clear message after 5s
+      setTimeout(() => setRefreshMessage(null), 5000);
+    } catch {
+      setRefreshMessage("Refresh failed");
+      setTimeout(() => setRefreshMessage(null), 5000);
+    } finally {
+      setRefreshing(false);
+    }
   }, []);
 
   // Compute the "as of" price date from positions
@@ -360,8 +403,23 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
               ))}
             </TabsList>
 
-            {/* AI Panel toggle */}
-            <AIPanelToggleButton isOpen={showAiPanel} onClick={toggleAiPanel} />
+            {/* Refresh prices + AI Panel toggle */}
+            <div className="flex items-center gap-1.5">
+              {refreshMessage && (
+                <span className="text-xs text-gray-500 hidden sm:inline">
+                  {refreshMessage}
+                </span>
+              )}
+              <button
+                onClick={handleRefreshPrices}
+                disabled={refreshing}
+                title="Refresh market prices"
+                className="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 transition-colors"
+              >
+                <RefreshCw className={`size-4 ${refreshing ? "animate-spin" : ""}`} />
+              </button>
+              <AIPanelToggleButton isOpen={showAiPanel} onClick={toggleAiPanel} />
+            </div>
           </div>
 
           {/* Assets tab: donut + cards + insights */}
