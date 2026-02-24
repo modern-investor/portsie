@@ -155,11 +155,9 @@ export interface UploadedStatement {
   positions_created: number;
   statement_start_date: string | null;
   statement_end_date: string | null;
-  raw_llm_response: unknown;
   extracted_data: LLMExtractionResult | null;
   process_count: number;
   confirmed_at: string | null;
-  detected_account_info: DetectedAccountInfo | null;
   quality_check_id: string | null;
   qc_status_message: string | null;
   processing_settings: {
@@ -170,13 +168,15 @@ export interface UploadedStatement {
     thinkingLevel: string;
     mediaResolution: string;
   } | null;
+  debug_context: import("@/lib/privacy/types").DebugContext | null;
   verification_data: LLMExtractionResult | null;
-  verification_raw_response: unknown;
   verification_settings: {
     backend: string;
     model: string;
   } | null;
   verification_error: string | null;
+  source_file_expires_at: string | null;
+  source_file_purged_at: string | null;
   created_at: string;
   updated_at: string;
 }

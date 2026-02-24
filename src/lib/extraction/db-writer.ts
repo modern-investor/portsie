@@ -29,6 +29,8 @@ import type {
 import { accountTypeToCategory } from "./account-matcher";
 import { reconcileHoldings } from "@/lib/holdings/reconcile";
 import { updateAccountSummary } from "@/lib/holdings/account-summary";
+import { encryptAccountNumber } from "@/lib/privacy/mappers/accounts";
+import { safeLog } from "@/lib/privacy/redaction";
 
 // ── Helpers ──
 
@@ -40,12 +42,16 @@ async function createAccount(
   userId: string,
   info: ExtractionAccount["account_info"]
 ): Promise<string> {
+  const encryptedNum = encryptAccountNumber(info.account_number);
+
   const { data, error } = await supabase
     .from("accounts")
     .insert({
       user_id: userId,
       data_source: "manual_upload",
-      schwab_account_number: info.account_number ?? null,
+      account_number_encrypted: encryptedNum.account_number_encrypted,
+      account_number_token: encryptedNum.account_number_token,
+      account_number_hint: encryptedNum.account_number_hint,
       account_type: info.account_type ?? null,
       account_nickname:
         info.account_nickname ||
@@ -60,12 +66,12 @@ async function createAccount(
 
   if (error) {
     // Handle unique constraint violation (concurrent upload for same account)
-    if (error.code === "23505" && info.account_number) {
+    if (error.code === "23505" && encryptedNum.account_number_token) {
       const { data: existing } = await supabase
         .from("accounts")
         .select("id")
         .eq("user_id", userId)
-        .eq("schwab_account_number", info.account_number)
+        .eq("account_number_token", encryptedNum.account_number_token)
         .eq("data_source", "manual_upload")
         .single();
 
@@ -89,19 +95,24 @@ async function batchCreateAccounts(
   if (newAccountMappings.length === 0) return result;
 
   // Insert all accounts in one batch
-  const rows = newAccountMappings.map((m) => ({
-    user_id: userId,
-    data_source: "manual_upload",
-    schwab_account_number: m.info.account_number ?? null,
-    account_type: m.info.account_type ?? null,
-    account_nickname:
-      m.info.account_nickname ||
-      `${m.info.institution_name || "Unknown"} Account`,
-    institution_name: m.info.institution_name || "Unknown",
-    account_group: m.info.account_group ?? null,
-    account_category: accountTypeToCategory(m.info.account_type),
-    is_active: true,
-  }));
+  const rows = newAccountMappings.map((m) => {
+    const encryptedNum = encryptAccountNumber(m.info.account_number);
+    return {
+      user_id: userId,
+      data_source: "manual_upload",
+      account_number_encrypted: encryptedNum.account_number_encrypted,
+      account_number_token: encryptedNum.account_number_token,
+      account_number_hint: encryptedNum.account_number_hint,
+      account_type: m.info.account_type ?? null,
+      account_nickname:
+        m.info.account_nickname ||
+        `${m.info.institution_name || "Unknown"} Account`,
+      institution_name: m.info.institution_name || "Unknown",
+      account_group: m.info.account_group ?? null,
+      account_category: accountTypeToCategory(m.info.account_type),
+      is_active: true,
+    };
+  });
 
   const { data, error } = await supabase
     .from("accounts")
@@ -541,10 +552,7 @@ export async function writeExtraction(
             reconciliation,
           };
         } catch (err) {
-          console.error(
-            `Failed to reconcile holdings for account ${accountId}:`,
-            err
-          );
+          safeLog("error", "DBWriter", `Failed to reconcile holdings for account ${accountId}`, err);
           return null;
         }
       })
@@ -689,7 +697,7 @@ export async function writeExtraction(
           });
 
         if (error) {
-          console.error("Failed to write aggregate balance snapshots:", error.message);
+          safeLog("error", "DBWriter", "Failed to write aggregate balance snapshots", { error: error.message });
         }
       }
 
@@ -710,7 +718,7 @@ export async function writeExtraction(
         aggBalanceData as unknown as import("@/lib/upload/types").ExtractedBalance | undefined
       );
     } catch (err) {
-      console.error("Failed to write unallocated/aggregate positions:", err);
+      safeLog("error", "DBWriter", "Failed to write unallocated/aggregate positions", err);
     }
   }
 
@@ -760,7 +768,7 @@ export async function writeExtraction(
               .eq("id", accountId);
           }
         } catch (err) {
-          console.error(`Failed to update account summary for ${accountId}:`, err);
+          safeLog("error", "DBWriter", `Failed to update account summary for ${accountId}`, err);
         }
       })
     );

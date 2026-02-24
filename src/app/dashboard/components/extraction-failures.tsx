@@ -16,7 +16,6 @@ interface FailureSummary {
 
 interface FailureDetail extends FailureSummary {
   file_path: string;
-  raw_llm_response: unknown;
   llm_mode: string | null;
   file_size_bytes: number | null;
 }
@@ -249,18 +248,6 @@ export function ExtractionFailures({
                           {detail.error_message}
                         </pre>
                       </div>
-
-                      {/* Raw LLM response */}
-                      {detail.raw_llm_response && (
-                        <div>
-                          <p className="mb-1 text-xs font-medium text-gray-600">
-                            Raw LLM Response
-                          </p>
-                          <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded bg-gray-50 p-2 text-xs text-gray-600">
-                            {JSON.stringify(detail.raw_llm_response, null, 2)}
-                          </pre>
-                        </div>
-                      )}
 
                       {/* Resolution notes if resolved */}
                       {f.resolved_at && f.resolution_notes && (

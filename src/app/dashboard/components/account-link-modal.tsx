@@ -8,7 +8,7 @@ interface AccountMatchDisplay {
   account_nickname: string | null;
   institution_name: string | null;
   account_type: string | null;
-  schwab_account_number: string | null;
+  account_number_hint: string | null;
   match_reason: string;
 }
 
@@ -109,9 +109,7 @@ export function AccountLinkModal({
                       {[
                         match.institution_name,
                         match.account_type,
-                        match.schwab_account_number
-                          ? `****${match.schwab_account_number.slice(-4)}`
-                          : null,
+                        match.account_number_hint ?? null,
                       ]
                         .filter(Boolean)
                         .join(" — ")}

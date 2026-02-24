@@ -3,6 +3,7 @@ import type { ProcessedFile } from "../upload/file-processor";
 import type { UploadFileType } from "../upload/types";
 import type { PortsieExtraction } from "../extraction/schema";
 import { getLLMSettings, getLLMApiKey, getLLMCliEndpoint } from "./settings";
+import { safeLog } from "@/lib/privacy";
 import { extractViaAPI } from "./llm-api";
 import { extractViaCLI } from "./llm-cli";
 import { extractViaGemini } from "./llm-gemini";
@@ -42,7 +43,7 @@ export async function extractFinancialData(
     }
     const geminiApiKey = process.env.GEMINI_API_KEY;
     if (!geminiApiKey) {
-      console.warn("[Dispatcher] GEMINI_API_KEY not set, falling back to CLI");
+      safeLog("warn", "Dispatcher", "GEMINI_API_KEY not set, falling back to CLI");
       const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
       return extractViaCLI(processedFile, fileType, filename, cliEndpoint);
     }
@@ -55,7 +56,7 @@ export async function extractFinancialData(
       );
     } catch (geminiError) {
       const errorMsg = geminiError instanceof Error ? geminiError.message : String(geminiError);
-      console.error(`[Dispatcher] Gemini extraction failed, falling back to CLI: ${errorMsg}`);
+      safeLog("error", "Dispatcher", "Gemini extraction failed, falling back to CLI", { error: errorMsg });
       const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
       return extractViaCLI(processedFile, fileType, filename, cliEndpoint, "claude-sonnet-4-6");
     }

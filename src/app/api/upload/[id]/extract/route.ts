@@ -14,6 +14,12 @@ import type { UploadFileType } from "@/lib/upload/types";
 import type { PortsieExtraction } from "@/lib/extraction/schema";
 import { PROCESSING_PRESETS, DEFAULT_PRESET } from "@/lib/llm/types";
 import type { ProcessingPreset, ProcessingSettings } from "@/lib/llm/types";
+import {
+  getPrivacyConfig,
+  sanitizeExtractionForStorage,
+  buildDebugContext,
+  safeLog,
+} from "@/lib/privacy";
 
 // LLM extraction can take several minutes for large PDF/CSV files
 export const maxDuration = 300; // 5 minutes
@@ -24,6 +30,9 @@ export const maxDuration = 300; // 5 minutes
  * Stage 1+2: LLM extraction → schema validation.
  * Stores the validated PortsieExtraction in extracted_data.
  * Sets parse_status to "extracted".
+ *
+ * Privacy: raw_llm_response is NOT persisted (strict mode default).
+ * A minimal debug_context is stored instead for diagnostics.
  *
  * Query params:
  *   ?auto_confirm=true — Chains all stages (extract → match → write) in one call.
@@ -41,6 +50,8 @@ export async function POST(
     presetParam && PROCESSING_PRESETS[presetParam]
       ? PROCESSING_PRESETS[presetParam]
       : PROCESSING_PRESETS[DEFAULT_PRESET];
+
+  const privacyConfig = getPrivacyConfig();
 
   const supabase = await createClient();
   const {
@@ -105,7 +116,7 @@ export async function POST(
     const processedFile = processFileForLLM(buffer, fileType, fileData.type);
 
     // ── Stage 1+2: LLM extraction + validation ──
-    const { extraction, rawResponse } = await extractFinancialData(
+    const { extraction } = await extractFinancialData(
       supabase,
       user.id,
       processedFile,
@@ -130,23 +141,35 @@ export async function POST(
     );
     const hasData = totalPositions > 0 || totalTransactions > 0 || totalBalances > 0;
 
+    // ── Privacy: sanitize extraction and build debug context ──
+    const sanitizedExtraction = sanitizeExtractionForStorage(extraction, privacyConfig);
+    const debugContext = buildDebugContext({
+      backend: processingSettings.backend,
+      model: processingSettings.model,
+      durationMs: primaryDurationMs,
+      preset: presetParam ?? undefined,
+    });
+
+    // Compute source file expiry if retention is configured
+    const sourceFileExpiresAt = privacyConfig.sourceFileRetentionDays > 0
+      ? new Date(Date.now() + privacyConfig.sourceFileRetentionDays * 86400_000).toISOString()
+      : null;
+
     // Save extraction results — parse_status = "extracted"
-    // Also clear any previous verification data
     await supabase
       .from("uploaded_statements")
       .update({
         parse_status: hasData ? "extracted" : "partial",
         parsed_at: new Date().toISOString(),
-        extracted_data: extraction,
-        raw_llm_response: rawResponse,
-        detected_account_info: extraction.accounts[0]?.account_info ?? null,
+        extracted_data: sanitizedExtraction,
+        debug_context: debugContext,
         extraction_schema_version: extraction.schema_version,
         statement_start_date: extraction.document.statement_start_date,
         statement_end_date: extraction.document.statement_end_date,
         parse_error: null,
         processing_settings: processingSettings,
+        source_file_expires_at: sourceFileExpiresAt,
         verification_data: null,
-        verification_raw_response: null,
         verification_settings: null,
         verification_error: null,
       })
@@ -177,7 +200,7 @@ export async function POST(
           confirmErr instanceof Error
             ? confirmErr.message
             : "Unknown auto-confirm error";
-        console.error("Auto-confirm failed:", confirmErr);
+        safeLog("error", "Extract", "Auto-confirm failed", { error: autoConfirmError, uploadId: id });
 
         await supabase
           .from("uploaded_statements")
@@ -193,9 +216,7 @@ export async function POST(
     if (verificationEnabled && hasData) {
       // Skip verification if primary took > 180s (safety margin for 300s timeout)
       if (primaryDurationMs > 180_000) {
-        console.warn(
-          `[Verification] Skipping — primary took ${Math.round(primaryDurationMs / 1000)}s (>180s limit)`
-        );
+        safeLog("warn", "Verification", `Skipping — primary took ${Math.round(primaryDurationMs / 1000)}s (>180s limit)`);
         await supabase
           .from("uploaded_statements")
           .update({
@@ -226,18 +247,24 @@ export async function POST(
             );
           }
 
+          // Privacy: sanitize verification data, do not persist raw response
+          const sanitizedVerification = sanitizeExtractionForStorage(
+            verificationResult.extraction, privacyConfig
+          );
+
+          const verificationUpdate: Record<string, unknown> = {
+            verification_data: privacyConfig.retainVerificationData ? sanitizedVerification : null,
+            verification_settings: { backend: verBackend, model: verModel },
+            verification_error: null,
+          };
+
           await supabase
             .from("uploaded_statements")
-            .update({
-              verification_data: verificationResult.extraction,
-              verification_raw_response: verificationResult.rawResponse,
-              verification_settings: { backend: verBackend, model: verModel },
-              verification_error: null,
-            })
+            .update(verificationUpdate)
             .eq("id", id);
         } catch (verErr) {
           const verErrMsg = verErr instanceof Error ? verErr.message : "Unknown verification error";
-          console.error("[Verification] Extraction failed:", verErr);
+          safeLog("error", "Verification", "Extraction failed", { error: verErrMsg });
           await supabase
             .from("uploaded_statements")
             .update({
@@ -273,7 +300,7 @@ export async function POST(
   } catch (err) {
     const errorMessage =
       err instanceof Error ? err.message : "Unknown processing error";
-    console.error("LLM extraction failed:", err);
+    safeLog("error", "Extract", "LLM extraction failed", { error: errorMessage, uploadId: id });
 
     await supabase
       .from("uploaded_statements")
@@ -299,7 +326,7 @@ export async function POST(
           file_size_bytes: statement.file_size_bytes,
         });
       } catch (logErr) {
-        console.error("Failed to log extraction failure:", logErr);
+        safeLog("error", "Extract", "Failed to log extraction failure", { error: logErr });
       }
     }
 
