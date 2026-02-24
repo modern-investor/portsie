@@ -1,12 +1,12 @@
 {
-  "version": "v260224.14 4:10p",
-  "release": 129,
-  "sha": "2eaf80b4",
-  "fullSha": "2eaf80b4073228c8530c8bf858f8fe0db7848a02",
+  "version": "v260224.15 4:36p",
+  "release": 130,
+  "sha": "d25cc674",
+  "fullSha": "d25cc674fbe96bd6cc4f0121eba8f78c702925c8",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000346",
-  "pushedAt": "2026-02-24T22:10:15+00",
-  "commits": [{"sha": "2eaf80b4073228c8530c8bf858f8fe0db7848a02", "short_sha": "2eaf80b4", "author": "rahulio", "message": "Add Price column to allocation table expanded rows"}]
+  "machine": "GitHub Actions 1000000352",
+  "pushedAt": "2026-02-24T22:36:35+00",
+  "commits": [{"sha": "d25cc674fbe96bd6cc4f0121eba8f78c702925c8", "short_sha": "d25cc674", "author": "rahulio", "message": "Update privacy policy with full protection details and add privacy@ email forwarding"}]
 }
