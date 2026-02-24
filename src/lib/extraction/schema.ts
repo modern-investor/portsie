@@ -71,7 +71,6 @@ export const ACCOUNT_TYPES = [
   "mortgage",
   "heloc",
   "auto_loan",
-  "real_estate",
   "view_only",
   "sep_ira",
   "simple_ira",
