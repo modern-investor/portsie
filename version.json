@@ -1,12 +1,12 @@
 {
-  "version": "v260224.10 3:45p",
-  "release": 125,
-  "sha": "aac14b05",
-  "fullSha": "aac14b05da5f0dd59bbe48b84769065b716d1523",
+  "version": "v260224.11 3:46p",
+  "release": 126,
+  "sha": "1e43f883",
+  "fullSha": "1e43f8837d9c55dcb2779afc484c2e13358903db",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000327",
-  "pushedAt": "2026-02-24T21:45:23+00",
-  "commits": [{"sha": "aac14b05da5f0dd59bbe48b84769065b716d1523", "short_sha": "aac14b05", "author": "rahulio", "message": "Fix Cash: add synthetic position row for brokerage cash balance"}]
+  "machine": "GitHub Actions 1000000331",
+  "pushedAt": "2026-02-24T21:46:28+00",
+  "commits": [{"sha": "1e43f8837d9c55dcb2779afc484c2e13358903db", "short_sha": "1e43f883", "author": "rahulio", "message": "Surface Gemini/Sonnet provider errors in AI Views panel"}]
 }
