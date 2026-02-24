@@ -1,12 +1,12 @@
 {
-  "version": "v260224.11 3:46p",
-  "release": 126,
-  "sha": "1e43f883",
-  "fullSha": "1e43f8837d9c55dcb2779afc484c2e13358903db",
+  "version": "v260224.12 3:49p",
+  "release": 127,
+  "sha": "e7998af2",
+  "fullSha": "e7998af2a0bfaa8f87cb323e8933604edd03277f",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000331",
-  "pushedAt": "2026-02-24T21:46:28+00",
-  "commits": [{"sha": "1e43f8837d9c55dcb2779afc484c2e13358903db", "short_sha": "1e43f883", "author": "rahulio", "message": "Surface Gemini/Sonnet provider errors in AI Views panel"}]
+  "machine": "GitHub Actions 1000000337",
+  "pushedAt": "2026-02-24T21:49:19+00",
+  "commits": [{"sha": "e7998af2a0bfaa8f87cb323e8933604edd03277f", "short_sha": "e7998af2", "author": "rahulio", "message": "Merge branch 'main' of https://github.com/modern-investor/portsie"}, {"sha": "164fd59b1bb51ff5e2e43ee976ebaa9618eeebbc", "short_sha": "164fd59b", "author": "rahulio", "message": "Fix dashboard: subtabs under Assets, AI panel toggle as icon"}, {"sha": "ce78fc77c483518517e21aeb95142182c76ebe50", "short_sha": "ce78fc77", "author": "rahulio", "message": "Fix dashboard: remove duplicate AI Views button, add asset subtabs"}]
 }
