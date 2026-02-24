@@ -352,166 +352,172 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
       {/* Executive summary */}
       <PortfolioSummaryBar portfolio={portfolio} hideValues={hideValues} priceDate={priceDate} />
 
-      {/* Main content area with panel overlay */}
-      <div className="relative overflow-hidden">
-        {/* Sub-tabs */}
-        <Tabs
-          value={subTab}
-          onValueChange={(v) => {
-            const tab = v as PortfolioSubTab;
-            setSubTab(tab);
-            // Only persist static tabs to localStorage
-            if (VALID_STATIC_TABS.includes(v)) {
-              localStorage.setItem(STORAGE_KEY, v);
-            }
-          }}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <TabsList className="flex-1 overflow-x-auto">
-              <TabsTrigger value="assets">
-                <PieChart className="size-5" />
-                Assets
-              </TabsTrigger>
-              <TabsTrigger value="accounts">
-                <Landmark className="size-5" />
-                Accounts
-              </TabsTrigger>
-              <TabsTrigger value="positions">
-                <List className="size-5" />
-                Positions
-              </TabsTrigger>
-
-              {/* Dynamic AI view tabs */}
-              {aiViewTabs.map((tab) => (
-                <TabsTrigger
-                  key={tab.id}
-                  value={`ai-view-${tab.id}`}
-                  className="group relative pr-7"
-                >
-                  <Sparkles className="size-4 text-amber-500" />
-                  <span className="max-w-24 truncate">{tab.title}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      closeAiTab(tab.id);
-                    }}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600 transition-all"
-                  >
-                    <X className="size-3" />
-                  </button>
+      {/* Main content + AI panel side-by-side */}
+      <div className="flex gap-4">
+        {/* Main content area */}
+        <div className="min-w-0 flex-1">
+          <Tabs
+            value={subTab}
+            onValueChange={(v) => {
+              const tab = v as PortfolioSubTab;
+              setSubTab(tab);
+              // Only persist static tabs to localStorage
+              if (VALID_STATIC_TABS.includes(v)) {
+                localStorage.setItem(STORAGE_KEY, v);
+              }
+            }}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <TabsList className="flex-1 overflow-x-auto">
+                <TabsTrigger value="assets">
+                  <PieChart className="size-5" />
+                  Assets
                 </TabsTrigger>
-              ))}
-            </TabsList>
+                <TabsTrigger value="accounts">
+                  <Landmark className="size-5" />
+                  Accounts
+                </TabsTrigger>
+                <TabsTrigger value="positions">
+                  <List className="size-5" />
+                  Positions
+                </TabsTrigger>
 
-            {/* Refresh prices + AI Panel toggle */}
-            <div className="flex items-center gap-1.5">
-              {refreshMessage && (
-                <span className="text-xs text-gray-500 hidden sm:inline">
-                  {refreshMessage}
-                </span>
-              )}
-              <button
-                onClick={handleRefreshPrices}
-                disabled={refreshing}
-                title="Refresh market prices"
-                className="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 transition-colors"
-              >
-                <RefreshCw className={`size-4 ${refreshing ? "animate-spin" : ""}`} />
-              </button>
-              <AIPanelToggleButton isOpen={showAiPanel} onClick={toggleAiPanel} />
-            </div>
-          </div>
-
-          {/* Assets tab: donut + cards + insights */}
-          <TabsContent value="assets">
-            <div className="space-y-6">
-              <div className="rounded-lg border bg-white p-4 sm:p-6">
-                <h3 className="mb-4 text-2xl font-semibold text-gray-500 uppercase tracking-wider">
-                  Asset Allocation
-                </h3>
-                <PortfolioDonutChart
-                  assetClasses={portfolio.assetClasses}
-                  totalMarketValue={portfolio.totalMarketValue}
-                  hideValues={hideValues}
-                />
-              </div>
-
-              <div className="rounded-lg border bg-white p-4 sm:p-6">
-                <PortfolioTreemap
-                  assetClasses={portfolio.assetClasses}
-                  totalMarketValue={portfolio.totalMarketValue}
-                  hideValues={hideValues}
-                />
-              </div>
-
-              <AssetClassCards
-                assetClasses={portfolio.assetClasses}
-                hideValues={hideValues}
-                onSelectClass={(id) => setSelectedClass(id)}
-              />
-
-              <PortfolioInsightsCard portfolio={portfolio} hideValues={hideValues} />
-            </div>
-          </TabsContent>
-
-          {/* Accounts tab — pass fetched data as props */}
-          <TabsContent value="accounts">
-            <AccountOverview
-              accounts={portfolioData.accounts}
-              aggregateAccounts={portfolioData.aggregateAccounts}
-              hideValues={hideValues}
-            />
-          </TabsContent>
-
-          {/* Positions tab — pass fetched data as props */}
-          <TabsContent value="positions">
-            <PositionsTable
-              positions={portfolioData.positions}
-              accounts={portfolioData.accounts}
-              hideValues={hideValues}
-            />
-          </TabsContent>
-
-          {/* Dynamic AI view tab contents */}
-          {aiViewTabs.map((tab) => (
-            <TabsContent key={tab.id} value={`ai-view-${tab.id}`}>
-              <div className="space-y-3">
-                {/* View header with delete button */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="size-4 text-amber-500" />
-                    <span className="text-sm font-medium text-gray-700">{tab.title}</span>
-                  </div>
-                  <button
-                    onClick={() => closeAiTab(tab.id)}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-white px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+                {/* Dynamic AI view tabs */}
+                {aiViewTabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={`ai-view-${tab.id}`}
+                    className="group relative pr-7"
                   >
-                    <Trash2 className="size-3" />
-                    Delete View
-                  </button>
+                    <Sparkles className="size-4 text-amber-500" />
+                    <span className="max-w-24 truncate">{tab.title}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        closeAiTab(tab.id);
+                      }}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600 transition-all"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              {/* Refresh prices + AI Panel toggle */}
+              <div className="flex items-center gap-1.5">
+                {refreshMessage && (
+                  <span className="text-xs text-gray-500 hidden sm:inline">
+                    {refreshMessage}
+                  </span>
+                )}
+                <button
+                  onClick={handleRefreshPrices}
+                  disabled={refreshing}
+                  title="Refresh market prices"
+                  className="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 transition-colors"
+                >
+                  <RefreshCw className={`size-4 ${refreshing ? "animate-spin" : ""}`} />
+                </button>
+                <AIPanelToggleButton isOpen={showAiPanel} onClick={toggleAiPanel} />
+              </div>
+            </div>
+
+            {/* Assets tab: donut + cards + insights */}
+            <TabsContent value="assets">
+              <div className="space-y-6">
+                <div className="rounded-lg border bg-white p-4 sm:p-6">
+                  <h3 className="mb-4 text-2xl font-semibold text-gray-500 uppercase tracking-wider">
+                    Asset Allocation
+                  </h3>
+                  <PortfolioDonutChart
+                    assetClasses={portfolio.assetClasses}
+                    totalMarketValue={portfolio.totalMarketValue}
+                    hideValues={hideValues}
+                  />
                 </div>
-                <DynamicViewWrapper
-                  code={tab.code}
-                  portfolioData={portfolioData}
-                  classifiedPortfolio={portfolio}
+
+                <div className="rounded-lg border bg-white p-4 sm:p-6">
+                  <PortfolioTreemap
+                    assetClasses={portfolio.assetClasses}
+                    totalMarketValue={portfolio.totalMarketValue}
+                    hideValues={hideValues}
+                  />
+                </div>
+
+                <AssetClassCards
+                  assetClasses={portfolio.assetClasses}
                   hideValues={hideValues}
-                  correlationData={tab.correlationData}
+                  onSelectClass={(id) => setSelectedClass(id)}
                 />
+
+                <PortfolioInsightsCard portfolio={portfolio} hideValues={hideValues} />
               </div>
             </TabsContent>
-          ))}
-        </Tabs>
 
-        {/* AI Suggestions Panel (right overlay) */}
-        <AISuggestionsPanel
-          isOpen={showAiPanel}
-          onClose={() => {
-            setShowAiPanel(false);
-            localStorage.setItem(PANEL_STORAGE_KEY, "false");
-          }}
-          onOpenView={openAiView}
-          hasPortfolioData={true}
-        />
+            {/* Accounts tab — pass fetched data as props */}
+            <TabsContent value="accounts">
+              <AccountOverview
+                accounts={portfolioData.accounts}
+                aggregateAccounts={portfolioData.aggregateAccounts}
+                hideValues={hideValues}
+              />
+            </TabsContent>
+
+            {/* Positions tab — pass fetched data as props */}
+            <TabsContent value="positions">
+              <PositionsTable
+                positions={portfolioData.positions}
+                accounts={portfolioData.accounts}
+                hideValues={hideValues}
+              />
+            </TabsContent>
+
+            {/* Dynamic AI view tab contents */}
+            {aiViewTabs.map((tab) => (
+              <TabsContent key={tab.id} value={`ai-view-${tab.id}`}>
+                <div className="space-y-3">
+                  {/* View header with delete button */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="size-4 text-amber-500" />
+                      <span className="text-sm font-medium text-gray-700">{tab.title}</span>
+                    </div>
+                    <button
+                      onClick={() => closeAiTab(tab.id)}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-white px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+                    >
+                      <Trash2 className="size-3" />
+                      Delete View
+                    </button>
+                  </div>
+                  <DynamicViewWrapper
+                    code={tab.code}
+                    portfolioData={portfolioData}
+                    classifiedPortfolio={portfolio}
+                    hideValues={hideValues}
+                    correlationData={tab.correlationData}
+                  />
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+
+        {/* AI Suggestions Panel (right side, inline) */}
+        {showAiPanel && (
+          <div className="hidden w-80 shrink-0 md:block">
+            <AISuggestionsPanel
+              isOpen={showAiPanel}
+              onClose={() => {
+                setShowAiPanel(false);
+                localStorage.setItem(PANEL_STORAGE_KEY, "false");
+              }}
+              onOpenView={openAiView}
+              hasPortfolioData={true}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

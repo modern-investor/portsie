@@ -136,13 +136,9 @@ export function AISuggestionsPanel({
   const hasAnySuggestions = suggestions.length > 0;
 
   return (
-    <div
-      className={`absolute top-0 right-0 z-20 h-full w-80 border-l bg-white shadow-lg transition-transform duration-300 ${
-        isOpen ? "translate-x-0" : "translate-x-full"
-      }`}
-    >
+    <div className="h-full w-full rounded-lg border bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between border-b px-4 py-3">
+      <div className="flex items-center justify-between border-b px-3 py-2.5">
         <div className="flex items-center gap-2">
           <Sparkles className="size-4 text-amber-500" />
           <span className="text-sm font-semibold text-gray-900">AI Views</span>
@@ -156,7 +152,7 @@ export function AISuggestionsPanel({
       </div>
 
       {/* Content */}
-      <div className="h-[calc(100%-52px)] overflow-y-auto">
+      <div className="max-h-[calc(100vh-220px)] overflow-y-auto">
         <div className="space-y-4 p-4">
           {/* No portfolio data */}
           {!hasPortfolioData && (
