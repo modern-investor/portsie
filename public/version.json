@@ -1,12 +1,12 @@
 {
-  "version": "v260224.07 3:17p",
-  "release": 122,
-  "sha": "478acdf0",
-  "fullSha": "478acdf0eb9beb0cd133c875c18e49d01aba9255",
+  "version": "v260224.08 3:21p",
+  "release": 123,
+  "sha": "1ef16b65",
+  "fullSha": "1ef16b652d3b5ab7c4c43fcb6240833698c82d59",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000308",
-  "pushedAt": "2026-02-24T21:17:45+00",
-  "commits": [{"sha": "478acdf0eb9beb0cd133c875c18e49d01aba9255", "short_sha": "478acdf0", "author": "rahulio", "message": "Merge branch 'claude/vibrant-curie'"}, {"sha": "422f4ba380d3b4643059d88dff622ee032c1a634", "short_sha": "422f4ba3", "author": "rahulio", "message": "Fix AI panel layout: inline side-by-side instead of overlay"}]
+  "machine": "GitHub Actions 1000000312",
+  "pushedAt": "2026-02-24T21:21:26+00",
+  "commits": [{"sha": "1ef16b652d3b5ab7c4c43fcb6240833698c82d59", "short_sha": "1ef16b65", "author": "rahulio", "message": "Add expandable asset allocation rows and rename component"}]
 }
