@@ -31,6 +31,12 @@ export function PortfolioInsightsCard({ portfolio, hideValues }: Props) {
   const divLabel = scoreLabel(diversificationScore);
   const risk = riskLabel(portfolio);
 
+  // Defensive buffer: cash + gold/metals
+  const goldPct = portfolio.assetClasses
+    .filter((ac) => ac.def.id === "gold_metals")
+    .reduce((s, ac) => s + ac.allocationPct, 0);
+  const defensiveBufferPct = (cashPct ?? 0) + goldPct;
+
   // Top holding concentration
   const allPositions = portfolio.assetClasses.flatMap((ac) => ac.positions);
   const sorted = [...allPositions].sort((a, b) => b.marketValue - a.marketValue);
@@ -70,8 +76,8 @@ export function PortfolioInsightsCard({ portfolio, hideValues }: Props) {
             <p className="text-xs text-gray-500">Risk Profile</p>
             <p className={`text-lg font-bold ${risk.color}`}>{risk.text}</p>
             <p className="text-xs text-gray-400 mt-0.5">
-              Cash buffer: {(cashPct ?? 0).toFixed(1)}%
-              {cashPct < 5 && " (low)"}
+              Defensive buffer: {defensiveBufferPct.toFixed(1)}%
+              {goldPct > 0 && ` (${(cashPct ?? 0).toFixed(1)}% cash, ${goldPct.toFixed(1)}% gold)`}
             </p>
           </div>
         </div>
@@ -102,7 +108,7 @@ export function PortfolioInsightsCard({ portfolio, hideValues }: Props) {
             <ShieldCheck className="h-5 w-5 text-purple-600" />
           </div>
           <div>
-            <p className="text-xs text-gray-500">Concentration Risk</p>
+            <p className="text-xs text-gray-500">Top Holdings</p>
             {top1 && (
               <>
                 <p className="text-sm font-medium">
@@ -112,11 +118,6 @@ export function PortfolioInsightsCard({ portfolio, hideValues }: Props) {
                   Top 3: {(top3Pct ?? 0).toFixed(1)}% of portfolio
                 </p>
               </>
-            )}
-            {top3Pct > 50 && (
-              <p className="text-xs text-orange-500 mt-0.5">
-                High concentration in top holdings
-              </p>
             )}
           </div>
         </div>
