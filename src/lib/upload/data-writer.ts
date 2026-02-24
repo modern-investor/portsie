@@ -6,6 +6,7 @@ import { findOrCreateAggregateAccount } from "./account-matcher";
 import { reconcileHoldings } from "@/lib/holdings/reconcile";
 import { updateAccountSummary } from "@/lib/holdings/account-summary";
 import type { UpdateAccountSummaryOptions } from "@/lib/holdings/account-summary";
+import { safeLog } from "@/lib/privacy";
 
 /**
  * Writes confirmed extraction results to the canonical database tables.
@@ -347,10 +348,7 @@ export async function writeMultiAccountData(
         totalHoldingsCreated += result.holdingsCreated;
         totalHoldingsClosed += result.holdingsClosed;
       } catch (err) {
-        console.error(
-          `Failed to write data for account ${accountId} (${linkResult.accountNickname}):`,
-          err
-        );
+        safeLog("error", "data-writer", `Failed to write data for account ${accountId}`, { error: err });
         // Continue with other accounts even if one fails
       }
     }
@@ -405,7 +403,7 @@ export async function writeMultiAccountData(
       totalSnapshotsWritten += aggResult.snapshotsWritten;
       totalHoldingsCreated += aggResult.holdingsCreated;
     } catch (err) {
-      console.error("Failed to write unallocated/aggregate positions:", err);
+      safeLog("error", "data-writer", "Failed to write unallocated/aggregate positions", { error: err });
     }
   }
 

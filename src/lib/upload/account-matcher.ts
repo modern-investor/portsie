@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DetectedAccountInfo, ExtractedAccount, ExistingAccountContext } from "./types";
+import { encryptAccountNumber } from "@/lib/privacy/mappers/accounts";
 
 /**
  * Map account_type to the broader account_category for the DB constraint.
@@ -31,12 +32,16 @@ export async function createManualAccount(
   userId: string,
   accountInfo: DetectedAccountInfo
 ): Promise<string> {
+  const encryptedNum = encryptAccountNumber(accountInfo.account_number);
+
   const { data, error } = await supabase
     .from("accounts")
     .insert({
       user_id: userId,
       data_source: "manual_upload",
-      schwab_account_number: accountInfo.account_number ?? null,
+      account_number_encrypted: encryptedNum.account_number_encrypted,
+      account_number_token: encryptedNum.account_number_token,
+      account_number_hint: encryptedNum.account_number_hint,
       account_type: accountInfo.account_type ?? null,
       account_nickname:
         accountInfo.account_nickname ||
@@ -51,12 +56,12 @@ export async function createManualAccount(
 
   if (error) {
     // Handle unique constraint violation (concurrent upload for same account)
-    if (error.code === "23505" && accountInfo.account_number) {
+    if (error.code === "23505" && encryptedNum.account_number_token) {
       const { data: existing } = await supabase
         .from("accounts")
         .select("id")
         .eq("user_id", userId)
-        .eq("schwab_account_number", accountInfo.account_number)
+        .eq("account_number_token", encryptedNum.account_number_token)
         .eq("data_source", "manual_upload")
         .single();
 

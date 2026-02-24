@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, isAdmin } from "@/lib/supabase/admin";
+import { redactEmail, safeLog } from "@/lib/privacy";
 
 /**
  * GET /api/admin/quality-checks
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
     let query = adminClient
       .from("quality_checks")
       .select(
-        "id, user_id, upload_id, check_status, checks, fix_attempts, fix_count, resolved_at, created_at, upload:uploaded_statements(filename, file_type)",
+        "id, user_id, upload_id, check_status, fix_attempts, fix_count, resolved_at, created_at, upload:uploaded_statements(filename, file_type)",
         { count: "exact" }
       )
       .order("created_at", { ascending: false })
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
       if (authData?.users) {
         for (const u of authData.users) {
           if (userIds.includes(u.id)) {
-            emailMap[u.id] = u.email ?? "unknown";
+            emailMap[u.id] = redactEmail(u.email ?? "unknown");
           }
         }
       }
@@ -98,7 +99,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error("Failed to fetch quality checks:", error);
+    safeLog("error", "admin/quality-checks", "Failed to fetch quality checks", { error });
     return NextResponse.json(
       { error: "Failed to fetch quality checks" },
       { status: 500 }

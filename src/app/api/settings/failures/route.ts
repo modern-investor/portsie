@@ -14,11 +14,11 @@ export async function GET(request: NextRequest) {
 
   const failureId = request.nextUrl.searchParams.get("id");
 
-  // Single failure detail (includes raw_llm_response)
+  // Single failure detail (column-scoped, no sensitive payloads)
   if (failureId) {
     const { data, error } = await supabase
       .from("extraction_failures")
-      .select("*")
+      .select("id, filename, file_type, file_path, attempt_number, error_message, llm_mode, file_size_bytes, resolved_at, resolution_notes, upload_id, created_at, updated_at")
       .eq("id", failureId)
       .eq("user_id", user.id)
       .single();

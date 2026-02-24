@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, isAdmin } from "@/lib/supabase/admin";
+import { redactEmail, safeLog } from "@/lib/privacy";
 
 export async function GET() {
   // Verify caller is authenticated and is an admin
@@ -59,7 +60,7 @@ export async function GET() {
 
       return {
         id: u.id,
-        email: u.email,
+        email: redactEmail(u.email ?? "unknown"),
         role: profileMap.get(u.id) ?? "user",
         createdAt: u.created_at,
         lastSignIn: u.last_sign_in_at,
@@ -70,7 +71,7 @@ export async function GET() {
 
     return NextResponse.json({ users });
   } catch (error) {
-    console.error("Failed to list users:", error);
+    safeLog("error", "admin/users", "Failed to list users", { error });
     return NextResponse.json(
       { error: "Failed to list users" },
       { status: 500 }

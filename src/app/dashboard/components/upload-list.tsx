@@ -331,17 +331,17 @@ export function UploadList({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{upload.filename}</p>
                 <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-xs text-gray-400">
-                  {upload.detected_account_info?.institution_name && (
+                  {upload.extracted_data?.accounts?.[0]?.account_info?.institution_name && (
                     <>
                       <span className="font-medium text-gray-600">
-                        {upload.detected_account_info.institution_name}
+                        {upload.extracted_data.accounts[0].account_info.institution_name}
                       </span>
                       <span aria-hidden>&middot;</span>
                     </>
                   )}
-                  {upload.detected_account_info?.account_type && (
+                  {upload.extracted_data?.accounts?.[0]?.account_info?.account_type && (
                     <>
-                      <span>{upload.detected_account_info.account_type}</span>
+                      <span>{upload.extracted_data.accounts[0].account_info.account_type}</span>
                       <span aria-hidden>&middot;</span>
                     </>
                   )}

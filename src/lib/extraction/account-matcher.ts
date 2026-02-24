@@ -216,7 +216,7 @@ export async function loadExistingAccountsForMatching(
   const { data, error } = await supabase
     .from("accounts")
     .select(
-      "id, account_nickname, institution_name, account_type, schwab_account_number, account_group, is_aggregate"
+      "id, account_nickname, institution_name, account_type, account_number_hint, account_number_token, account_group, is_aggregate"
     )
     .eq("user_id", userId)
     .eq("is_active", true);
@@ -230,7 +230,7 @@ export async function loadExistingAccountsForMatching(
     account_nickname: a.account_nickname,
     institution_name: a.institution_name,
     account_type: a.account_type,
-    account_number_hint: a.schwab_account_number ?? null,
+    account_number_hint: a.account_number_hint ?? null,
     account_group: a.account_group,
     is_aggregate: a.is_aggregate ?? false,
   }));
