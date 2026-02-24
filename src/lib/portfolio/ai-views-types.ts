@@ -78,6 +78,7 @@ export interface AIViewSuggestionRow {
   builtin_type: string | null;
   correlation_data: CorrelationData | null;
   portfolio_hash: string | null;
+  generation_errors: Record<string, string> | null;
   created_at: string;
   updated_at: string;
 }

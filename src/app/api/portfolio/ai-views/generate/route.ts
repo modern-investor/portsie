@@ -89,20 +89,31 @@ export async function POST() {
 
     const providerErrors: Record<string, string> = {};
     if (geminiResult.status === "rejected") {
-      const msg = geminiResult.reason instanceof Error ? geminiResult.reason.message : String(geminiResult.reason);
-      console.error("[ai-views] Gemini suggestions failed:", msg);
+      const reason = geminiResult.reason;
+      const msg = reason instanceof Error ? reason.message : String(reason);
+      const stack = reason instanceof Error ? reason.stack?.split("\n").slice(0, 3).join(" > ") : "";
+      console.error("[ai-views] Gemini suggestions failed:", { message: msg, stack });
       providerErrors.gemini = msg;
     }
     if (sonnetResult.status === "rejected") {
-      const msg = sonnetResult.reason instanceof Error ? sonnetResult.reason.message : String(sonnetResult.reason);
+      const reason = sonnetResult.reason;
+      const msg = reason instanceof Error ? reason.message : String(reason);
       console.error("[ai-views] Sonnet suggestions failed:", msg);
       providerErrors.sonnet = msg;
     }
     if (correlationResult.status === "rejected") {
-      const msg = correlationResult.reason instanceof Error ? correlationResult.reason.message : String(correlationResult.reason);
+      const reason = correlationResult.reason;
+      const msg = reason instanceof Error ? reason.message : String(reason);
       console.error("[ai-views] Correlation analysis failed:", msg);
       providerErrors.correlation = msg;
     }
+
+    console.log("[ai-views] Provider results:", {
+      gemini: geminiResult.status === "fulfilled" ? `${geminiSuggestions.length} suggestions` : "FAILED",
+      sonnet: sonnetResult.status === "fulfilled" ? `${sonnetSuggestions.length} suggestions` : "FAILED",
+      correlation: correlationResult.status === "fulfilled" ? "OK" : "FAILED",
+      errors: Object.keys(providerErrors),
+    });
 
     // ── Step 5: Generate code for all views via Opus (batched 3 at a time) ──
     interface CodeGenTask {
@@ -189,6 +200,8 @@ export async function POST() {
     }
 
     // ── Step 6: Store in DB ──
+    const errorsJson = Object.keys(providerErrors).length > 0 ? providerErrors : null;
+
     const rows = results.map((r) => ({
       user_id: user.id,
       suggestion_provider: r.task.provider,
@@ -205,6 +218,7 @@ export async function POST() {
       builtin_type: r.task.builtinType,
       correlation_data: r.task.builtinType === "correlation" ? correlationData : null,
       portfolio_hash: portfolioHash,
+      generation_errors: errorsJson,
     }));
 
     const { data: insertedRows, error: insertError } = await supabase

@@ -92,6 +92,7 @@ export function AISuggestionsPanel({
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setSuggestions(data.suggestions ?? []);
+      if (data.providerErrors) setProviderErrors(data.providerErrors);
     } catch {
       // No cached suggestions — that's fine, user can generate
     } finally {
@@ -132,9 +133,16 @@ export function AISuggestionsPanel({
 
   // Split suggestions by type
   const builtinViews = suggestions.filter((s) => s.isBuiltin);
-  const providerViews = suggestions.filter(
+  const selectedProviderViews = suggestions.filter(
     (s) => !s.isBuiltin && s.provider === provider
   );
+  const otherProvider = provider === "gemini" ? "sonnet" : "gemini";
+  const otherProviderViews = suggestions.filter(
+    (s) => !s.isBuiltin && s.provider === otherProvider
+  );
+  // Fall back to the other provider's views if selected provider has none
+  const isFallback = selectedProviderViews.length === 0 && otherProviderViews.length > 0;
+  const providerViews = isFallback ? otherProviderViews : selectedProviderViews;
   const hasAnySuggestions = suggestions.length > 0;
 
   return (
@@ -252,6 +260,23 @@ export function AISuggestionsPanel({
                 <AIProviderToggle value={provider} onChange={handleProviderChange} />
               </div>
 
+              {/* Fallback notice: selected provider has no views, showing the other */}
+              {isFallback && (
+                <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+                  <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                  <div>
+                    <p className="text-xs text-amber-700">
+                      {provider === "gemini" ? "Gemini" : "Sonnet"} failed — showing {otherProvider === "gemini" ? "Gemini" : "Sonnet"} views instead
+                    </p>
+                    {providerErrors[provider] && (
+                      <p className="mt-0.5 text-xs text-amber-600/70 break-words">
+                        {providerErrors[provider]}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {providerViews.length > 0 ? (
                 <div className="space-y-2">
                   {providerViews.map((s) => (
@@ -261,7 +286,7 @@ export function AISuggestionsPanel({
               ) : (
                 <div className="text-center py-2">
                   <p className="text-xs text-gray-400">
-                    No {provider === "gemini" ? "Gemini" : "Sonnet"} suggestions available
+                    No suggestions available
                   </p>
                   {providerErrors[provider] && (
                     <p className="mt-1 text-xs text-red-400 break-words">

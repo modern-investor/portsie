@@ -31,7 +31,14 @@ export async function GET() {
   }
 
   const suggestions = (rows ?? []).map(rowToSuggestion);
-  return NextResponse.json({ suggestions });
+
+  // Extract persisted provider errors from the first row (stored on every row during generation)
+  const providerErrors = rows?.[0]?.generation_errors as Record<string, string> | null;
+
+  return NextResponse.json({
+    suggestions,
+    ...(providerErrors && Object.keys(providerErrors).length > 0 && { providerErrors }),
+  });
 }
 
 /**

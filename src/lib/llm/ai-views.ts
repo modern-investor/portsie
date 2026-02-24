@@ -23,10 +23,22 @@ export async function callGeminiForSuggestions(
   portfolioSummary: string
 ): Promise<RawSuggestion[]> {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY not set");
+  if (!apiKey) throw new Error("GEMINI_API_KEY not set (env var missing)");
+
+  console.log("[ai-views] Calling Gemini for suggestions...", {
+    model: DEFAULT_GEMINI_MODEL,
+    promptLength: portfolioSummary.length,
+    keyPrefix: apiKey.slice(0, 8) + "...",
+  });
 
   const prompt = buildSuggestionPrompt(portfolioSummary);
   const text = await callGeminiText(apiKey, prompt, "low");
+
+  console.log("[ai-views] Gemini suggestion response length:", text.length, "chars");
+  if (text.length < 20) {
+    console.warn("[ai-views] Gemini returned very short response:", text);
+  }
+
   return parseSuggestions(text, "gemini");
 }
 
@@ -69,10 +81,15 @@ export async function callGeminiForCorrelation(
   portfolioSummary: string
 ): Promise<CorrelationData> {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY not set");
+  if (!apiKey) throw new Error("GEMINI_API_KEY not set (env var missing)");
+
+  console.log("[ai-views] Calling Gemini for correlation analysis...");
 
   const prompt = buildCorrelationPrompt(portfolioSummary);
   const text = await callGeminiText(apiKey, prompt, "medium");
+
+  console.log("[ai-views] Gemini correlation response length:", text.length, "chars");
+
   return parseCorrelationData(text);
 }
 
@@ -102,7 +119,12 @@ async function callGeminiText(
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => "Unknown");
-    throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+    console.error("[ai-views] Gemini API HTTP error:", {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorText.slice(0, 500),
+    });
+    throw new Error(`Gemini API error (${response.status}): ${errorText.slice(0, 300)}`);
   }
 
   return collectSSEText(response);
