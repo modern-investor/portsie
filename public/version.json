@@ -1,12 +1,12 @@
 {
-  "version": "v260224.09 3:39p",
-  "release": 124,
-  "sha": "8fc827cb",
-  "fullSha": "8fc827cb9c4f7a66ba62e0273089713a0841b987",
+  "version": "v260224.10 3:45p",
+  "release": 125,
+  "sha": "aac14b05",
+  "fullSha": "aac14b05da5f0dd59bbe48b84769065b716d1523",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000318",
-  "pushedAt": "2026-02-24T21:39:03+00",
-  "commits": [{"sha": "8fc827cb9c4f7a66ba62e0273089713a0841b987", "short_sha": "8fc827cb", "author": "rahulio", "message": "Fix font preload warning and Gemini thinking parts corrupting AI Views"}]
+  "machine": "GitHub Actions 1000000327",
+  "pushedAt": "2026-02-24T21:45:23+00",
+  "commits": [{"sha": "aac14b05da5f0dd59bbe48b84769065b716d1523", "short_sha": "aac14b05", "author": "rahulio", "message": "Fix Cash: add synthetic position row for brokerage cash balance"}]
 }
