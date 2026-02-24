@@ -93,9 +93,10 @@ export const SUB_ASSET_CLASSES: Record<SubAssetClassId, SubAssetClassDef> = {
   gold_miners:        { id: "gold_miners",        parentId: "gold_metals",       label: "Gold Miners",       chartColor: "#eab308", order: 2 },
   other_metals:       { id: "other_metals",       parentId: "gold_metals",       label: "Other Metals",      chartColor: "#facc15", order: 3 },
   // Real Estate
-  reit_etfs:          { id: "reit_etfs",          parentId: "real_estate",       label: "REIT ETFs",         chartColor: "#059669", order: 1 },
-  individual_reits:   { id: "individual_reits",   parentId: "real_estate",       label: "Individual REITs",  chartColor: "#10b981", order: 2 },
-  re_funds:           { id: "re_funds",           parentId: "real_estate",       label: "RE Funds",          chartColor: "#34d399", order: 3 },
+  physical_real_estate: { id: "physical_real_estate", parentId: "real_estate",  label: "Physical Property",  chartColor: "#047857", order: 1 },
+  reit_etfs:          { id: "reit_etfs",          parentId: "real_estate",       label: "REIT ETFs",         chartColor: "#059669", order: 2 },
+  individual_reits:   { id: "individual_reits",   parentId: "real_estate",       label: "Individual REITs",  chartColor: "#10b981", order: 3 },
+  re_funds:           { id: "re_funds",           parentId: "real_estate",       label: "RE Funds",          chartColor: "#34d399", order: 4 },
   // Debt
   mortgage:           { id: "mortgage",           parentId: "debt",              label: "Mortgage",          chartColor: "#dc2626", order: 1 },
   credit_card:        { id: "credit_card",        parentId: "debt",              label: "Credit Card",       chartColor: "#ef4444", order: 2 },
@@ -194,6 +195,8 @@ export function classifySubAssetClass(
       return "other_metals";
 
     case "real_estate":
+      // Physical real estate (asset_type REAL_ESTATE) — not a traded security
+      if (instrumentType === "REAL_ESTATE") return "physical_real_estate";
       if (REIT_ETF_SYMBOLS.has(sym)) return "reit_etfs";
       if (INDIVIDUAL_REIT_SYMBOLS.has(sym)) return "individual_reits";
       if (sym === "BREFX" || instrumentType === "MUTUAL_FUND") return "re_funds";

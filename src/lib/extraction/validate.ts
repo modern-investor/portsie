@@ -274,7 +274,7 @@ function normalizeAccountType(val: unknown): AccountType {
     heloc_loan: "heloc",
     credit: "credit_card",
     loan: "auto_loan",
-    property: "real_estate",
+    property: "other",
   };
   return aliases[lower] ?? null;
 }

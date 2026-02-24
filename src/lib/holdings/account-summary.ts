@@ -34,7 +34,7 @@ export async function updateAccountSummary(
     .eq("id", accountId)
     .single();
   const accountCategory = acctData?.account_category ?? "brokerage";
-  const NON_POSITION_CATEGORIES = new Set(["banking", "credit", "loan", "real_estate"]);
+  const NON_POSITION_CATEGORIES = new Set(["banking", "credit", "loan"]);
 
   // Sum market value of active holdings
   const { data: holdings } = await supabase

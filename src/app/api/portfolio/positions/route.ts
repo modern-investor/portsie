@@ -47,7 +47,7 @@ export interface UnifiedAccount {
   lastSyncedAt: string | null;
   accountGroup: string | null;
   isAggregate: boolean;
-  /** Account category: "brokerage", "banking", "credit", "loan", "real_estate", "offline". */
+  /** Account category: "brokerage", "banking", "credit", "loan", "offline". */
   accountCategory: string;
 }
 
@@ -380,6 +380,7 @@ export async function GET() {
     // Keep liquidationValue intact so the Accounts tab shows correct per-account
     // totals. Non-brokerage accounts (banking, credit, loans, real estate) keep
     // their cashBalance since they aren't represented in aggregate positions.
+    // (Real estate is an asset type on positions, not a separate account category.)
     const BROKERAGE_CATEGORIES = new Set(["brokerage"]);
     for (const acct of accounts) {
       if (BROKERAGE_CATEGORIES.has(acct.accountCategory)) {

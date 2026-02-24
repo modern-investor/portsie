@@ -11,7 +11,6 @@ function accountTypeToCategory(accountType: string | null | undefined): string {
   if (["checking", "savings"].includes(t)) return "banking";
   if (["credit_card"].includes(t)) return "credit";
   if (["mortgage", "heloc", "auto_loan"].includes(t)) return "loan";
-  if (["real_estate"].includes(t)) return "real_estate";
   return "brokerage";
 }
 

@@ -35,6 +35,7 @@ export type SubAssetClassId =
   | "gold_miners"
   | "other_metals"
   // Real Estate
+  | "physical_real_estate"
   | "reit_etfs"
   | "individual_reits"
   | "re_funds"
@@ -127,7 +128,7 @@ export interface PortfolioInputAccount {
   cashBalance: number;
   /** Full account value (negative for liabilities like mortgages, credit cards). */
   liquidationValue: number;
-  /** Account category from DB: "brokerage", "banking", "credit", "loan", "real_estate", "offline". */
+  /** Account category from DB: "brokerage", "banking", "credit", "loan", "offline". */
   accountCategory: string;
 }
 

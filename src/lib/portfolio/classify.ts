@@ -36,6 +36,11 @@ function classifySymbol(
   const sym = symbol.toUpperCase();
   const desc = (description ?? "").toUpperCase();
 
+  // Actual real estate assets (not REITs/funds — those are matched by symbol below)
+  if (instrumentType === "REAL_ESTATE") {
+    return { assetClassId: "real_estate", subCategory: "Physical Property" };
+  }
+
   // Options → check if underlying is tech
   if (instrumentType === "OPTION") {
     const underlying = sym.replace(/\s.*$/, "").replace(/\d{6}[CP]\d+$/, "");
@@ -124,7 +129,6 @@ export function classifyPortfolio(
   let totalCash = 0;
   let liabilityTotal = 0;
   let bankingValue = 0;
-  let realEstateAccountValue = 0;
   for (const acct of accounts) {
     if (LIABILITY_CATEGORIES.has(acct.accountCategory)) {
       // Liability accounts: use liquidationValue (already negative in DB)
@@ -132,16 +136,13 @@ export function classifyPortfolio(
     } else if (POSITION_BACKED_CATEGORIES.has(acct.accountCategory)) {
       // Brokerage accounts: positions are already counted; only add cash
       totalCash += acct.cashBalance ?? 0;
-    } else if (acct.accountCategory === "real_estate") {
-      // Real estate accounts: not backed by positions, shown in real_estate class
-      realEstateAccountValue += acct.liquidationValue ?? 0;
     } else {
       // Banking/offline/other non-brokerage: treated as cash
       bankingValue += acct.liquidationValue ?? 0;
     }
   }
 
-  const totalMarketValue = positionsMarketValue + totalCash + bankingValue + realEstateAccountValue + liabilityTotal;
+  const totalMarketValue = positionsMarketValue + totalCash + bankingValue + liabilityTotal;
   const totalDayChange = positions.reduce((s, p) => s + p.currentDayProfitLoss, 0);
   const totalDayChangePct =
     totalMarketValue > 0 ? (totalDayChange / (totalMarketValue - totalDayChange)) * 100 : 0;
@@ -190,11 +191,6 @@ export function classifyPortfolio(
     if (def.id === "cash") {
       // Include brokerage cash + banking/offline account values
       extraMV = totalCash + bankingValue;
-    }
-
-    // Include real estate account values (not backed by positions)
-    if (def.id === "real_estate") {
-      extraMV = realEstateAccountValue;
     }
 
     // Include liability total in the debt asset class

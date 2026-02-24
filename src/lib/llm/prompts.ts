@@ -64,7 +64,7 @@ accounts: Array of per-account data. ALWAYS an array, even for single-account do
 
 account_info: Account identification and metadata.
   - account_number: The account number (may be partial, e.g., "...902"). Extract whatever is visible. null if not shown.
-  - account_type: MUST be one of: "individual", "ira", "roth_ira", "joint", "trust", "401k", "403b", "529", "custodial", "margin", "checking", "savings", "credit_card", "mortgage", "heloc", "auto_loan", "real_estate", "view_only", "sep_ira", "simple_ira", "rollover_ira", "inherited_ira", "education", "hsa", "other", or null.
+  - account_type: MUST be one of: "individual", "ira", "roth_ira", "joint", "trust", "401k", "403b", "529", "custodial", "margin", "checking", "savings", "credit_card", "mortgage", "heloc", "auto_loan", "view_only", "sep_ira", "simple_ira", "rollover_ira", "inherited_ira", "education", "hsa", "other", or null. NOTE: "real_estate" is NOT a valid account_type. If a brokerage account holds real estate assets (e.g., manually added property), the account is still a brokerage account (use "individual" or "other") — the real estate is an asset (asset_type: "REAL_ESTATE"), not an account type.
   - institution_name: The brokerage, bank, or institution name (e.g., "Charles Schwab", "Robinhood", "PNC Bank").
   - account_nickname: The display name from the document (e.g., "Rahul Trading", "SubTrust Roth IRA"). Use the exact name from the document.
   - account_group: Section/group header if accounts are organized (e.g., "Non Retirement", "Retirement", "SubTrust"). null if not grouped.
