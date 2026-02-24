@@ -75,6 +75,7 @@ export function AssetAllocationTable({ assetClasses, totalMarketValue, hideValue
           <tr className="border-b text-gray-500">
             <th className="py-3.5 text-left font-medium">Category</th>
             <th className="py-3.5 text-right font-medium">Holdings</th>
+            {!hideValues && <th className="py-3.5 text-right font-medium">Price</th>}
             <th className="py-3.5 text-right font-medium">Alloc %</th>
             {!hideValues && <th className="py-3.5 text-right font-medium">Value</th>}
           </tr>
@@ -117,6 +118,7 @@ export function AssetAllocationTable({ assetClasses, totalMarketValue, hideValue
                     </div>
                   </td>
                   <td className="py-3.5 text-right tabular-nums">{entry.holdingCount}</td>
+                  {!hideValues && <td className="py-3.5" />}
                   <td className="py-3.5 text-right tabular-nums font-medium">{(entry.pct ?? 0).toFixed(1)}%</td>
                   {!hideValues && (
                     <td className="py-3.5 text-right tabular-nums">
@@ -146,6 +148,13 @@ export function AssetAllocationTable({ assetClasses, totalMarketValue, hideValue
                       <td className="py-2 text-right tabular-nums text-base text-gray-500">
                         {hideValues ? "" : pos.quantity.toLocaleString()}
                       </td>
+                      {!hideValues && (
+                        <td className="py-2 text-right tabular-nums text-base text-gray-500">
+                          {pos.quantity > 0
+                            ? `$${(pos.marketValue / pos.quantity).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : "—"}
+                        </td>
+                      )}
                       <td className="py-2 text-right tabular-nums text-base text-gray-500">
                         {(pos.allocationPct ?? 0).toFixed(1)}%
                       </td>
@@ -163,6 +172,7 @@ export function AssetAllocationTable({ assetClasses, totalMarketValue, hideValue
           <tr className="border-t-2 font-semibold">
             <td className="py-3.5 pl-7">Total</td>
             <td className="py-3.5 text-right tabular-nums">{totalHoldings}</td>
+            {!hideValues && <td className="py-3.5" />}
             <td className="py-3.5 text-right tabular-nums">100%</td>
             {!hideValues && (
               <td className="py-3.5 text-right tabular-nums">
