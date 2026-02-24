@@ -98,35 +98,47 @@ export function ConnectionsView({
 
   return (
     <div className="space-y-6">
-      {/* Tab selectors */}
-      <div className="flex border-b border-gray-200">
+      {/* Large card-style tab selectors */}
+      <div className="grid grid-cols-2 gap-4">
         <button
           onClick={() => handleTabChange("datalinks")}
-          className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors ${
+          className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 px-4 py-8 text-center transition-all ${
             subTab === "datalinks"
-              ? "border-b-2 border-gray-900 text-gray-900"
-              : "text-gray-500 hover:text-gray-700"
+              ? "border-gray-900 bg-black text-white shadow-md"
+              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-sm"
           }`}
         >
-          <Link2 className="h-4 w-4" />
-          Connect Data Feed
+          <Link2 className="h-6 w-6" />
+          <span className="text-base font-semibold">Connect Data Feed</span>
+          <span
+            className={`text-xs ${subTab === "datalinks" ? "text-gray-300" : "text-gray-400"}`}
+          >
+            Link brokerages &amp; banks via API
+          </span>
         </button>
 
         <button
           onClick={() => handleTabChange("uploads")}
-          className={`relative flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors ${
+          className={`relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 px-4 py-8 text-center transition-all ${
             subTab === "uploads"
-              ? "border-b-2 border-gray-900 text-gray-900"
-              : "text-gray-500 hover:text-gray-700"
+              ? "border-gray-900 bg-black text-white shadow-md"
+              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:shadow-sm"
           }`}
         >
-          <Upload className="h-4 w-4" />
-          Upload Statements &amp; Reports
           {pendingUploadCount > 0 && (
-            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-medium text-white">
+            <span className="absolute top-3 right-3 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-medium text-white">
               {pendingUploadCount}
             </span>
           )}
+          <Upload className="h-6 w-6" />
+          <span className="text-base font-semibold">
+            Upload Statements &amp; Reports
+          </span>
+          <span
+            className={`text-xs ${subTab === "uploads" ? "text-gray-300" : "text-gray-400"}`}
+          >
+            PDF, CSV, Excel, images &amp; more
+          </span>
         </button>
       </div>
 
