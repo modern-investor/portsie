@@ -18,11 +18,12 @@ import { PositionsTable } from "./positions-table";
 import { AccountOverview } from "./account-overview";
 import { IntegrityWarning } from "./integrity-warning";
 import { DynamicViewWrapper } from "./dynamic-view-wrapper";
-import { AISuggestionsPanel, AIPanelToggleButton } from "./ai-suggestions-panel";
+import { AISuggestionsPanel } from "./ai-suggestions-panel";
 
 // ─── Sub-tab types ──────────────────────────────────────────────────────────
 
 type PortfolioSubTab = "assets" | "accounts" | "positions" | `ai-view-${string}`;
+type AssetsSubTab = "allocation" | "treemap" | "cards" | "insights";
 
 const STORAGE_KEY = "portsie:portfolio-tab";
 const PANEL_STORAGE_KEY = "portsie:ai-panel-open";
@@ -88,6 +89,7 @@ interface Props {
 
 export function PortfolioView({ hideValues, onNavigateTab }: Props) {
   const [subTab, setSubTab] = useState<PortfolioSubTab>("assets");
+  const [assetsSubTab, setAssetsSubTab] = useState<AssetsSubTab>("allocation");
 
   // Restore saved tab from localStorage after hydration to avoid React #418
   useEffect(() => {
@@ -232,12 +234,11 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
 
   // ── AI Panel handlers ──
 
-  const toggleAiPanel = useCallback(() => {
-    setShowAiPanel((prev) => {
-      const next = !prev;
-      localStorage.setItem(PANEL_STORAGE_KEY, String(next));
-      return next;
-    });
+  // Default AI panel to open (no toggle button; panel has its own close button)
+  useEffect(() => {
+    if (localStorage.getItem(PANEL_STORAGE_KEY) === null) {
+      setShowAiPanel(true);
+    }
   }, []);
 
   // Helper to persist tabs to localStorage
@@ -404,7 +405,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
                 ))}
               </TabsList>
 
-              {/* Refresh prices + AI Panel toggle */}
+              {/* Refresh prices */}
               <div className="flex items-center gap-1.5">
                 {refreshMessage && (
                   <span className="text-xs text-gray-500 hidden sm:inline">
@@ -419,24 +420,45 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
                 >
                   <RefreshCw className={`size-4 ${refreshing ? "animate-spin" : ""}`} />
                 </button>
-                <AIPanelToggleButton isOpen={showAiPanel} onClick={toggleAiPanel} />
               </div>
             </div>
 
-            {/* Assets tab: donut + cards + insights */}
+            {/* Assets tab with subtabs */}
             <TabsContent value="assets">
-              <div className="space-y-6">
+              {/* Subtab navigation */}
+              <div className="mb-4 flex gap-1 border-b border-gray-200">
+                {([
+                  { id: "allocation", label: "Allocation" },
+                  { id: "treemap", label: "Treemap" },
+                  { id: "cards", label: "Cards" },
+                  { id: "insights", label: "Insights" },
+                ] as const).map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setAssetsSubTab(tab.id)}
+                    className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                      assetsSubTab === tab.id
+                        ? "border-black text-black"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Subtab content */}
+              {assetsSubTab === "allocation" && (
                 <div className="rounded-lg border bg-white p-4 sm:p-6">
-                  <h3 className="mb-4 text-2xl font-semibold text-gray-500 uppercase tracking-wider">
-                    Asset Allocation
-                  </h3>
                   <PortfolioDonutChart
                     assetClasses={portfolio.assetClasses}
                     totalMarketValue={portfolio.totalMarketValue}
                     hideValues={hideValues}
                   />
                 </div>
+              )}
 
+              {assetsSubTab === "treemap" && (
                 <div className="rounded-lg border bg-white p-4 sm:p-6">
                   <PortfolioTreemap
                     assetClasses={portfolio.assetClasses}
@@ -444,15 +466,19 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
                     hideValues={hideValues}
                   />
                 </div>
+              )}
 
+              {assetsSubTab === "cards" && (
                 <AssetClassCards
                   assetClasses={portfolio.assetClasses}
                   hideValues={hideValues}
                   onSelectClass={(id) => setSelectedClass(id)}
                 />
+              )}
 
+              {assetsSubTab === "insights" && (
                 <PortfolioInsightsCard portfolio={portfolio} hideValues={hideValues} />
-              </div>
+              )}
             </TabsContent>
 
             {/* Accounts tab — pass fetched data as props */}
