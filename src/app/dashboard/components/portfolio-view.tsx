@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { classifyPortfolio } from "@/lib/portfolio";
 import type { ClassifiedPortfolio, AssetClassId } from "@/lib/portfolio/types";
 import type { PortfolioData } from "@/app/api/portfolio/positions/route";
-import { Upload, Link2, PieChart, Landmark, List } from "lucide-react";
+import type { ViewSuggestion } from "@/lib/portfolio/ai-views-types";
+import { Upload, Link2, PieChart, Landmark, List, X, Sparkles } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PortfolioSummaryBar } from "./portfolio-summary-bar";
 import { PortfolioDonutChart } from "./portfolio-donut-chart";
@@ -15,13 +16,25 @@ import { AssetClassDetail } from "./asset-class-detail";
 import { PositionsTable } from "./positions-table";
 import { AccountOverview } from "./account-overview";
 import { IntegrityWarning } from "./integrity-warning";
+import { DynamicViewWrapper } from "./dynamic-view-wrapper";
+import { AISuggestionsPanel, AIPanelToggleButton } from "./ai-suggestions-panel";
 
 // ─── Sub-tab types ──────────────────────────────────────────────────────────
 
-type PortfolioSubTab = "assets" | "accounts" | "positions";
+type PortfolioSubTab = "assets" | "accounts" | "positions" | `ai-view-${string}`;
 
 const STORAGE_KEY = "portsie:portfolio-tab";
-const VALID_TABS: PortfolioSubTab[] = ["assets", "accounts", "positions"];
+const PANEL_STORAGE_KEY = "portsie:ai-panel-open";
+const VALID_STATIC_TABS = ["assets", "accounts", "positions"];
+
+// ─── AI View Tab ────────────────────────────────────────────────────────────
+
+interface AIViewTab {
+  id: string;
+  title: string;
+  code: string;
+  correlationData?: ViewSuggestion["correlationData"];
+}
 
 // ─── Empty state ────────────────────────────────────────────────────────────
 
@@ -76,15 +89,28 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
 
   // Restore saved tab from localStorage after hydration to avoid React #418
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY) as PortfolioSubTab | null;
-    if (saved && VALID_TABS.includes(saved)) setSubTab(saved);
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && VALID_STATIC_TABS.includes(saved)) {
+      setSubTab(saved as PortfolioSubTab);
+    }
   }, []);
+
   const [selectedClass, setSelectedClass] = useState<AssetClassId | null>(null);
   const [portfolio, setPortfolio] = useState<ClassifiedPortfolio | null>(null);
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isEmpty, setIsEmpty] = useState(false);
+
+  // ── AI Views state ──
+  const [aiViewTabs, setAiViewTabs] = useState<AIViewTab[]>([]);
+  const [showAiPanel, setShowAiPanel] = useState(false);
+
+  // Restore AI panel visibility
+  useEffect(() => {
+    const saved = localStorage.getItem(PANEL_STORAGE_KEY);
+    if (saved === "true") setShowAiPanel(true);
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -133,7 +159,6 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
       .map((p) => p.priceDate)
       .filter(Boolean) as string[];
     if (dates.length === 0) return new Date().toISOString().slice(0, 10);
-    // Use the most common date, or the latest
     const counts = new Map<string, number>();
     for (const d of dates) {
       counts.set(d, (counts.get(d) ?? 0) + 1);
@@ -148,6 +173,52 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
     }
     return best;
   }, [portfolioData]);
+
+  // ── AI Panel handlers ──
+
+  const toggleAiPanel = useCallback(() => {
+    setShowAiPanel((prev) => {
+      const next = !prev;
+      localStorage.setItem(PANEL_STORAGE_KEY, String(next));
+      return next;
+    });
+  }, []);
+
+  const openAiView = useCallback(
+    (suggestion: ViewSuggestion) => {
+      if (!suggestion.componentCode || suggestion.codeStatus !== "complete") return;
+
+      // Check if this view is already open
+      const existingTab = aiViewTabs.find((t) => t.id === suggestion.id);
+      if (existingTab) {
+        setSubTab(`ai-view-${suggestion.id}`);
+        return;
+      }
+
+      // Add new tab
+      const newTab: AIViewTab = {
+        id: suggestion.id,
+        title: suggestion.title,
+        code: suggestion.componentCode,
+        correlationData: suggestion.correlationData,
+      };
+      setAiViewTabs((prev) => [...prev, newTab]);
+      setSubTab(`ai-view-${suggestion.id}`);
+    },
+    [aiViewTabs]
+  );
+
+  const closeAiTab = useCallback(
+    (tabId: string) => {
+      setAiViewTabs((prev) => prev.filter((t) => t.id !== tabId));
+      // If we're closing the current tab, switch back to assets
+      if (subTab === `ai-view-${tabId}`) {
+        setSubTab("assets");
+        localStorage.setItem(STORAGE_KEY, "assets");
+      }
+    },
+    [subTab]
+  );
 
   // ── Loading state ──
   if (loading) {
@@ -207,7 +278,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="relative space-y-4">
       {/* Integrity warning (if discrepancies exist) */}
       {portfolioData.discrepancies && portfolioData.discrepancies.length > 0 && (
         <IntegrityWarning discrepancies={portfolioData.discrepancies} hideValues={hideValues} />
@@ -216,80 +287,136 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
       {/* Executive summary */}
       <PortfolioSummaryBar portfolio={portfolio} hideValues={hideValues} priceDate={priceDate} />
 
-      {/* Sub-tabs */}
-      <Tabs
-        value={subTab}
-        onValueChange={(v) => {
-          const tab = v as PortfolioSubTab;
-          setSubTab(tab);
-          localStorage.setItem(STORAGE_KEY, tab);
-        }}
-      >
-        <TabsList>
-          <TabsTrigger value="assets">
-            <PieChart className="size-5" />
-            Assets
-          </TabsTrigger>
-          <TabsTrigger value="accounts">
-            <Landmark className="size-5" />
-            Accounts
-          </TabsTrigger>
-          <TabsTrigger value="positions">
-            <List className="size-5" />
-            Positions
-          </TabsTrigger>
-        </TabsList>
+      {/* Main content area with panel overlay */}
+      <div className="relative overflow-hidden">
+        {/* Sub-tabs */}
+        <Tabs
+          value={subTab}
+          onValueChange={(v) => {
+            const tab = v as PortfolioSubTab;
+            setSubTab(tab);
+            // Only persist static tabs to localStorage
+            if (VALID_STATIC_TABS.includes(v)) {
+              localStorage.setItem(STORAGE_KEY, v);
+            }
+          }}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <TabsList className="flex-1 overflow-x-auto">
+              <TabsTrigger value="assets">
+                <PieChart className="size-5" />
+                Assets
+              </TabsTrigger>
+              <TabsTrigger value="accounts">
+                <Landmark className="size-5" />
+                Accounts
+              </TabsTrigger>
+              <TabsTrigger value="positions">
+                <List className="size-5" />
+                Positions
+              </TabsTrigger>
 
-        {/* Assets tab: donut + cards + insights */}
-        <TabsContent value="assets">
-          <div className="space-y-6">
-            <div className="rounded-lg border bg-white p-4 sm:p-6">
-              <h3 className="mb-4 text-2xl font-semibold text-gray-500 uppercase tracking-wider">
-                Asset Allocation
-              </h3>
-              <PortfolioDonutChart
-                assetClasses={portfolio.assetClasses}
-                totalMarketValue={portfolio.totalMarketValue}
-                hideValues={hideValues}
-              />
-            </div>
+              {/* Dynamic AI view tabs */}
+              {aiViewTabs.map((tab) => (
+                <TabsTrigger
+                  key={tab.id}
+                  value={`ai-view-${tab.id}`}
+                  className="group relative pr-7"
+                >
+                  <Sparkles className="size-4 text-amber-500" />
+                  <span className="max-w-24 truncate">{tab.title}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeAiTab(tab.id);
+                    }}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600 transition-all"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-            <div className="rounded-lg border bg-white p-4 sm:p-6">
-              <PortfolioTreemap
-                assetClasses={portfolio.assetClasses}
-                totalMarketValue={portfolio.totalMarketValue}
-                hideValues={hideValues}
-              />
-            </div>
-
-            <AssetClassCards
-              assetClasses={portfolio.assetClasses}
-              hideValues={hideValues}
-              onSelectClass={(id) => setSelectedClass(id)}
-            />
-
-            <PortfolioInsightsCard portfolio={portfolio} hideValues={hideValues} />
+            {/* AI Panel toggle */}
+            <AIPanelToggleButton isOpen={showAiPanel} onClick={toggleAiPanel} />
           </div>
-        </TabsContent>
 
-        {/* Accounts tab — pass fetched data as props */}
-        <TabsContent value="accounts">
-          <AccountOverview
-            accounts={portfolioData.accounts}
-            aggregateAccounts={portfolioData.aggregateAccounts}
-            hideValues={hideValues}
-          />
-        </TabsContent>
+          {/* Assets tab: donut + cards + insights */}
+          <TabsContent value="assets">
+            <div className="space-y-6">
+              <div className="rounded-lg border bg-white p-4 sm:p-6">
+                <h3 className="mb-4 text-2xl font-semibold text-gray-500 uppercase tracking-wider">
+                  Asset Allocation
+                </h3>
+                <PortfolioDonutChart
+                  assetClasses={portfolio.assetClasses}
+                  totalMarketValue={portfolio.totalMarketValue}
+                  hideValues={hideValues}
+                />
+              </div>
 
-        {/* Positions tab — pass fetched data as props */}
-        <TabsContent value="positions">
-          <PositionsTable
-            positions={portfolioData.positions}
-            accounts={portfolioData.accounts}
-            hideValues={hideValues}
-          />
-        </TabsContent>
-      </Tabs>
+              <div className="rounded-lg border bg-white p-4 sm:p-6">
+                <PortfolioTreemap
+                  assetClasses={portfolio.assetClasses}
+                  totalMarketValue={portfolio.totalMarketValue}
+                  hideValues={hideValues}
+                />
+              </div>
+
+              <AssetClassCards
+                assetClasses={portfolio.assetClasses}
+                hideValues={hideValues}
+                onSelectClass={(id) => setSelectedClass(id)}
+              />
+
+              <PortfolioInsightsCard portfolio={portfolio} hideValues={hideValues} />
+            </div>
+          </TabsContent>
+
+          {/* Accounts tab — pass fetched data as props */}
+          <TabsContent value="accounts">
+            <AccountOverview
+              accounts={portfolioData.accounts}
+              aggregateAccounts={portfolioData.aggregateAccounts}
+              hideValues={hideValues}
+            />
+          </TabsContent>
+
+          {/* Positions tab — pass fetched data as props */}
+          <TabsContent value="positions">
+            <PositionsTable
+              positions={portfolioData.positions}
+              accounts={portfolioData.accounts}
+              hideValues={hideValues}
+            />
+          </TabsContent>
+
+          {/* Dynamic AI view tab contents */}
+          {aiViewTabs.map((tab) => (
+            <TabsContent key={tab.id} value={`ai-view-${tab.id}`}>
+              <DynamicViewWrapper
+                code={tab.code}
+                portfolioData={portfolioData}
+                classifiedPortfolio={portfolio}
+                hideValues={hideValues}
+                correlationData={tab.correlationData}
+              />
+            </TabsContent>
+          ))}
+        </Tabs>
+
+        {/* AI Suggestions Panel (right overlay) */}
+        <AISuggestionsPanel
+          isOpen={showAiPanel}
+          onClose={() => {
+            setShowAiPanel(false);
+            localStorage.setItem(PANEL_STORAGE_KEY, "false");
+          }}
+          onOpenView={openAiView}
+          hasPortfolioData={true}
+        />
+      </div>
     </div>
   );
 }
