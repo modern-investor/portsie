@@ -3,16 +3,17 @@
  *
  * - callGeminiForSuggestions: Gemini Flash 3.x → 3 view suggestions
  * - callSonnetForSuggestions: Claude Sonnet 4.6 CLI → 3 view suggestions
- * - generateComponentCode: Claude Opus 4.6 CLI → React component code
+ * - generateChartSpec: Gemini Flash 3.x → declarative chart JSON spec
  * - callGeminiForCorrelation: Gemini Flash 3.x → correlation analysis
  */
 
 import {
   buildSuggestionPrompt,
-  buildCodeGenerationPrompt,
+  buildChartSpecPrompt,
   buildCorrelationPrompt,
 } from "./prompts-ai-views";
 import type { RawSuggestion, CorrelationData } from "../portfolio/ai-views-types";
+import type { DeclarativeChartSpec } from "../portfolio/chart-spec-types";
 
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 const DEFAULT_GEMINI_MODEL = "gemini-3-flash-preview";
@@ -28,7 +29,6 @@ export async function callGeminiForSuggestions(
   console.log("[ai-views] Calling Gemini for suggestions...", {
     model: DEFAULT_GEMINI_MODEL,
     promptLength: portfolioSummary.length,
-    keyPrefix: apiKey.slice(0, 8) + "...",
   });
 
   const prompt = buildSuggestionPrompt(portfolioSummary);
@@ -52,27 +52,20 @@ export async function callSonnetForSuggestions(
   return parseSuggestions(text, "sonnet");
 }
 
-// ─── Opus CLI: Code Generation ──────────────────────────────────────────────
+// ─── Gemini: Declarative Chart Spec Generation ──────────────────────────────
 
-export async function generateComponentCode(
+export async function generateChartSpec(
   suggestion: { title: string; description: string; chartType: string; dataSpec: string; insight: string },
   portfolioSummary: string,
   correlationData?: string
-): Promise<string> {
-  const prompt = buildCodeGenerationPrompt(suggestion, portfolioSummary, correlationData);
-  const text = await callCLIRemote(prompt, "claude-opus-4-6");
+): Promise<DeclarativeChartSpec> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY not set (env var missing)");
 
-  // Strip markdown fences if Opus wraps the code in them
-  let code = text.trim();
-  if (code.startsWith("```")) {
-    const firstNewline = code.indexOf("\n");
-    code = code.slice(firstNewline + 1);
-  }
-  if (code.endsWith("```")) {
-    code = code.slice(0, code.lastIndexOf("```")).trim();
-  }
+  const prompt = buildChartSpecPrompt(suggestion, portfolioSummary, correlationData);
+  const text = await callGeminiText(apiKey, prompt, "low");
 
-  return code;
+  return parseChartSpec(text);
 }
 
 // ─── Gemini: Correlation Analysis ───────────────────────────────────────────
@@ -132,7 +125,6 @@ async function callGeminiText(
 
 /**
  * Collect text from a Gemini SSE stream response.
- * Same pattern as llm-gemini.ts collectSSEStream but simplified to return text only.
  */
 async function collectSSEText(response: Response): Promise<string> {
   const body = response.body;
@@ -161,7 +153,6 @@ async function collectSSEText(response: Response): Promise<string> {
         const candidate = chunk.candidates?.[0];
         if (candidate?.content?.parts) {
           for (const part of candidate.content.parts) {
-            // Skip thinking parts (Gemini 3 with thinkingLevel enabled)
             if (part.thought) continue;
             if (part.text) fullText += part.text;
           }
@@ -177,10 +168,6 @@ async function collectSSEText(response: Response): Promise<string> {
 
 // ─── Internal: CLI wrapper remote call ──────────────────────────────────────
 
-/**
- * Call the CLI wrapper on the DO droplet.
- * Same pattern as llm-cli.ts extractViaCLIRemote but returns raw text.
- */
 async function callCLIRemote(prompt: string, model: string): Promise<string> {
   const endpoint = process.env.PORTSIE_CLI_ENDPOINT || "http://159.89.157.120:8910/extract";
 
@@ -219,7 +206,6 @@ async function callCLIRemote(prompt: string, model: string): Promise<string> {
 function parseSuggestions(text: string, provider: string): RawSuggestion[] {
   let json = text.trim();
 
-  // Strip markdown fences
   if (json.startsWith("```")) {
     const firstNewline = json.indexOf("\n");
     json = json.slice(firstNewline + 1);
@@ -228,7 +214,6 @@ function parseSuggestions(text: string, provider: string): RawSuggestion[] {
     json = json.slice(0, json.lastIndexOf("```")).trim();
   }
 
-  // Try to extract JSON object if wrapped in other text
   const objStart = json.indexOf("{");
   const objEnd = json.lastIndexOf("}");
   if (objStart >= 0 && objEnd > objStart) {
@@ -257,10 +242,57 @@ function parseSuggestions(text: string, provider: string): RawSuggestion[] {
   }));
 }
 
+function parseChartSpec(text: string): DeclarativeChartSpec {
+  let json = text.trim();
+
+  if (json.startsWith("```")) {
+    const firstNewline = json.indexOf("\n");
+    json = json.slice(firstNewline + 1);
+  }
+  if (json.endsWith("```")) {
+    json = json.slice(0, json.lastIndexOf("```")).trim();
+  }
+
+  const objStart = json.indexOf("{");
+  const objEnd = json.lastIndexOf("}");
+  if (objStart >= 0 && objEnd > objStart) {
+    json = json.slice(objStart, objEnd + 1);
+  }
+
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(json);
+  } catch (err) {
+    throw new Error(
+      `Failed to parse chart spec JSON: ${err instanceof Error ? err.message : err}`
+    );
+  }
+
+  // Validate required fields
+  if (!parsed.chart_type || typeof parsed.chart_type !== "string") {
+    throw new Error("Chart spec missing chart_type");
+  }
+  if (!parsed.data_transform || typeof parsed.data_transform !== "object") {
+    throw new Error("Chart spec missing data_transform");
+  }
+
+  const dt = parsed.data_transform as Record<string, unknown>;
+  if (!dt.source || typeof dt.source !== "string") {
+    throw new Error("Chart spec data_transform missing source");
+  }
+
+  // Validate source is a known safe value
+  const validSources = ["assetClasses", "positions", "accounts", "correlationMatrix", "riskClusters", "notablePairs", "custom"];
+  if (!validSources.includes(dt.source as string)) {
+    throw new Error(`Chart spec has unknown data source: ${dt.source}`);
+  }
+
+  return parsed as unknown as DeclarativeChartSpec;
+}
+
 function parseCorrelationData(text: string): CorrelationData {
   let json = text.trim();
 
-  // Strip markdown fences
   if (json.startsWith("```")) {
     const firstNewline = json.indexOf("\n");
     json = json.slice(firstNewline + 1);
@@ -284,7 +316,6 @@ function parseCorrelationData(text: string): CorrelationData {
     );
   }
 
-  // Validate required fields
   const symbols = parsed.symbols as string[];
   const matrix = parsed.correlation_matrix as number[][];
   const score = Number(parsed.diversity_score);

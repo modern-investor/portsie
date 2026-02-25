@@ -5,6 +5,7 @@ import { classifyPortfolio } from "@/lib/portfolio";
 import type { ClassifiedPortfolio, AssetClassId } from "@/lib/portfolio/types";
 import type { PortfolioData } from "@/app/api/portfolio/positions/route";
 import type { ViewSuggestion } from "@/lib/portfolio/ai-views-types";
+import type { DeclarativeChartSpec } from "@/lib/portfolio/chart-spec-types";
 import { Upload, Link2, PieChart, Landmark, List, X, Sparkles, Trash2, RefreshCw, PanelRight } from "lucide-react";
 import type { PriceRefreshResult } from "@/lib/market";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -19,11 +20,19 @@ import { AccountOverview } from "./account-overview";
 import { IntegrityWarning } from "./integrity-warning";
 import { DynamicViewWrapper } from "./dynamic-view-wrapper";
 import { AISuggestionsPanel } from "./ai-suggestions-panel";
+import {
+  ConcentrationRisk,
+  DiversificationRadar,
+  AccountQuality,
+  AssetCompositionDonut,
+  BUILTIN_VIEWS,
+} from "./builtin-views";
+import { DataFreshnessBanner } from "./data-freshness-banner";
 
 // ─── Sub-tab types ──────────────────────────────────────────────────────────
 
 type PortfolioSubTab = "assets" | "accounts" | "positions";
-type AssetsSubTab = "allocation" | "treemap" | "cards" | "insights" | `ai-view-${string}`;
+type AssetsSubTab = "allocation" | "treemap" | "cards" | "insights" | "concentration" | "diversification" | "accounts-quality" | "composition" | `ai-view-${string}`;
 
 const STORAGE_KEY = "portsie:portfolio-tab";
 const PANEL_STORAGE_KEY = "portsie:ai-panel-open";
@@ -35,7 +44,10 @@ const VALID_STATIC_TABS = ["assets", "accounts", "positions"];
 interface AIViewTab {
   id: string;
   title: string;
-  code: string;
+  /** @deprecated Legacy code string — kept for backward compat. */
+  code?: string;
+  /** Declarative chart spec (new approach). */
+  chartSpec?: DeclarativeChartSpec | null;
   correlationData?: ViewSuggestion["correlationData"];
 }
 
@@ -249,7 +261,8 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
 
   const openAiView = useCallback(
     (suggestion: ViewSuggestion) => {
-      if (!suggestion.componentCode || suggestion.codeStatus !== "complete") return;
+      if (suggestion.codeStatus !== "complete") return;
+      if (!suggestion.chartSpec && !suggestion.componentCode) return;
 
       // Check if this view is already open
       const existingTab = aiViewTabs.find((t) => t.id === suggestion.id);
@@ -263,7 +276,8 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
       const newTab: AIViewTab = {
         id: suggestion.id,
         title: suggestion.title,
-        code: suggestion.componentCode,
+        chartSpec: suggestion.chartSpec,
+        code: suggestion.componentCode ?? undefined,
         correlationData: suggestion.correlationData,
       };
       const updatedTabs = [...aiViewTabs, newTab];
@@ -355,6 +369,9 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
       {/* Executive summary */}
       <PortfolioSummaryBar portfolio={portfolio} hideValues={hideValues} priceDate={priceDate} />
 
+      {/* Data freshness banner */}
+      <DataFreshnessBanner portfolioData={portfolioData} />
+
       {/* Main content + AI panel side-by-side */}
       <div className="flex gap-4">
         {/* Main content area */}
@@ -438,12 +455,36 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
                   </button>
                 ))}
 
+                {/* Built-in analytical views */}
+                <span className="mx-1 self-center text-gray-300">|</span>
+                {BUILTIN_VIEWS.map((bv) => (
+                  <button
+                    key={bv.id}
+                    onClick={() => setAssetsSubTab(bv.id)}
+                    className={`shrink-0 px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                      assetsSubTab === bv.id
+                        ? "border-purple-500 text-purple-700"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {bv.label}
+                  </button>
+                ))}
+
                 {/* Dynamic AI view subtabs */}
                 {aiViewTabs.map((tab) => (
-                  <button
+                  <div
                     key={tab.id}
+                    role="tab"
+                    tabIndex={0}
                     onClick={() => setAssetsSubTab(`ai-view-${tab.id}`)}
-                    className={`group relative shrink-0 pl-3 pr-7 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setAssetsSubTab(`ai-view-${tab.id}`);
+                      }
+                    }}
+                    className={`group relative shrink-0 cursor-pointer pl-3 pr-7 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
                       assetsSubTab === `ai-view-${tab.id}`
                         ? "border-amber-500 text-amber-700"
                         : "border-transparent text-gray-500 hover:text-gray-700"
@@ -459,10 +500,11 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
                         closeAiTab(tab.id);
                       }}
                       className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600 transition-all"
+                      aria-label={`Close ${tab.title}`}
                     >
                       <X className="size-3" />
                     </button>
-                  </button>
+                  </div>
                 ))}
               </div>
 
@@ -499,6 +541,31 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
                 <PortfolioInsightsCard portfolio={portfolio} hideValues={hideValues} />
               )}
 
+              {/* Built-in analytical views */}
+              {assetsSubTab === "concentration" && (
+                <div className="rounded-lg border bg-white p-4 sm:p-6">
+                  <ConcentrationRisk classifiedPortfolio={portfolio} hideValues={hideValues} />
+                </div>
+              )}
+
+              {assetsSubTab === "diversification" && (
+                <div className="rounded-lg border bg-white p-4 sm:p-6">
+                  <DiversificationRadar classifiedPortfolio={portfolio} hideValues={hideValues} />
+                </div>
+              )}
+
+              {assetsSubTab === "accounts-quality" && (
+                <div className="rounded-lg border bg-white p-4 sm:p-6">
+                  <AccountQuality portfolioData={portfolioData} hideValues={hideValues} />
+                </div>
+              )}
+
+              {assetsSubTab === "composition" && (
+                <div className="rounded-lg border bg-white p-4 sm:p-6">
+                  <AssetCompositionDonut classifiedPortfolio={portfolio} hideValues={hideValues} />
+                </div>
+              )}
+
               {/* Dynamic AI view subtab content */}
               {aiViewTabs.map((tab) =>
                 assetsSubTab === `ai-view-${tab.id}` ? (
@@ -517,6 +584,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
                       </button>
                     </div>
                     <DynamicViewWrapper
+                      chartSpec={tab.chartSpec}
                       code={tab.code}
                       portfolioData={portfolioData}
                       classifiedPortfolio={portfolio}

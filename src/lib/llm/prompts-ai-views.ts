@@ -2,7 +2,7 @@
  * Prompt templates for AI-suggested portfolio views.
  * Three prompts:
  * 1. Suggestion prompt — asks Gemini/Sonnet for 3 view suggestions
- * 2. Code generation prompt — asks Opus to generate React component code
+ * 2. Chart spec prompt — asks for a declarative JSON chart specification
  * 3. Correlation prompt — asks Gemini for cross-asset correlation analysis
  */
 
@@ -14,7 +14,7 @@ export function buildSuggestionPrompt(portfolioSummary: string): string {
 For each suggestion, provide:
 1. title: A short name for the view (max 5 words, e.g., "Sector Concentration Risk")
 2. description: 1-2 sentences explaining what the view shows and why it matters
-3. chart_type: One of: "bar", "line", "scatter", "heatmap", "radar", "pie", "treemap", "composed" (bar+line overlay)
+3. chart_type: One of: "bar", "horizontal_bar", "line", "scatter", "heatmap", "radar", "pie", "treemap", "area", "composed" (bar+line overlay)
 4. insight: What specific actionable insight this view reveals about the portfolio
 5. data_spec: Detailed description of what data to plot — which positions/values go on each axis or dimension, how to group/aggregate, what calculations to perform from the raw portfolio data
 
@@ -62,70 +62,109 @@ Portfolio data:
 ${portfolioSummary}`;
 }
 
-// ─── 2. Code Generation Prompt ──────────────────────────────────────────────
+// ─── 2. Chart Spec Prompt (replaces code generation) ────────────────────────
 
-export function buildCodeGenerationPrompt(
+export function buildChartSpecPrompt(
   suggestion: { title: string; description: string; chartType: string; dataSpec: string; insight: string },
   portfolioSummary: string,
   correlationData?: string
 ): string {
   const correlationSection = correlationData
-    ? `\n\nCorrelation analysis data (available as props.correlationData):\n${correlationData}`
+    ? `\n\nCorrelation analysis data (available via "correlationMatrix", "riskClusters", "notablePairs" sources):\n${correlationData}`
     : "";
 
-  return `You are a React/TypeScript code generator for a financial portfolio dashboard. Generate the BODY of a React functional component that renders a chart visualization.
+  return `You are a chart specification generator for a financial portfolio dashboard. Generate a JSON chart specification that will be rendered by a trusted chart engine.
 
-CRITICAL CONSTRAINTS — you MUST follow these exactly:
-- You are writing the BODY of a function that receives these variables in scope:
-  - portfolioData: object with { positions: array, accounts: array, aggregatePositions: array, aggregateAccounts: array }
-  - classifiedPortfolio: object with { totalMarketValue, totalDayChange, assetClasses: array of { def: { label, color }, marketValue, dayChange, allocationPct, holdingCount, positions: array of { symbol, description, marketValue, allocationPct, instrumentType, currentDayProfitLoss } } }
-  - hideValues: boolean (when true, replace dollar amounts with "***")
-  - correlationData: object or null (only for correlation views)
-- Available in scope: React, useState, useMemo, and ALL recharts components:
-  BarChart, Bar, LineChart, Line, ScatterChart, Scatter, RadarChart, Radar,
-  PieChart, Pie, Cell, Treemap, ResponsiveContainer, Tooltip, Legend,
-  XAxis, YAxis, CartesianGrid, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-  Area, AreaChart, ComposedChart, ReferenceLine, Label
-- Use these hex colors: #6366f1 (indigo), #8b5cf6 (violet), #06b6d4 (cyan), #f59e0b (amber), #eab308 (yellow), #10b981 (emerald), #ef4444 (red), #64748b (slate), #ec4899 (pink), #3b82f6 (blue)
-- Use Tailwind CSS 4 classes for layout and text styling
-- When hideValues is true, display "***" instead of dollar amounts
-- Do NOT use import statements — everything is already in scope
-- Do NOT use export statements
-- Do NOT use markdown fences
-- The code must end with a return statement that returns JSX
-- The component must be self-contained — all data transformation happens inside
-- Format dollar values with toLocaleString("en-US")
-- Include a title heading and brief description above the chart
-- Make charts responsive using ResponsiveContainer with width="100%" and a fixed height
+AVAILABLE DATA SOURCES (use one as "source" in data_transform):
+- "assetClasses" — rows with: name, id, color, marketValue, dayChange, allocationPct, holdingCount
+- "positions" — rows with: symbol, description, assetType, quantity, marketValue, averagePrice, dayPL, dayPLPct, accountName, source, allocationPct
+- "accounts" — rows with: name, institution, type, source, cashBalance, liquidationValue, holdingsCount, isAggregate, accountCategory
+- "correlationMatrix" — rows with: x (symbol), y (symbol), value (correlation -1 to 1), xIndex, yIndex
+- "riskClusters" — rows with: name, symbols (comma-separated), symbolCount, internalCorrelation
+- "notablePairs" — rows with: pair, correlation, reason, type (most_correlated/least_correlated)
 
-EXAMPLE of valid output format:
-const data = useMemo(() => {
-  return classifiedPortfolio.assetClasses
-    .filter(ac => ac.holdingCount > 0)
-    .map(ac => ({ name: ac.def.label, value: ac.marketValue }));
-}, [classifiedPortfolio]);
+CHART TYPES: "bar", "horizontal_bar", "line", "pie", "scatter", "radar", "treemap", "area", "composed", "heatmap"
 
-return (
-  <div className="space-y-4">
-    <div>
-      <h3 className="text-lg font-semibold text-gray-900">Chart Title</h3>
-      <p className="text-sm text-gray-500">Description here</p>
-    </div>
-    <div className="rounded-lg border bg-white p-4">
-      <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
-          <Bar dataKey="value" fill="#6366f1" />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  </div>
-);
+VALUE FORMATS: "currency" (adds $), "percent" (adds %), "number" (plain)
 
-NOW GENERATE CODE FOR THIS VIEW:
+SCHEMA:
+{
+  "chart_type": "<type>",
+  "title": "<chart title>",
+  "subtitle": "<optional description>",
+  "insight": "<actionable insight>",
+  "data_transform": {
+    "source": "<data source>",
+    "filter": { "field": "<name>", "op": "gt|lt|gte|lte|eq|neq", "value": <val> },
+    "map": { "<outputKey>": "<sourceField>", ... },
+    "sort": { "field": "<outputKey>", "direction": "asc|desc" },
+    "limit": <number>,
+    "group_by": "<field to group by>",
+    "aggregate": "sum|count|avg"
+  },
+  "config": {
+    "xKey": "<x axis key>",
+    "yKeys": ["<y axis key(s)>"],
+    "colors": ["#hex1", "#hex2", ...],
+    "showLegend": true/false,
+    "showGrid": true/false,
+    "height": <px>,
+    "valueFormat": "currency|percent|number",
+    "referenceLines": [{ "axis": "y", "value": <num>, "label": "<text>", "color": "#hex" }],
+    "innerRadius": <for donut charts>,
+    "radarAxes": ["<axis keys>"],
+    "labels": { "<key>": "<display label>", ... },
+    "barKeys": ["<for composed charts>"],
+    "lineKeys": ["<for composed charts>"],
+    "heatmapXLabels": ["<labels>"],
+    "heatmapYLabels": ["<labels>"]
+  }
+}
+
+EXAMPLES:
+
+Example 1 — Bar chart of asset classes by value:
+{
+  "chart_type": "bar",
+  "title": "Asset Allocation by Value",
+  "subtitle": "Market value distribution across asset classes",
+  "insight": "Technology equities dominate at 65% of portfolio",
+  "data_transform": {
+    "source": "assetClasses",
+    "filter": { "field": "holdingCount", "op": "gt", "value": 0 },
+    "map": { "name": "name", "value": "marketValue", "color": "color" },
+    "sort": { "field": "value", "direction": "desc" }
+  },
+  "config": {
+    "xKey": "name",
+    "yKeys": ["value"],
+    "valueFormat": "currency",
+    "showGrid": true,
+    "height": 400
+  }
+}
+
+Example 2 — Horizontal bar of top 10 positions:
+{
+  "chart_type": "horizontal_bar",
+  "title": "Top 10 Holdings",
+  "subtitle": "Largest positions by market value",
+  "insight": "Top 3 holdings represent 45% of portfolio",
+  "data_transform": {
+    "source": "positions",
+    "map": { "name": "symbol", "value": "marketValue" },
+    "sort": { "field": "value", "direction": "desc" },
+    "limit": 10
+  },
+  "config": {
+    "xKey": "name",
+    "yKeys": ["value"],
+    "valueFormat": "currency",
+    "height": 400
+  }
+}
+
+NOW GENERATE A CHART SPEC FOR THIS VIEW:
 Title: ${suggestion.title}
 Description: ${suggestion.description}
 Chart type: ${suggestion.chartType}
@@ -133,10 +172,10 @@ Data specification: ${suggestion.dataSpec}
 Insight: ${suggestion.insight}
 ${correlationSection}
 
-Portfolio context (the data your component will receive):
+Portfolio context:
 ${portfolioSummary}
 
-Respond with ONLY the function body code. No imports, no exports, no markdown fences.`;
+Respond with JSON only — no markdown fences, no explanation.`;
 }
 
 // ─── 3. Correlation Analysis Prompt ─────────────────────────────────────────
