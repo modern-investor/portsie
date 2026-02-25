@@ -133,16 +133,22 @@ export function AISuggestionsPanel({
 
   // Split suggestions by type
   const builtinViews = suggestions.filter((s) => s.isBuiltin);
-  const selectedProviderViews = suggestions.filter(
-    (s) => !s.isBuiltin && s.provider === provider
-  );
-  const otherProvider = provider === "gemini" ? "sonnet" : "gemini";
-  const otherProviderViews = suggestions.filter(
-    (s) => !s.isBuiltin && s.provider === otherProvider
-  );
-  // Fall back to the other provider's views if selected provider has none
-  const isFallback = selectedProviderViews.length === 0 && otherProviderViews.length > 0;
-  const providerViews = isFallback ? otherProviderViews : selectedProviderViews;
+  const geminiViews = suggestions.filter((s) => !s.isBuiltin && s.provider === "gemini");
+  const sonnetViews = suggestions.filter((s) => !s.isBuiltin && s.provider === "sonnet");
+
+  // Auto-switch provider when selected provider has no views but the other does
+  useEffect(() => {
+    if (suggestions.length === 0) return;
+    const selectedHasViews = provider === "gemini" ? geminiViews.length > 0 : sonnetViews.length > 0;
+    const otherHasViews = provider === "gemini" ? sonnetViews.length > 0 : geminiViews.length > 0;
+    if (!selectedHasViews && otherHasViews) {
+      const fallbackProvider = provider === "gemini" ? "sonnet" : "gemini";
+      setProvider(fallbackProvider);
+      localStorage.setItem(PROVIDER_STORAGE_KEY, fallbackProvider);
+    }
+  }, [suggestions, provider, geminiViews.length, sonnetViews.length]);
+
+  const providerViews = provider === "gemini" ? geminiViews : sonnetViews;
   const hasAnySuggestions = suggestions.length > 0;
 
   return (
@@ -260,22 +266,19 @@ export function AISuggestionsPanel({
                 <AIProviderToggle value={provider} onChange={handleProviderChange} />
               </div>
 
-              {/* Fallback notice: selected provider has no views, showing the other */}
-              {isFallback && (
-                <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
-                  <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
-                  <div>
-                    <p className="text-xs text-amber-700">
-                      {provider === "gemini" ? "Gemini" : "Sonnet"} failed — showing {otherProvider === "gemini" ? "Gemini" : "Sonnet"} views instead
+              {/* Provider error notice */}
+              {(() => {
+                const failedProvider = provider === "gemini" ? "sonnet" : "gemini";
+                const failedHasError = providerErrors[failedProvider];
+                return failedHasError ? (
+                  <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+                    <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                    <p className="text-xs text-amber-600">
+                      {failedProvider === "gemini" ? "Gemini" : "Sonnet"} failed during generation
                     </p>
-                    {providerErrors[provider] && (
-                      <p className="mt-0.5 text-xs text-amber-600/70 break-words">
-                        {providerErrors[provider]}
-                      </p>
-                    )}
                   </div>
-                </div>
-              )}
+                ) : null;
+              })()}
 
               {providerViews.length > 0 ? (
                 <div className="space-y-2">
@@ -286,7 +289,7 @@ export function AISuggestionsPanel({
               ) : (
                 <div className="text-center py-2">
                   <p className="text-xs text-gray-400">
-                    No suggestions available
+                    No suggestions from {provider === "gemini" ? "Gemini" : "Sonnet"}
                   </p>
                   {providerErrors[provider] && (
                     <p className="mt-1 text-xs text-red-400 break-words">

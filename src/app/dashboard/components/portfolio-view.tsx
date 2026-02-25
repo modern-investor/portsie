@@ -22,8 +22,8 @@ import { AISuggestionsPanel } from "./ai-suggestions-panel";
 
 // ─── Sub-tab types ──────────────────────────────────────────────────────────
 
-type PortfolioSubTab = "assets" | "accounts" | "positions" | `ai-view-${string}`;
-type AssetsSubTab = "allocation" | "treemap" | "cards" | "insights";
+type PortfolioSubTab = "assets" | "accounts" | "positions";
+type AssetsSubTab = "allocation" | "treemap" | "cards" | "insights" | `ai-view-${string}`;
 
 const STORAGE_KEY = "portsie:portfolio-tab";
 const PANEL_STORAGE_KEY = "portsie:ai-panel-open";
@@ -254,7 +254,8 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
       // Check if this view is already open
       const existingTab = aiViewTabs.find((t) => t.id === suggestion.id);
       if (existingTab) {
-        setSubTab(`ai-view-${suggestion.id}`);
+        setSubTab("assets");
+        setAssetsSubTab(`ai-view-${suggestion.id}`);
         return;
       }
 
@@ -268,7 +269,8 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
       const updatedTabs = [...aiViewTabs, newTab];
       setAiViewTabs(updatedTabs);
       persistTabs(updatedTabs);
-      setSubTab(`ai-view-${suggestion.id}`);
+      setSubTab("assets");
+      setAssetsSubTab(`ai-view-${suggestion.id}`);
     },
     [aiViewTabs, persistTabs]
   );
@@ -278,13 +280,12 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
       const updatedTabs = aiViewTabs.filter((t) => t.id !== tabId);
       setAiViewTabs(updatedTabs);
       persistTabs(updatedTabs);
-      // If we're closing the current tab, switch back to assets
-      if (subTab === `ai-view-${tabId}`) {
-        setSubTab("assets");
-        localStorage.setItem(STORAGE_KEY, "assets");
+      // If we're closing the currently active subtab, switch back to allocation
+      if (assetsSubTab === `ai-view-${tabId}`) {
+        setAssetsSubTab("allocation");
       }
     },
-    [subTab, aiViewTabs, persistTabs]
+    [assetsSubTab, aiViewTabs, persistTabs]
   );
 
   // ── Loading state ──
@@ -383,27 +384,6 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
                   <List className="size-5" />
                   Positions
                 </TabsTrigger>
-
-                {/* Dynamic AI view tabs */}
-                {aiViewTabs.map((tab) => (
-                  <TabsTrigger
-                    key={tab.id}
-                    value={`ai-view-${tab.id}`}
-                    className="group relative pr-7"
-                  >
-                    <Sparkles className="size-4 text-amber-500" />
-                    <span className="max-w-24 truncate">{tab.title}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        closeAiTab(tab.id);
-                      }}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600 transition-all"
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </TabsTrigger>
-                ))}
               </TabsList>
 
               {/* Refresh prices + AI panel toggle */}
@@ -438,7 +418,7 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
             {/* Assets tab with subtabs */}
             <TabsContent value="assets">
               {/* Subtab navigation */}
-              <div className="mb-4 flex gap-1 border-b border-gray-200">
+              <div className="mb-4 flex gap-1 overflow-x-auto border-b border-gray-200">
                 {([
                   { id: "allocation", label: "Allocation" },
                   { id: "treemap", label: "Treemap" },
@@ -448,13 +428,40 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
                   <button
                     key={tab.id}
                     onClick={() => setAssetsSubTab(tab.id)}
-                    className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                    className={`shrink-0 px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
                       assetsSubTab === tab.id
                         ? "border-black text-black"
                         : "border-transparent text-gray-500 hover:text-gray-700"
                     }`}
                   >
                     {tab.label}
+                  </button>
+                ))}
+
+                {/* Dynamic AI view subtabs */}
+                {aiViewTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setAssetsSubTab(`ai-view-${tab.id}`)}
+                    className={`group relative shrink-0 pl-3 pr-7 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                      assetsSubTab === `ai-view-${tab.id}`
+                        ? "border-amber-500 text-amber-700"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles className="size-3.5 text-amber-500" />
+                      <span className="max-w-28 truncate">{tab.title}</span>
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        closeAiTab(tab.id);
+                      }}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600 transition-all"
+                    >
+                      <X className="size-3" />
+                    </button>
                   </button>
                 ))}
               </div>
@@ -491,6 +498,34 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
               {assetsSubTab === "insights" && (
                 <PortfolioInsightsCard portfolio={portfolio} hideValues={hideValues} />
               )}
+
+              {/* Dynamic AI view subtab content */}
+              {aiViewTabs.map((tab) =>
+                assetsSubTab === `ai-view-${tab.id}` ? (
+                  <div key={tab.id} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="size-4 text-amber-500" />
+                        <span className="text-sm font-medium text-gray-700">{tab.title}</span>
+                      </div>
+                      <button
+                        onClick={() => closeAiTab(tab.id)}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-white px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+                      >
+                        <Trash2 className="size-3" />
+                        Delete View
+                      </button>
+                    </div>
+                    <DynamicViewWrapper
+                      code={tab.code}
+                      portfolioData={portfolioData}
+                      classifiedPortfolio={portfolio}
+                      hideValues={hideValues}
+                      correlationData={tab.correlationData}
+                    />
+                  </div>
+                ) : null
+              )}
             </TabsContent>
 
             {/* Accounts tab — pass fetched data as props */}
@@ -511,34 +546,6 @@ export function PortfolioView({ hideValues, onNavigateTab }: Props) {
               />
             </TabsContent>
 
-            {/* Dynamic AI view tab contents */}
-            {aiViewTabs.map((tab) => (
-              <TabsContent key={tab.id} value={`ai-view-${tab.id}`}>
-                <div className="space-y-3">
-                  {/* View header with delete button */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="size-4 text-amber-500" />
-                      <span className="text-sm font-medium text-gray-700">{tab.title}</span>
-                    </div>
-                    <button
-                      onClick={() => closeAiTab(tab.id)}
-                      className="inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-white px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
-                    >
-                      <Trash2 className="size-3" />
-                      Delete View
-                    </button>
-                  </div>
-                  <DynamicViewWrapper
-                    code={tab.code}
-                    portfolioData={portfolioData}
-                    classifiedPortfolio={portfolio}
-                    hideValues={hideValues}
-                    correlationData={tab.correlationData}
-                  />
-                </div>
-              </TabsContent>
-            ))}
           </Tabs>
         </div>
 
