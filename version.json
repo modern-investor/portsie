@@ -1,12 +1,12 @@
 {
-  "version": "v260225.01 1:47a",
-  "release": 132,
-  "sha": "353b7095",
-  "fullSha": "353b70953a5bb0ad8c968cf598d08d3329c0338d",
+  "version": "v260225.02 3:06a",
+  "release": 133,
+  "sha": "051ecc7b",
+  "fullSha": "051ecc7b29088c386ef19c36deb337287bf723f1",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000365",
-  "pushedAt": "2026-02-25T07:47:52+00",
-  "commits": [{"sha": "353b70953a5bb0ad8c968cf598d08d3329c0338d", "short_sha": "353b7095", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/claude/recursing-hofstadter'"}, {"sha": "1db835116744e61904f9cd04cabed4786532ffe2", "short_sha": "1db83511", "author": "rahulio", "message": "Fix bump-version.sh JSON parsing for commit messages with quotes"}]
+  "machine": "GitHub Actions 1000000371",
+  "pushedAt": "2026-02-25T09:06:31+00",
+  "commits": [{"sha": "051ecc7b29088c386ef19c36deb337287bf723f1", "short_sha": "051ecc7b", "author": "rahulio", "message": "Fix AI Views toggle behavior and move view tabs to subtab nav"}]
 }
