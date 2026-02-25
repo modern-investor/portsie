@@ -7,12 +7,12 @@ interface Props {
 
 export function AIProviderToggle({ value, onChange }: Props) {
   return (
-    <div className="inline-flex rounded-md border border-gray-200 bg-gray-50 p-0.5">
+    <div className="inline-flex rounded-full bg-gray-100 p-0.5">
       <button
         onClick={() => onChange("gemini")}
-        className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
+        className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
           value === "gemini"
-            ? "bg-white text-gray-900 shadow-sm"
+            ? "bg-black text-white shadow-sm"
             : "text-gray-500 hover:text-gray-700"
         }`}
       >
@@ -20,9 +20,9 @@ export function AIProviderToggle({ value, onChange }: Props) {
       </button>
       <button
         onClick={() => onChange("sonnet")}
-        className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
+        className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
           value === "sonnet"
-            ? "bg-white text-gray-900 shadow-sm"
+            ? "bg-black text-white shadow-sm"
             : "text-gray-500 hover:text-gray-700"
         }`}
       >

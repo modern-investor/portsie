@@ -64,20 +64,22 @@ export function DynamicViewWrapper({
   hideValues,
   correlationData,
 }: Props) {
-  const DynamicComp = useMemo(() => createDynamicComponent(code), [code]);
+  const result = useMemo(() => createDynamicComponent(code), [code]);
 
-  if (!DynamicComp) {
+  if (!result.component) {
     return (
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
         <p className="text-sm font-medium text-amber-700">
           Failed to load view component
         </p>
         <p className="mt-1 text-xs text-amber-600">
-          The AI-generated code could not be compiled. Try regenerating.
+          {result.error || "The AI-generated code could not be compiled. Try regenerating."}
         </p>
       </div>
     );
   }
+
+  const DynamicComp = result.component;
 
   return (
     <ViewErrorBoundary>
