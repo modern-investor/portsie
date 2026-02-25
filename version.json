@@ -1,12 +1,12 @@
 {
-  "version": "v260225.04 6:07a",
-  "release": 135,
-  "sha": "ecd28b55",
-  "fullSha": "ecd28b557c3c299a687f110ed81497ca1b05a05e",
+  "version": "v260225.05 9:37a",
+  "release": 136,
+  "sha": "e4a85d02",
+  "fullSha": "e4a85d02222721297b1f696a033065a0fe7533f6",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000380",
-  "pushedAt": "2026-02-25T12:07:43+00",
-  "commits": [{"sha": "ecd28b557c3c299a687f110ed81497ca1b05a05e", "short_sha": "ecd28b55", "author": "rahulio", "message": "Fix upload list losing spinner and timestamps on page refresh"}]
+  "machine": "GitHub Actions 1000000385",
+  "pushedAt": "2026-02-25T15:37:49+00",
+  "commits": [{"sha": "e4a85d02222721297b1f696a033065a0fe7533f6", "short_sha": "e4a85d02", "author": "rahulio", "message": "Fix upload processing state transition not triggering review/redirect"}]
 }
