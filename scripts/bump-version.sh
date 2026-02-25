@@ -145,7 +145,7 @@ cat > "$REPO_ROOT/version.json" <<VEOF
   "source": "${SOURCE}",
   "model": "${MODEL_CODE}",
   "machine": "${MACHINE}",
-  "pushedAt": "$(date -u +%Y-%m-%dT%H:%M:%S+00)",
+  "pushedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "commits": ${COMMITS_JSON}
 }
 VEOF
