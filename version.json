@@ -1,12 +1,12 @@
 {
-  "version": "v260225.08 3:29p",
-  "release": 139,
-  "sha": "25714955",
-  "fullSha": "257149559a2b17a94501de06755497d84b0d4475",
+  "version": "v260225.12 4:25p",
+  "release": 143,
+  "sha": "230cd1e5",
+  "fullSha": "230cd1e59bccf2d59ee17d5b333c34cdd9a69cc9",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000402",
-  "pushedAt": "2026-02-25T21:29:43Z",
-  "commits": [{"sha": "257149559a2b17a94501de06755497d84b0d4475", "short_sha": "25714955", "author": "rahulio", "message": "Add AI views review for assets dashboard"}]
+  "machine": "GitHub Actions 1000000423",
+  "pushedAt": "2026-02-25T22:25:09Z",
+  "commits": [{"sha": "230cd1e59bccf2d59ee17d5b333c34cdd9a69cc9", "short_sha": "230cd1e5", "author": "rahulio", "message": "Fix invalid date in Build Info modal"}]
 }
