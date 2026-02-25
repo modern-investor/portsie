@@ -60,6 +60,9 @@ export function UploadSection({
   // Track IDs that were auto-confirmed in this batch for summary dialog
   const [confirmedIds, setConfirmedIds] = useState<string[]>([]);
   const [processingPreset, setProcessingPreset] = useState<ProcessingPreset>(DEFAULT_PRESET);
+  // IDs that should auto-open review (or redirect) when they reach a terminal state.
+  // Populated when batch processing starts; consumed by an effect watching `uploads`.
+  const pendingAutoReviewRef = useRef<Set<string>>(new Set());
   const router = useRouter();
 
   // Auto-redirect countdown after save
@@ -80,6 +83,36 @@ export function UploadSection({
     setRedirectCountdown(null);
     setConfirmedIds([]);
   }
+
+  // Auto-open review (or trigger redirect) when a pending upload reaches a terminal state.
+  // This is the safety net: if the extract API times out and the retry loop gives up
+  // with parse_status still "processing", the polling will eventually catch the DB update
+  // and this effect fires to open review / start redirect.
+  useEffect(() => {
+    const pending = pendingAutoReviewRef.current;
+    if (pending.size === 0) return;
+
+    for (const id of [...pending]) {
+      const u = uploads.find((up) => up.id === id);
+      if (!u) continue;
+
+      const isTerminal = ["completed", "extracted", "partial", "failed"].includes(u.parse_status);
+      if (!isTerminal) continue;
+
+      pending.delete(id);
+
+      // Auto-open review for uploads with data
+      if (["completed", "extracted", "partial"].includes(u.parse_status) && !reviewingId) {
+        setReviewingId(id);
+      }
+
+      // Auto-redirect for confirmed uploads (auto-confirm succeeded)
+      if (u.confirmed_at && redirectCountdown === null) {
+        setConfirmedIds((prev) => prev.includes(id) ? prev : [...prev, id]);
+        setRedirectCountdown(5);
+      }
+    }
+  }, [uploads, reviewingId, redirectCountdown]);
 
   // Poll uploads in active states (processing, qc_running, qc_fixing) every 3 seconds
   const uploadsRef = useRef(uploads);
@@ -216,12 +249,13 @@ export function UploadSection({
         [uploadId]: { ...prev[uploadId], e: new Date().toISOString() },
       }));
 
-      // Refresh the upload record — retry once after a short delay if status is
+      // Refresh the upload record — retry with increasing delays if status is
       // still "processing" (DB write from the extract endpoint may not have
-      // propagated yet).
-      for (let attempt = 0; attempt < 2; attempt++) {
+      // propagated yet, or the Vercel function may have timed out mid-write).
+      const retryDelays = [0, 2000, 3000, 5000, 5000];
+      for (let attempt = 0; attempt < retryDelays.length; attempt++) {
         try {
-          if (attempt > 0) await new Promise((r) => setTimeout(r, 1500));
+          if (retryDelays[attempt] > 0) await new Promise((r) => setTimeout(r, retryDelays[attempt]));
           const detailRes = await fetch(`/api/upload/${uploadId}`);
           if (detailRes.ok) {
             const updated = await detailRes.json();
@@ -232,7 +266,7 @@ export function UploadSection({
             if (updated.parse_status !== "processing") break;
           }
         } catch {
-          // Silently fail — user can refresh manually
+          // Silently fail — polling will catch up
         }
       }
 
@@ -258,6 +292,10 @@ export function UploadSection({
       for (const id of ids) next[id] = { q: now };
       return next;
     });
+
+    // Register all IDs for auto-review so the reactive effect can catch
+    // state transitions even if handleProcess's retry loop gives up early.
+    for (const id of ids) pendingAutoReviewRef.current.add(id);
 
     // Process sequentially so queued items stay visually distinct
     (async () => {
@@ -322,8 +360,9 @@ export function UploadSection({
         [id]: { q: now },
       }));
       setReviewingId(null);
+      pendingAutoReviewRef.current.add(id);
       const confirmed = await handleProcess(id);
-      // Re-open review after reprocessing completes
+      // Re-open review after reprocessing completes (fast path)
       setUploads((prev) => {
         const u = prev.find((up) => up.id === id);
         if (u && ["completed", "extracted", "partial"].includes(u.parse_status)) {
