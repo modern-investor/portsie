@@ -26,6 +26,7 @@ import type {
   AccountWriteResult,
   WriteReport,
 } from "./schema";
+import { createHash } from "crypto";
 import { accountTypeToCategory } from "./account-matcher";
 import { reconcileHoldings } from "@/lib/holdings/reconcile";
 import { updateAccountSummary } from "@/lib/holdings/account-summary";
@@ -117,7 +118,7 @@ async function batchCreateAccounts(
   const { data, error } = await supabase
     .from("accounts")
     .insert(rows)
-    .select("id");
+    .select("id, account_number_token");
 
   if (error) {
     // Fallback: create accounts individually (handles unique constraint violations)
@@ -128,9 +129,22 @@ async function batchCreateAccounts(
     return result;
   }
 
-  // Map results back by index order
+  // Map results back by account_number_token (not array index).
+  // PostgreSQL INSERT RETURNING typically preserves order, but that's an
+  // implementation detail — matching by token is a contractual guarantee.
+  const tokenToId = new Map<string, string>();
+  for (const row of data) {
+    if (row.account_number_token) {
+      tokenToId.set(row.account_number_token, row.id);
+    }
+  }
+
   for (let i = 0; i < newAccountMappings.length; i++) {
-    if (data[i]) {
+    const token = rows[i].account_number_token;
+    if (token && tokenToId.has(token)) {
+      result.set(newAccountMappings[i].index, tokenToId.get(token)!);
+    } else if (data[i]) {
+      // Fallback to positional for accounts without tokens (rare edge case)
       result.set(newAccountMappings[i].index, data[i].id);
     }
   }
@@ -331,6 +345,26 @@ function buildBalanceRows(
   }));
 }
 
+/**
+ * Build a deterministic fingerprint from stable transaction content fields.
+ * This replaces index-based keys so that re-extractions with different
+ * ordering still produce the same external_transaction_id for the same
+ * logical transaction.
+ */
+function txFingerprint(t: ExtractionTransaction): string {
+  const payload = [
+    t.transaction_date,
+    (t.symbol ?? "").trim().toUpperCase(),
+    t.action.trim().toUpperCase(),
+    String(t.quantity ?? ""),
+    String(t.price_per_share ?? ""),
+    String(t.total_amount),
+    (t.description ?? "").trim().toLowerCase(),
+  ].join("|");
+
+  return createHash("sha256").update(payload).digest("hex").slice(0, 24);
+}
+
 function buildTransactionRows(
   userId: string,
   accountId: string,
@@ -338,26 +372,38 @@ function buildTransactionRows(
   transactions: ExtractionTransaction[]
 ): Record<string, unknown>[] {
   const deduped = deduplicateTransactions(transactions);
-  return deduped.map((t, index) => ({
-    user_id: userId,
-    account_id: accountId,
-    data_source: "manual_upload",
-    external_transaction_id: `upload_${statementId}_${accountId}_${index}`,
-    transaction_date: t.transaction_date,
-    settlement_date: t.settlement_date ?? null,
-    symbol: t.symbol ?? null,
-    cusip: t.cusip ?? null,
-    asset_type: t.asset_type ?? null,
-    asset_subtype: t.asset_subtype ?? null,
-    description: t.description,
-    action: t.action,
-    quantity: t.quantity ?? null,
-    price_per_share: t.price_per_share ?? null,
-    total_amount: t.total_amount,
-    fees: t.fees ?? 0,
-    commission: t.commission ?? 0,
-    uploaded_statement_id: statementId,
-  }));
+  // Track fingerprints to handle collisions (genuinely identical transactions
+  // that differ only by position in the document).
+  const fpCounts = new Map<string, number>();
+
+  return deduped.map((t) => {
+    const fp = txFingerprint(t);
+    const count = fpCounts.get(fp) ?? 0;
+    fpCounts.set(fp, count + 1);
+    // Append occurrence index only for duplicates (count > 0)
+    const suffix = count > 0 ? `_${count}` : "";
+
+    return {
+      user_id: userId,
+      account_id: accountId,
+      data_source: "manual_upload",
+      external_transaction_id: `upload_${statementId}_${fp}${suffix}`,
+      transaction_date: t.transaction_date,
+      settlement_date: t.settlement_date ?? null,
+      symbol: t.symbol ?? null,
+      cusip: t.cusip ?? null,
+      asset_type: t.asset_type ?? null,
+      asset_subtype: t.asset_subtype ?? null,
+      description: t.description,
+      action: t.action,
+      quantity: t.quantity ?? null,
+      price_per_share: t.price_per_share ?? null,
+      total_amount: t.total_amount,
+      fees: t.fees ?? 0,
+      commission: t.commission ?? 0,
+      uploaded_statement_id: statementId,
+    };
+  });
 }
 
 // ── Public API ──
@@ -377,6 +423,7 @@ export async function writeExtraction(
 ): Promise<WriteReport> {
   const accountResults: AccountWriteResult[] = [];
   const linkedAccountIds: string[] = [];
+  const warnings: string[] = [];
 
   const totals = {
     accounts_processed: 0,
@@ -552,7 +599,9 @@ export async function writeExtraction(
             reconciliation,
           };
         } catch (err) {
+          const msg = `reconcile_failed:${accountId}:${err instanceof Error ? err.message : String(err)}`;
           safeLog("error", "DBWriter", `Failed to reconcile holdings for account ${accountId}`, err);
+          warnings.push(msg);
           return null;
         }
       })
@@ -698,6 +747,7 @@ export async function writeExtraction(
 
         if (error) {
           safeLog("error", "DBWriter", "Failed to write aggregate balance snapshots", { error: error.message });
+          warnings.push(`aggregate_balance_failed:${error.message}`);
         }
       }
 
@@ -718,7 +768,9 @@ export async function writeExtraction(
         aggBalanceData as unknown as import("@/lib/upload/types").ExtractedBalance | undefined
       );
     } catch (err) {
+      const msg = `aggregate_write_failed:${err instanceof Error ? err.message : String(err)}`;
       safeLog("error", "DBWriter", "Failed to write unallocated/aggregate positions", err);
+      warnings.push(msg);
     }
   }
 
@@ -768,7 +820,9 @@ export async function writeExtraction(
               .eq("id", accountId);
           }
         } catch (err) {
+          const msg = `summary_update_failed:${accountId}:${err instanceof Error ? err.message : String(err)}`;
           safeLog("error", "DBWriter", `Failed to update account summary for ${accountId}`, err);
+          warnings.push(msg);
         }
       })
     );
@@ -788,6 +842,7 @@ export async function writeExtraction(
       statement_end_date: extraction.document.statement_end_date ?? null,
       account_mappings: accountMap,
       extraction_schema_version: extraction.schema_version,
+      write_warnings: warnings,
     })
     .eq("id", statementId);
 
@@ -795,5 +850,6 @@ export async function writeExtraction(
     account_results: accountResults,
     aggregate_result: aggregateResult,
     totals,
+    warnings,
   };
 }
