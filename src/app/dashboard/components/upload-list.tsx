@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import type { UploadedStatement } from "@/lib/upload/types";
 import type { PortsieExtraction } from "@/lib/extraction/schema";
 import type { ProcessingPreset } from "@/lib/llm/types";
@@ -214,6 +214,70 @@ function InlineSummary({ upload }: { upload: UploadedStatement }) {
           verify failed
         </span>
       )}
+    </div>
+  );
+}
+
+const INVESTING_QUOTES = [
+  { text: "The stock market is a device for transferring money from the impatient to the patient.", author: "Warren Buffett" },
+  { text: "In investing, what is comfortable is rarely profitable.", author: "Robert Arnott" },
+  { text: "The individual investor should act consistently as an investor and not as a speculator.", author: "Ben Graham" },
+  { text: "The biggest risk of all is not taking one.", author: "Mellody Hobson" },
+  { text: "It's not whether you're right or wrong, but how much money you make when you're right and how much you lose when you're wrong.", author: "George Soros" },
+  { text: "Know what you own, and know why you own it.", author: "Peter Lynch" },
+  { text: "The four most dangerous words in investing are: 'This time it's different.'", author: "Sir John Templeton" },
+  { text: "Wide diversification is only required when investors do not understand what they are doing.", author: "Warren Buffett" },
+  { text: "The desire to perform all the time is usually a barrier to performing over time.", author: "Robert Olstein" },
+  { text: "If you aren't willing to own a stock for 10 years, don't even think about owning it for 10 minutes.", author: "Warren Buffett" },
+  { text: "Investing should be more like watching paint dry or watching grass grow. If you want excitement, take $800 and go to Las Vegas.", author: "Paul Samuelson" },
+  { text: "The intelligent investor is a realist who sells to optimists and buys from pessimists.", author: "Ben Graham" },
+  { text: "Behind every stock is a company. Find out what it's doing.", author: "Peter Lynch" },
+  { text: "Someone's sitting in the shade today because someone planted a tree a long time ago.", author: "Warren Buffett" },
+  { text: "Bull markets are born on pessimism, grow on skepticism, mature on optimism, and die on euphoria.", author: "Sir John Templeton" },
+  { text: "The market is a pendulum that forever swings between unsustainable optimism and unjustified pessimism.", author: "Ben Graham" },
+  { text: "Spend each day trying to be a little wiser than you were when you woke up.", author: "Charlie Munger" },
+  { text: "All intelligent investing is value investing — acquiring more than you are paying for.", author: "Charlie Munger" },
+  { text: "Risk comes from not knowing what you're doing.", author: "Warren Buffett" },
+  { text: "October: This is one of the peculiarly dangerous months to speculate in stocks. The others are July, January, September, April, November, May, March, June, December, August, and February.", author: "Mark Twain" },
+  { text: "Compound interest is the eighth wonder of the world. He who understands it, earns it; he who doesn't, pays it.", author: "Albert Einstein (attributed)" },
+  { text: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin" },
+  { text: "The stock market is filled with individuals who know the price of everything, but the value of nothing.", author: "Philip Fisher" },
+  { text: "Go to bed a little smarter each day.", author: "Charlie Munger" },
+  { text: "I will tell you how to become rich. Close the doors. Be fearful when others are greedy. Be greedy when others are fearful.", author: "Warren Buffett" },
+  { text: "Returns matter a lot. It's our money.", author: "Bill Ackman" },
+  { text: "Time in the market beats timing the market.", author: "Ken Fisher" },
+  { text: "The only value of stock forecasters is to make fortune-tellers look good.", author: "Warren Buffett" },
+];
+
+/** Rotating investing wisdom quotes shown during processing */
+function ProcessingQuotes() {
+  const [index, setIndex] = useState(() => Math.floor(Math.random() * INVESTING_QUOTES.length));
+  const [fade, setFade] = useState(true);
+
+  const advance = useCallback(() => {
+    setFade(false);
+    setTimeout(() => {
+      setIndex((prev) => (prev + 1) % INVESTING_QUOTES.length);
+      setFade(true);
+    }, 400);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(advance, 20_000);
+    return () => clearInterval(interval);
+  }, [advance]);
+
+  const quote = INVESTING_QUOTES[index];
+
+  return (
+    <div className="mt-3 flex items-start gap-2.5 rounded-lg border border-dashed border-gray-200 bg-gray-50/50 px-4 py-3">
+      <span className="mt-0.5 shrink-0 text-lg leading-none text-gray-300">&ldquo;</span>
+      <div
+        className={`min-h-[2.5rem] transition-opacity duration-400 ${fade ? "opacity-100" : "opacity-0"}`}
+      >
+        <p className="text-sm italic text-gray-500">{quote.text}</p>
+        <p className="mt-1 text-xs font-medium text-gray-400">&mdash; {quote.author}</p>
+      </div>
     </div>
   );
 }
@@ -504,6 +568,9 @@ export function UploadList({
           </div>
         );
       })}
+
+      {/* Rotating investing wisdom quotes while processing */}
+      {batchTotal > 0 && batchDone < batchTotal && <ProcessingQuotes />}
     </div>
   );
 }
