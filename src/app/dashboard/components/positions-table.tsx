@@ -537,11 +537,24 @@ export function PositionsTable({ positions, accounts, hideValues }: Props) {
                           ) : null;
                         })()}
                       </td>
-                      {/* Account (two-row) */}
+                      {/* Account (two-row) + source badge */}
                       {showAccountColumn && (
                         <td className="px-2 py-2 sm:px-4 sm:py-3 whitespace-nowrap">
-                          <div className="text-xs text-gray-700">
+                          <div className="flex items-center gap-1 text-xs text-gray-700">
                             {pos.accountInstitution ?? "Unknown"}
+                            {pos.source && pos.source !== "schwab_api" && (
+                              <span className={`text-[9px] leading-none rounded px-1 py-0.5 ${
+                                pos.source === "manual_upload" ? "bg-blue-50 text-blue-600" :
+                                pos.source === "manual_entry" ? "bg-purple-50 text-purple-600" :
+                                pos.source === "quiltt" ? "bg-green-50 text-green-600" :
+                                "bg-gray-100 text-gray-500"
+                              }`}>
+                                {pos.source === "manual_upload" ? "Upload" :
+                                 pos.source === "manual_entry" ? "Manual" :
+                                 pos.source === "quiltt" ? "Quiltt" :
+                                 pos.source === "offline" ? "Offline" : pos.source}
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-gray-400">
                             {pos.accountNumber ?? ""}
