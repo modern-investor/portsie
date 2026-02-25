@@ -131,16 +131,51 @@ export interface DynamicViewProps {
 }
 
 /**
+ * Sanitize AI-generated code by stripping common LLM artifacts
+ * that violate the forbidden pattern checks (imports, exports, fences).
+ */
+function sanitizeCode(code: string): string {
+  let sanitized = code;
+
+  // Strip markdown fences
+  if (sanitized.startsWith("```")) {
+    const firstNewline = sanitized.indexOf("\n");
+    sanitized = sanitized.slice(firstNewline + 1);
+  }
+  if (sanitized.endsWith("```")) {
+    sanitized = sanitized.slice(0, sanitized.lastIndexOf("```")).trim();
+  }
+
+  // Strip import statements (everything is already in scope)
+  sanitized = sanitized.replace(/^import\s+.*?[;\n]/gm, "");
+
+  // Strip export default / export prefixes
+  sanitized = sanitized.replace(/^export\s+default\s+/gm, "");
+  sanitized = sanitized.replace(/^export\s+/gm, "");
+
+  // Strip "use client" / "use server" directives
+  sanitized = sanitized.replace(/^["']use (client|server)["'];?\s*\n/gm, "");
+
+  return sanitized.trim();
+}
+
+/**
  * Create a React functional component from AI-generated code string.
- * Returns null if validation fails or code is invalid.
+ * Returns { component, error } — component is null on failure with error describing why.
  */
 export function createDynamicComponent(
   code: string
-): React.FC<DynamicViewProps> | null {
-  const validation = validateComponentCode(code);
+): { component: React.FC<DynamicViewProps> | null; error: string | null } {
+  if (!code || code.trim().length === 0) {
+    return { component: null, error: "Empty code" };
+  }
+
+  const sanitized = sanitizeCode(code);
+
+  const validation = validateComponentCode(sanitized);
   if (!validation.valid) {
     console.error("[DynamicComponent] Validation failed:", validation.error);
-    return null;
+    return { component: null, error: `Validation: ${validation.error}` };
   }
 
   try {
@@ -152,7 +187,7 @@ export function createDynamicComponent(
       "classifiedPortfolio",
       "hideValues",
       "correlationData",
-      `"use strict";\n${code}`
+      `"use strict";\n${sanitized}`
     );
 
     // Create the React component wrapper
@@ -176,9 +211,9 @@ export function createDynamicComponent(
     };
 
     DynamicComponent.displayName = "DynamicAIView";
-    return DynamicComponent;
+    return { component: DynamicComponent, error: null };
   } catch (err) {
     console.error("[DynamicComponent] Creation failed:", err);
-    return null;
+    return { component: null, error: `Compile: ${err instanceof Error ? err.message : "Unknown"}` };
   }
 }
