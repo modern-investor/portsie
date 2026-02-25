@@ -79,20 +79,20 @@ done < <(git -C "$REPO_ROOT" log --format='%H|%s|%an' $RANGE 2>/dev/null || true
 echo "Recording release event in Supabase..."
 
 RPC_PAYLOAD=$(python3 -c "
-import json
+import json, sys
 payload = {
-    'p_push_sha': '$SHA',
-    'p_branch': '$BRANCH',
-    'p_compare_from': $([ -n "$COMPARE_FROM" ] && echo "'$COMPARE_FROM'" || echo "None"),
-    'p_compare_to': '$COMPARE_TO',
-    'p_actor': '$ACTOR',
-    'p_source': '$SOURCE',
-    'p_model_code': '$MODEL_CODE',
-    'p_machine_name': '$MACHINE',
-    'p_commits': json.loads('''$COMMITS_JSON''')
+    'p_push_sha': sys.argv[1],
+    'p_branch': sys.argv[2],
+    'p_compare_from': sys.argv[3] if sys.argv[3] else None,
+    'p_compare_to': sys.argv[4],
+    'p_actor': sys.argv[5],
+    'p_source': sys.argv[6],
+    'p_model_code': sys.argv[7],
+    'p_machine_name': sys.argv[8],
+    'p_commits': json.loads(sys.argv[9])
 }
 print(json.dumps(payload))
-")
+" "$SHA" "$BRANCH" "$COMPARE_FROM" "$COMPARE_TO" "$ACTOR" "$SOURCE" "$MODEL_CODE" "$MACHINE" "$COMMITS_JSON")
 
 API_RESULT=$(curl -s -X POST \
   "${SUPABASE_URL}/rest/v1/rpc/record_release_event" \
