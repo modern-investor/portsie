@@ -92,8 +92,6 @@ export function UploadSection({
     const pending = pendingAutoReviewRef.current;
     if (pending.size === 0) return;
 
-    // Don't trigger redirect while batch items are still queued or processing.
-    // This prevents premature navigation when only some items in a batch are done.
     const batchInFlight = queuedIds.size > 0 || processingIds.size > 0;
 
     for (const id of [...pending]) {
@@ -103,17 +101,21 @@ export function UploadSection({
       const isTerminal = ["completed", "extracted", "partial", "failed"].includes(u.parse_status);
       if (!isTerminal) continue;
 
-      pending.delete(id);
-
-      // Auto-open review for uploads with data
-      if (["completed", "extracted", "partial"].includes(u.parse_status) && !reviewingId) {
-        setReviewingId(id);
+      // Confirmed uploads → redirect, but wait until batch finishes
+      if (u.confirmed_at) {
+        if (!batchInFlight && redirectCountdown === null) {
+          pending.delete(id);
+          setConfirmedIds((prev) => prev.includes(id) ? prev : [...prev, id]);
+          setRedirectCountdown(5);
+        }
+        // Keep in pending until batch completes so effect re-fires
+        continue;
       }
 
-      // Auto-redirect for confirmed uploads — only when no batch items remain
-      if (u.confirmed_at && redirectCountdown === null && !batchInFlight && pending.size === 0) {
-        setConfirmedIds((prev) => prev.includes(id) ? prev : [...prev, id]);
-        setRedirectCountdown(5);
+      // Non-confirmed terminal uploads → open review or discard
+      pending.delete(id);
+      if (["extracted", "partial"].includes(u.parse_status) && !reviewingId) {
+        setReviewingId(id);
       }
     }
   }, [uploads, reviewingId, redirectCountdown, queuedIds, processingIds]);
@@ -357,18 +359,29 @@ export function UploadSection({
           return next;
         });
       }
-      // After batch completes, auto-open review for the first file that has data.
-      // We use the setUploads updater to read latest state (closure is stale).
+      // After batch completes, determine the right action from actual upload state.
+      // handleProcess may return false on HTTP timeout even when the backend auto-
+      // confirmed successfully — so we check confirmed_at from the DB record.
+      let confirmedInBatch = [...batchConfirmedIds];
       setUploads((prev) => {
-        const reviewable = ids.find((fid) => {
-          const u = prev.find((up) => up.id === fid);
-          return u && ["completed", "extracted", "partial"].includes(u.parse_status);
-        });
-        if (reviewable) setReviewingId(reviewable);
+        if (confirmedInBatch.length === 0) {
+          confirmedInBatch = ids.filter((fid) => {
+            const u = prev.find((up) => up.id === fid);
+            return !!u?.confirmed_at;
+          });
+        }
+        // If nothing was confirmed, open review for the first extractable file
+        if (confirmedInBatch.length === 0) {
+          const reviewable = ids.find((fid) => {
+            const u = prev.find((up) => up.id === fid);
+            return u && ["extracted", "partial"].includes(u.parse_status);
+          });
+          if (reviewable) setReviewingId(reviewable);
+        }
         return prev;
       });
-      if (batchConfirmedIds.length > 0) {
-        setConfirmedIds(batchConfirmedIds);
+      if (confirmedInBatch.length > 0) {
+        setConfirmedIds(confirmedInBatch);
         setRedirectCountdown(5);
       }
     })();
