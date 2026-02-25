@@ -12,6 +12,7 @@ import { DEFAULT_PRESET } from "@/lib/llm/types";
 import type { ProcessingPreset } from "@/lib/llm/types";
 
 const POLL_STATUSES = new Set(["processing", "qc_running", "qc_fixing"]);
+const STALE_PROCESSING_MS = 7 * 60 * 1000;
 
 /** Build a human-readable summary of what was saved */
 function buildSavedSummary(uploads: UploadedStatement[], confirmedIds: string[]) {
@@ -120,7 +121,8 @@ export function UploadSection({
     }
   }, [uploads, reviewingId, redirectCountdown, queuedIds, processingIds]);
 
-  // Poll uploads in active states (processing, qc_running, qc_fixing) every 3 seconds
+  // Poll uploads in active states (processing, qc_running, qc_fixing) every 3 seconds.
+  // Also detects stale processing: if processing_started_at is >7 min ago, reset to "failed".
   const uploadsRef = useRef(uploads);
   uploadsRef.current = uploads;
   useEffect(() => {
@@ -135,6 +137,23 @@ export function UploadSection({
           const res = await fetch(`/api/upload/${id}`);
           if (res.ok) {
             const updated = await res.json();
+
+            // Detect stale processing: backend died without updating DB
+            if (
+              updated.parse_status === "processing" &&
+              updated.processing_started_at &&
+              Date.now() - new Date(updated.processing_started_at).getTime() > STALE_PROCESSING_MS
+            ) {
+              // Reset to "failed" so user can retry
+              fetch(`/api/upload/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ parse_status: "failed", parse_error: "Processing timed out" }),
+              }).catch(() => {});
+              updated.parse_status = "failed";
+              updated.parse_error = "Processing timed out";
+            }
+
             setUploads((prev) =>
               prev.map((u) => (u.id === id ? updated : u))
             );
@@ -175,7 +194,6 @@ export function UploadSection({
         // (e.g. user refreshed mid-processing). Use updated_at as approximate start time.
         // If an upload has been "processing" for >7 min, it's stuck (Vercel killed the
         // function). Mark it failed so auto-process can retry it.
-        const STALE_PROCESSING_MS = 7 * 60 * 1000;
         const now = Date.now();
         const stale: UploadedStatement[] = [];
         const inFlight: UploadedStatement[] = [];
@@ -275,7 +293,10 @@ export function UploadSection({
     }));
 
     try {
-      const res = await fetch(`/api/upload/${uploadId}/extract?auto_confirm=true&preset=${processingPreset}`, { method: "POST" });
+      const res = await fetch(`/api/upload/${uploadId}/extract?auto_confirm=true&preset=${processingPreset}`, {
+        method: "POST",
+        signal: AbortSignal.timeout(270_000), // 4.5 min — abort before Vercel's 5 min hard kill
+      });
       const body = await res.json().catch(() => null);
       if (res.ok && body) {
         autoConfirmed = !!body.autoConfirmed;

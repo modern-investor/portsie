@@ -198,8 +198,23 @@ async function collectSSEStream(response: Response): Promise<{
   let finishReason: string | undefined;
   let usageMetadata: unknown;
 
+  // Per-chunk timeout: if no data arrives for 90s, the connection is stalled.
+  // The outer AbortSignal covers total time, but a stalled mid-stream connection
+  // (server accepted but stopped sending) won't trigger it until the full 10 min.
+  const CHUNK_TIMEOUT_MS = 90_000;
   while (true) {
-    const { done, value } = await reader.read();
+    const chunkPromise = reader.read();
+    let timer: ReturnType<typeof setTimeout>;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error("Gemini SSE stream stalled — no data for 90s")), CHUNK_TIMEOUT_MS);
+    });
+    let result: ReadableStreamReadResult<Uint8Array>;
+    try {
+      result = await Promise.race([chunkPromise, timeoutPromise]);
+    } finally {
+      clearTimeout(timer!);
+    }
+    const { done, value } = result;
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
 
@@ -302,7 +317,8 @@ async function uploadFileToGemini(
   if (fileName) {
     for (let i = 0; i < 10; i++) {
       const statusResp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`
+        `https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`,
+        { signal: AbortSignal.timeout(10_000) } // 10s timeout per status check
       );
       if (statusResp.ok) {
         const status = await statusResp.json();
