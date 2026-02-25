@@ -51,6 +51,7 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith("/auth") &&
     !request.nextUrl.pathname.startsWith("/legal") &&
     !request.nextUrl.pathname.startsWith("/api/market/finnhub/webhook") &&
+    !request.nextUrl.pathname.startsWith("/api/waitlist") &&
     request.nextUrl.pathname !== "/"
   ) {
     const url = request.nextUrl.clone();
