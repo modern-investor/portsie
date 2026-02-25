@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Portsie",
-  description: "Portsie privacy policy — how we collect, use, and protect your data.",
+  title: "Privacy Position and Policy | Portsie",
+  description: "Portsie privacy position and policy — how we collect, use, and protect your data.",
 };
 
 export default function PrivacyPolicy() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-12 text-foreground">
-      <h1 className="text-3xl font-bold mb-2">Privacy Policy</h1>
+      <h1 className="text-3xl font-bold mb-2">Privacy Position and Policy</h1>
       <p className="text-muted-foreground text-sm mb-8">
         Last updated: February 25, 2026
       </p>
@@ -29,6 +29,48 @@ export default function PrivacyPolicy() {
           <p className="mt-2">
             We&apos;ve written this policy in plain language so anyone can understand how their data
             is handled. We also provide technical details and code references for transparency.
+          </p>
+
+          <h3 className="font-semibold mt-5 mb-2">Our Privacy Philosophy</h3>
+          <p>
+            Portsie was built with a <strong>privacy-first architecture</strong> from the ground up —
+            not bolted on after the fact. Our guiding principles:
+          </p>
+          <ul className="list-disc pl-6 space-y-1 mt-2">
+            <li>
+              <strong>Reduce breach impact.</strong> Even if our database were compromised, stored data
+              should not directly identify you or reveal your financial details. Sensitive fields are
+              encrypted and tokenized so raw database contents are useless without separate keys.
+            </li>
+            <li>
+              <strong>Minimize what we keep.</strong> We store only what is necessary for the product
+              to function. Raw AI responses, plaintext account numbers, and other sensitive payloads
+              are never persisted — columns that once held them have been permanently removed from the
+              database.
+            </li>
+            <li>
+              <strong>Decrypt only when needed.</strong> Sensitive data is decrypted only in authorized
+              server paths, never returned as raw blobs to the client, and never written to logs.
+            </li>
+            <li>
+              <strong>Build toward zero-knowledge.</strong> Our long-term goal is a Bring Your Own
+              Backend (BYOB) mode where Portsie becomes a zero-knowledge client — your data lives
+              entirely in your own cloud, encrypted with your own keys, and we cannot access it even
+              if we wanted to.
+            </li>
+          </ul>
+          <p className="mt-3">
+            Every privacy control described in this policy is implemented in code, validated by
+            automated tests, and available for inspection in our{" "}
+            <a
+              href="https://github.com/modern-investor/portsie"
+              className="underline hover:opacity-80"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              open-source repository
+            </a>
+            . We believe transparency is the strongest form of trust.
           </p>
         </section>
 
@@ -589,10 +631,39 @@ export default function PrivacyPolicy() {
               enforcement, incident response checklist.
             </li>
           </ul>
+          <p className="mt-3">
+            All code references in this policy point to files in our public GitHub repository:{" "}
+            <a
+              href="https://github.com/modern-investor/portsie"
+              className="underline hover:opacity-80"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              github.com/modern-investor/portsie
+            </a>
+            . You can verify any implementation detail yourself.
+          </p>
           <p className="mt-2 text-muted-foreground text-xs">
-            Source code:{" "}
-            <code className="bg-muted px-1 py-0.5 rounded">src/lib/privacy/</code> — encryption,
-            tokenization, redaction, privacy config, and field mappers.
+            Privacy implementation:{" "}
+            <a
+              href="https://github.com/modern-investor/portsie/tree/main/src/lib/privacy"
+              className="bg-muted px-1 py-0.5 rounded hover:opacity-80"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              src/lib/privacy/
+            </a>{" "}
+            — encryption, tokenization, redaction, privacy config, and field mappers.
+            {" "}Privacy documentation:{" "}
+            <a
+              href="https://github.com/modern-investor/portsie/tree/main/docs"
+              className="bg-muted px-1 py-0.5 rounded hover:opacity-80"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              docs/
+            </a>{" "}
+            — architecture, data classification, and operations runbook.
           </p>
         </section>
 
@@ -625,10 +696,18 @@ export default function PrivacyPolicy() {
         </section>
       </div>
 
-      <div className="mt-12 pt-6 border-t border-border">
+      <div className="mt-12 pt-6 border-t border-border flex items-center justify-between">
         <Link href="/" className="text-sm text-muted-foreground underline hover:opacity-80">
           &larr; Back to Portsie
         </Link>
+        <a
+          href="https://github.com/modern-investor/portsie"
+          className="text-sm text-muted-foreground underline hover:opacity-80"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View source on GitHub
+        </a>
       </div>
     </div>
   );

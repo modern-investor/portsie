@@ -9,7 +9,7 @@ export function SiteFooter() {
         <p>&copy; {year} Portsie LLC. All rights reserved.</p>
         <nav className="flex items-center gap-4">
           <Link href="/legal/privacy" className="hover:text-foreground transition-colors">
-            Privacy Policy
+            Privacy Position and Policy
           </Link>
           <span className="text-border">|</span>
           <Link href="/legal/terms" className="hover:text-foreground transition-colors">
