@@ -1,12 +1,12 @@
 {
-  "version": "v260225.15 4:52p",
-  "release": 146,
-  "sha": "de740098",
-  "fullSha": "de740098dfdb31cb84f2f7fbbea8a32993f979cc",
+  "version": "v260225.16 5:28p",
+  "release": 147,
+  "sha": "9d8d2875",
+  "fullSha": "9d8d287573da7070463db9a337746aeb6518a9b7",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000437",
-  "pushedAt": "2026-02-25T22:52:55Z",
-  "commits": [{"sha": "de740098dfdb31cb84f2f7fbbea8a32993f979cc", "short_sha": "de740098", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/inspiring-elion'"}, {"sha": "31b7059cae87482bda28a62643d304a612b25cdb", "short_sha": "31b7059c", "author": "rahulio", "message": "Redesign processing quotes: bigger, more visual, author avatars"}, {"sha": "7fa387529e2a1f5c767c102f1e5c9a48cb0eaac1", "short_sha": "7fa38752", "author": "rahulio", "message": "Add source badges to positions table account column"}, {"sha": "8c230d308a58b5cf9af7f4bd2c1197146a7d6522", "short_sha": "8c230d30", "author": "rahulio", "message": "Replace AI view code execution with declarative chart specs, fix 10 bugs, add built-in views"}]
+  "machine": "GitHub Actions 1000000442",
+  "pushedAt": "2026-02-25T23:28:41Z",
+  "commits": [{"sha": "9d8d287573da7070463db9a337746aeb6518a9b7", "short_sha": "9d8d2875", "author": "rahulio", "message": "Fix infinite processing hang: add timeouts and stale detection"}]
 }
