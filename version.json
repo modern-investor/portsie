@@ -1,12 +1,12 @@
 {
-  "version": "v260225.10 4:11p",
-  "release": 141,
-  "sha": "5b356103",
-  "fullSha": "5b356103966a0eff6d36d2bb7133687915eaffa9",
+  "version": "v260225.11 4:24p",
+  "release": 142,
+  "sha": "5594d2d1",
+  "fullSha": "5594d2d160d8a2f61df9fad31bab5938719c9fe6",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000412",
-  "pushedAt": "2026-02-25T22:11:28+00",
-  "commits": [{"sha": "5b356103966a0eff6d36d2bb7133687915eaffa9", "short_sha": "5b356103", "author": "rahulio", "message": "Fix post-completion redirect not firing after HTTP timeout"}, {"sha": "0d9963dd51a8ce4f864b443b80a8b402191a1996", "short_sha": "0d9963dd", "author": "rahulio", "message": "Fix post-completion redirect not firing after HTTP timeout"}, {"sha": "0678df310ced3f616716b53eb329a980553c8c57", "short_sha": "0678df31", "author": "rahulio", "message": "Harden upload pipeline reliability: atomic lock, deterministic keys, safe mapping"}]
+  "machine": "GitHub Actions 1000000417",
+  "pushedAt": "2026-02-25T22:24:17Z",
+  "commits": [{"sha": "5594d2d160d8a2f61df9fad31bab5938719c9fe6", "short_sha": "5594d2d1", "author": "Rahul", "message": "Fix invalid date in Build Info modal (#44)"}]
 }
