@@ -1,5 +1,6 @@
+import { createHash } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { LLMExtractionResult, ExtractedAccount } from "./types";
+import type { LLMExtractionResult, ExtractedAccount, ExtractedTransaction } from "./types";
 import type { ReconciliationResult } from "@/lib/holdings/types";
 import type { AutoLinkResult } from "./account-matcher";
 import { findOrCreateAggregateAccount } from "./account-matcher";
@@ -7,6 +8,25 @@ import { reconcileHoldings } from "@/lib/holdings/reconcile";
 import { updateAccountSummary } from "@/lib/holdings/account-summary";
 import type { UpdateAccountSummaryOptions } from "@/lib/holdings/account-summary";
 import { safeLog } from "@/lib/privacy";
+
+/**
+ * Build a deterministic fingerprint from stable transaction content fields.
+ * Replaces index-based keys so re-extractions with different ordering
+ * still produce the same external_transaction_id for the same transaction.
+ */
+function txFingerprint(t: ExtractedTransaction): string {
+  const payload = [
+    t.transaction_date,
+    (t.symbol ?? "").trim().toUpperCase(),
+    t.action.trim().toUpperCase(),
+    String(t.quantity ?? ""),
+    String(t.price_per_share ?? ""),
+    String(t.total_amount),
+    (t.description ?? "").trim().toLowerCase(),
+  ].join("|");
+
+  return createHash("sha256").update(payload).digest("hex").slice(0, 24);
+}
 
 /**
  * Writes confirmed extraction results to the canonical database tables.
@@ -186,30 +206,39 @@ export async function writeExtractedData(
 
   // ── 4. Write transactions ──
   if (extractedData.transactions.length > 0) {
-    const transactionRows = extractedData.transactions.map((t, index) => ({
-      user_id: userId,
-      account_id: accountId,
-      data_source: "manual_upload",
-      external_transaction_id: `upload_${statementId}_${index}`,
-      transaction_date: t.transaction_date,
-      settlement_date: t.settlement_date ?? null,
-      symbol: t.symbol ?? null,
-      cusip: t.cusip ?? null,
-      asset_type: t.asset_type ?? null,
-      asset_subtype: t.asset_subtype ?? null,
-      description: t.description,
-      action: t.action,
-      quantity: t.quantity ?? null,
-      price_per_share: t.price_per_share ?? null,
-      total_amount: t.total_amount ?? (
-        (t.quantity != null && t.price_per_share != null)
-          ? +(t.quantity * t.price_per_share).toFixed(2)
-          : 0
-      ),
-      fees: t.fees ?? 0,
-      commission: t.commission ?? 0,
-      uploaded_statement_id: statementId,
-    }));
+    // Track fingerprints to handle collisions (genuinely identical transactions)
+    const fpCounts = new Map<string, number>();
+    const transactionRows = extractedData.transactions.map((t) => {
+      const fp = txFingerprint(t);
+      const count = fpCounts.get(fp) ?? 0;
+      fpCounts.set(fp, count + 1);
+      const suffix = count > 0 ? `_${count}` : "";
+
+      return {
+        user_id: userId,
+        account_id: accountId,
+        data_source: "manual_upload",
+        external_transaction_id: `upload_${statementId}_${fp}${suffix}`,
+        transaction_date: t.transaction_date,
+        settlement_date: t.settlement_date ?? null,
+        symbol: t.symbol ?? null,
+        cusip: t.cusip ?? null,
+        asset_type: t.asset_type ?? null,
+        asset_subtype: t.asset_subtype ?? null,
+        description: t.description,
+        action: t.action,
+        quantity: t.quantity ?? null,
+        price_per_share: t.price_per_share ?? null,
+        total_amount: t.total_amount ?? (
+          (t.quantity != null && t.price_per_share != null)
+            ? +(t.quantity * t.price_per_share).toFixed(2)
+            : 0
+        ),
+        fees: t.fees ?? 0,
+        commission: t.commission ?? 0,
+        uploaded_statement_id: statementId,
+      };
+    });
 
     const { data, error } = await supabase
       .from("transactions")

@@ -92,6 +92,10 @@ export function UploadSection({
     const pending = pendingAutoReviewRef.current;
     if (pending.size === 0) return;
 
+    // Don't trigger redirect while batch items are still queued or processing.
+    // This prevents premature navigation when only some items in a batch are done.
+    const batchInFlight = queuedIds.size > 0 || processingIds.size > 0;
+
     for (const id of [...pending]) {
       const u = uploads.find((up) => up.id === id);
       if (!u) continue;
@@ -106,13 +110,13 @@ export function UploadSection({
         setReviewingId(id);
       }
 
-      // Auto-redirect for confirmed uploads (auto-confirm succeeded)
-      if (u.confirmed_at && redirectCountdown === null) {
+      // Auto-redirect for confirmed uploads — only when no batch items remain
+      if (u.confirmed_at && redirectCountdown === null && !batchInFlight && pending.size === 0) {
         setConfirmedIds((prev) => prev.includes(id) ? prev : [...prev, id]);
         setRedirectCountdown(5);
       }
     }
-  }, [uploads, reviewingId, redirectCountdown]);
+  }, [uploads, reviewingId, redirectCountdown, queuedIds, processingIds]);
 
   // Poll uploads in active states (processing, qc_running, qc_fixing) every 3 seconds
   const uploadsRef = useRef(uploads);

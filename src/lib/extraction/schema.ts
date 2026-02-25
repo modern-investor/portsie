@@ -318,6 +318,8 @@ export interface WriteReport {
     balances_written: number;
     transactions_created: number;
   };
+  /** Non-fatal warnings from partial write failures (e.g. reconciliation, summary updates) */
+  warnings: string[];
 }
 
 // ── Validation types (Stage 2 output) ──

@@ -74,26 +74,35 @@ export async function POST(
     return NextResponse.json({ error: "Upload not found" }, { status: 404 });
   }
 
-  if (statement.parse_status === "processing") {
-    return NextResponse.json(
-      { error: "This file is already being processed" },
-      { status: 409 }
-    );
-  }
-
   // Track processing attempt count
   const newProcessCount = (statement.process_count ?? 0) + 1;
 
-  // Mark as processing
-  await supabase
+  // Atomic CAS lock: transition to "processing" only from allowed prior states.
+  // This eliminates the TOCTOU race where two concurrent requests both pass
+  // a status check and then both start processing the same upload.
+  const lockId = crypto.randomUUID();
+  const { data: lockRow } = await supabase
     .from("uploaded_statements")
     .update({
       parse_status: "processing",
       parse_error: null,
       process_count: newProcessCount,
       confirmed_at: null,
+      processing_lock_id: lockId,
+      processing_started_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .in("parse_status", ["pending", "failed", "partial", "extracted"])
+    .select("id, processing_lock_id")
+    .maybeSingle();
+
+  if (!lockRow) {
+    return NextResponse.json(
+      { error: "This file is already being processed" },
+      { status: 409 }
+    );
+  }
 
   try {
     const extractionStartTime = Date.now();
