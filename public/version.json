@@ -1,12 +1,12 @@
 {
-  "version": "v260225.03 3:36a",
-  "release": 134,
-  "sha": "e0504ae7",
-  "fullSha": "e0504ae781a9e79e15eb83cc7e86e996162d0cf2",
+  "version": "v260225.04 6:07a",
+  "release": 135,
+  "sha": "ecd28b55",
+  "fullSha": "ecd28b557c3c299a687f110ed81497ca1b05a05e",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000375",
-  "pushedAt": "2026-02-25T09:36:45+00",
-  "commits": [{"sha": "e0504ae781a9e79e15eb83cc7e86e996162d0cf2", "short_sha": "e0504ae7", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/claude/hardcore-heyrovsky'"}, {"sha": "aee47f94ddc2a50b4a6b73cf0f608c18da2d919b", "short_sha": "aee47f94", "author": "rahulio", "message": "Improve AI Views toggle styling and fix view compilation failures"}]
+  "machine": "GitHub Actions 1000000380",
+  "pushedAt": "2026-02-25T12:07:43+00",
+  "commits": [{"sha": "ecd28b557c3c299a687f110ed81497ca1b05a05e", "short_sha": "ecd28b55", "author": "rahulio", "message": "Fix upload list losing spinner and timestamps on page refresh"}]
 }
