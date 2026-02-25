@@ -1,12 +1,12 @@
 {
-  "version": "v260225.11 4:24p",
-  "release": 142,
-  "sha": "5594d2d1",
-  "fullSha": "5594d2d160d8a2f61df9fad31bab5938719c9fe6",
+  "version": "v260225.08 3:29p",
+  "release": 139,
+  "sha": "25714955",
+  "fullSha": "257149559a2b17a94501de06755497d84b0d4475",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000417",
-  "pushedAt": "2026-02-25T22:24:17Z",
-  "commits": [{"sha": "5594d2d160d8a2f61df9fad31bab5938719c9fe6", "short_sha": "5594d2d1", "author": "Rahul", "message": "Fix invalid date in Build Info modal (#44)"}]
+  "machine": "GitHub Actions 1000000402",
+  "pushedAt": "2026-02-25T21:29:43Z",
+  "commits": [{"sha": "257149559a2b17a94501de06755497d84b0d4475", "short_sha": "25714955", "author": "rahulio", "message": "Add AI views review for assets dashboard"}]
 }
