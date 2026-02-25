@@ -1,12 +1,12 @@
 {
-  "version": "v260225.05 9:37a",
-  "release": 136,
-  "sha": "e4a85d02",
-  "fullSha": "e4a85d02222721297b1f696a033065a0fe7533f6",
+  "version": "v260225.06 9:43a",
+  "release": 137,
+  "sha": "9cf1fca6",
+  "fullSha": "9cf1fca6300be4b5ea56bacef8f92e757a249e20",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000385",
-  "pushedAt": "2026-02-25T15:37:49+00",
-  "commits": [{"sha": "e4a85d02222721297b1f696a033065a0fe7533f6", "short_sha": "e4a85d02", "author": "rahulio", "message": "Fix upload processing state transition not triggering review/redirect"}]
+  "machine": "GitHub Actions 1000000391",
+  "pushedAt": "2026-02-25T15:43:17+00",
+  "commits": [{"sha": "9cf1fca6300be4b5ea56bacef8f92e757a249e20", "short_sha": "9cf1fca6", "author": "rahulio", "message": "Add stale processing timeout and PATCH endpoint for upload reset"}]
 }
