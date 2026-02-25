@@ -1,12 +1,12 @@
 {
-  "version": "v260224.16 4:38p",
-  "release": 131,
-  "sha": "490a9f9d",
-  "fullSha": "490a9f9daf015445f3751c53f950cfdfa3f0e42e",
+  "version": "v260225.01 1:47a",
+  "release": 132,
+  "sha": "353b7095",
+  "fullSha": "353b70953a5bb0ad8c968cf598d08d3329c0338d",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000356",
-  "pushedAt": "2026-02-24T22:38:24+00",
-  "commits": [{"sha": "490a9f9daf015445f3751c53f950cfdfa3f0e42e", "short_sha": "490a9f9d", "author": "rahulio", "message": "AI Views: persist Gemini errors, fall back to Sonnet views"}]
+  "machine": "GitHub Actions 1000000365",
+  "pushedAt": "2026-02-25T07:47:52+00",
+  "commits": [{"sha": "353b70953a5bb0ad8c968cf598d08d3329c0338d", "short_sha": "353b7095", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/claude/recursing-hofstadter'"}, {"sha": "1db835116744e61904f9cd04cabed4786532ffe2", "short_sha": "1db83511", "author": "rahulio", "message": "Fix bump-version.sh JSON parsing for commit messages with quotes"}]
 }
