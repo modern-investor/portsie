@@ -11,7 +11,7 @@ import type { PortsieExtraction } from "@/lib/extraction/schema";
 import { DEFAULT_PRESET } from "@/lib/llm/types";
 import type { ProcessingPreset } from "@/lib/llm/types";
 
-const QC_POLL_STATUSES = new Set(["qc_running", "qc_fixing"]);
+const POLL_STATUSES = new Set(["processing", "qc_running", "qc_fixing"]);
 
 /** Build a human-readable summary of what was saved */
 function buildSavedSummary(uploads: UploadedStatement[], confirmedIds: string[]) {
@@ -81,17 +81,17 @@ export function UploadSection({
     setConfirmedIds([]);
   }
 
-  // Poll uploads in QC states (qc_running, qc_fixing) every 3 seconds
+  // Poll uploads in active states (processing, qc_running, qc_fixing) every 3 seconds
   const uploadsRef = useRef(uploads);
   uploadsRef.current = uploads;
   useEffect(() => {
-    const qcIds = uploads
-      .filter((u) => QC_POLL_STATUSES.has(u.parse_status))
+    const pollIds = uploads
+      .filter((u) => POLL_STATUSES.has(u.parse_status))
       .map((u) => u.id);
-    if (qcIds.length === 0) return;
+    if (pollIds.length === 0) return;
 
     const interval = setInterval(async () => {
-      for (const id of qcIds) {
+      for (const id of pollIds) {
         try {
           const res = await fetch(`/api/upload/${id}`);
           if (res.ok) {
@@ -99,6 +99,20 @@ export function UploadSection({
             setUploads((prev) =>
               prev.map((u) => (u.id === id ? updated : u))
             );
+            // If a "processing" upload finished, clear it from processingIds
+            // and record the end timestamp
+            if (updated.parse_status !== "processing") {
+              setProcessingIds((prev) => {
+                if (!prev.has(id)) return prev;
+                const next = new Set(prev);
+                next.delete(id);
+                return next;
+              });
+              setTimestamps((prev) => {
+                if (!prev[id]?.s || prev[id]?.e) return prev;
+                return { ...prev, [id]: { ...prev[id], e: new Date().toISOString() } };
+              });
+            }
           }
         } catch {
           // Silently fail — will retry on next poll
@@ -117,6 +131,29 @@ export function UploadSection({
       if (res.ok) {
         const data: UploadedStatement[] = await res.json();
         setUploads(data);
+
+        // Reconstruct state for uploads that are still processing on the backend
+        // (e.g. user refreshed mid-processing). Use updated_at as approximate start time.
+        const inFlight = data.filter(
+          (u: UploadedStatement) => u.parse_status === "processing"
+        );
+        if (inFlight.length > 0) {
+          setProcessingIds((prev) => {
+            const next = new Set(prev);
+            for (const u of inFlight) next.add(u.id);
+            return next;
+          });
+          setTimestamps((prev) => {
+            const next = { ...prev };
+            for (const u of inFlight) {
+              if (!next[u.id]) {
+                next[u.id] = { s: u.updated_at };
+              }
+            }
+            return next;
+          });
+        }
+
         // Auto-process any pending/failed files from previous sessions (once)
         if (!hasAutoProcessed.current) {
           hasAutoProcessed.current = true;
