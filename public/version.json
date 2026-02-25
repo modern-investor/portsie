@@ -1,12 +1,12 @@
 {
-  "version": "v260225.02 3:06a",
-  "release": 133,
-  "sha": "051ecc7b",
-  "fullSha": "051ecc7b29088c386ef19c36deb337287bf723f1",
+  "version": "v260225.03 3:36a",
+  "release": 134,
+  "sha": "e0504ae7",
+  "fullSha": "e0504ae781a9e79e15eb83cc7e86e996162d0cf2",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000371",
-  "pushedAt": "2026-02-25T09:06:31+00",
-  "commits": [{"sha": "051ecc7b29088c386ef19c36deb337287bf723f1", "short_sha": "051ecc7b", "author": "rahulio", "message": "Fix AI Views toggle behavior and move view tabs to subtab nav"}]
+  "machine": "GitHub Actions 1000000375",
+  "pushedAt": "2026-02-25T09:36:45+00",
+  "commits": [{"sha": "e0504ae781a9e79e15eb83cc7e86e996162d0cf2", "short_sha": "e0504ae7", "author": "rahulio", "message": "Merge remote-tracking branch 'origin/claude/hardcore-heyrovsky'"}, {"sha": "aee47f94ddc2a50b4a6b73cf0f608c18da2d919b", "short_sha": "aee47f94", "author": "rahulio", "message": "Improve AI Views toggle styling and fix view compilation failures"}]
 }
