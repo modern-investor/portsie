@@ -1,5 +1,7 @@
 /** Types for AI-suggested portfolio views. */
 
+import type { DeclarativeChartSpec } from "./chart-spec-types";
+
 export interface ViewSuggestion {
   id: string;
   provider: "gemini" | "sonnet";
@@ -8,7 +10,10 @@ export interface ViewSuggestion {
   chartType: string;
   insight: string;
   dataSpec: string;
+  /** @deprecated Use chartSpec instead. Kept for backward compat with legacy views. */
   componentCode: string | null;
+  /** Declarative chart specification (replaces componentCode). */
+  chartSpec: DeclarativeChartSpec | null;
   codeStatus: "pending" | "generating" | "complete" | "failed";
   codeError: string | null;
   order: number;
@@ -53,13 +58,6 @@ export interface RiskCluster {
   internalCorrelation: number;
 }
 
-/** Props passed to dynamically rendered AI view components. */
-export interface DynamicViewProps {
-  portfolioData: unknown; // PortfolioData — kept as unknown for the dynamic scope
-  classifiedPortfolio: unknown; // ClassifiedPortfolio
-  hideValues: boolean;
-}
-
 /** DB row shape from ai_view_suggestions table. */
 export interface AIViewSuggestionRow {
   id: string;
@@ -71,6 +69,7 @@ export interface AIViewSuggestionRow {
   insight: string;
   data_spec: string | null;
   component_code: string | null;
+  chart_spec: DeclarativeChartSpec | null;
   code_generation_status: "pending" | "generating" | "complete" | "failed";
   code_generation_error: string | null;
   suggestion_order: number;
@@ -94,6 +93,7 @@ export function rowToSuggestion(row: AIViewSuggestionRow): ViewSuggestion {
     insight: row.insight,
     dataSpec: row.data_spec ?? "",
     componentCode: row.component_code,
+    chartSpec: row.chart_spec,
     codeStatus: row.code_generation_status,
     codeError: row.code_generation_error,
     order: row.suggestion_order,

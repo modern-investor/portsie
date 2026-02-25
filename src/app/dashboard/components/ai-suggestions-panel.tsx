@@ -18,6 +18,7 @@ import {
   Network,
 } from "lucide-react";
 import { AIProviderToggle } from "./ai-provider-toggle";
+import { InvestorObjectiveSelector, useInvestorObjective } from "./investor-objective-selector";
 import type { ViewSuggestion } from "@/lib/portfolio/ai-views-types";
 
 const PANEL_STORAGE_KEY = "portsie:ai-panel-open";
@@ -49,6 +50,33 @@ function ChartIcon({ type, className }: { type: string; className?: string }) {
   }
 }
 
+// ─── Generating Progress (Bug #9: user-friendly staged messages) ─────────────
+
+const PROGRESS_STAGES = [
+  "Analyzing your portfolio...",
+  "Identifying key patterns...",
+  "Preparing custom views...",
+  "Finalizing charts...",
+];
+
+function GeneratingProgress() {
+  const [stage, setStage] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStage((prev) => Math.min(prev + 1, PROGRESS_STAGES.length - 1));
+    }, 8000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <>
+      <p className="text-xs text-blue-700">{PROGRESS_STAGES[stage]}</p>
+      <p className="mt-1 text-xs text-blue-500">This may take a moment</p>
+    </>
+  );
+}
+
 // ─── Panel Component ────────────────────────────────────────────────────────
 
 interface Props {
@@ -70,6 +98,7 @@ export function AISuggestionsPanel({
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
   const [providerErrors, setProviderErrors] = useState<Record<string, string>>({});
+  const [objective, setObjective] = useInvestorObjective();
 
   // Restore provider preference
   useEffect(() => {
@@ -104,7 +133,10 @@ export function AISuggestionsPanel({
     setGenerating(true);
     setError("");
     try {
-      const res = await fetch("/api/portfolio/ai-views/generate", { method: "POST" });
+      const url = objective
+        ? `/api/portfolio/ai-views/generate?objective=${objective}`
+        : "/api/portfolio/ai-views/generate";
+      const res = await fetch(url, { method: "POST" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `HTTP ${res.status}`);
@@ -117,13 +149,13 @@ export function AISuggestionsPanel({
     } finally {
       setGenerating(false);
     }
-  }, []);
+  }, [objective]);
 
   const handleRegenerate = useCallback(async () => {
     // Delete existing, then generate fresh
     await fetch("/api/portfolio/ai-views", { method: "DELETE" }).catch(() => {});
     setSuggestions([]);
-    handleGenerate();
+    await handleGenerate();
   }, [handleGenerate]);
 
   const handleProviderChange = (v: "gemini" | "sonnet") => {
@@ -179,6 +211,11 @@ export function AISuggestionsPanel({
             </div>
           )}
 
+          {/* Investor objective selector */}
+          {hasPortfolioData && !generating && (
+            <InvestorObjectiveSelector value={objective} onChange={setObjective} />
+          )}
+
           {/* Generate / Regenerate button */}
           {hasPortfolioData && (
             <button
@@ -209,10 +246,7 @@ export function AISuggestionsPanel({
           {generating && (
             <div className="space-y-2">
               <div className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2">
-                <p className="text-xs text-blue-700">
-                  Asking Gemini + Sonnet for suggestions, then having Opus write the code...
-                </p>
-                <p className="mt-1 text-xs text-blue-500">This takes about 60-90 seconds</p>
+                <GeneratingProgress />
               </div>
               {[1, 2, 3].map((i) => (
                 <div key={i} className="animate-pulse rounded-md border p-3">
@@ -244,6 +278,31 @@ export function AISuggestionsPanel({
             </div>
           )}
 
+          {/* Empty state: generation ran but produced nothing */}
+          {!loading && !generating && !error && hasPortfolioData && suggestions.length === 0 && Object.keys(providerErrors).length > 0 && (
+            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-4 text-center space-y-2">
+              <AlertCircle className="mx-auto size-5 text-red-400" />
+              <p className="text-sm font-medium text-red-700">
+                View generation failed
+              </p>
+              <div className="space-y-1">
+                {Object.entries(providerErrors).map(([prov, msg]) => (
+                  <p key={prov} className="text-xs text-red-500">
+                    {prov === "gemini" ? "Gemini" : "Sonnet"}: {msg}
+                  </p>
+                ))}
+              </div>
+              <button
+                onClick={handleGenerate}
+                disabled={generating}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 transition-colors"
+              >
+                <RefreshCw className="size-3" />
+                Try Again
+              </button>
+            </div>
+          )}
+
           {/* Built-in views (always shown first) */}
           {builtinViews.length > 0 && !generating && (
             <div className="space-y-2">
@@ -263,7 +322,10 @@ export function AISuggestionsPanel({
                 <p className="text-xs font-medium uppercase tracking-wider text-gray-400">
                   Suggested Views
                 </p>
-                <AIProviderToggle value={provider} onChange={handleProviderChange} />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-400">Show:</span>
+                  <AIProviderToggle value={provider} onChange={handleProviderChange} />
+                </div>
               </div>
 
               {/* Provider error notice */}
@@ -350,7 +412,7 @@ function SuggestionCard({
         </p>
       )}
       {isFailed && (
-        <p className="mt-1.5 text-xs text-red-500">Code generation failed</p>
+        <p className="mt-1.5 text-xs text-red-500">Chart generation failed</p>
       )}
       {isCorrelation && suggestion.correlationData && (
         <div className="mt-2 flex items-center gap-2">

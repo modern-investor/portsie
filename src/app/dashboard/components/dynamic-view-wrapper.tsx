@@ -1,13 +1,11 @@
 "use client";
 
-import { Component, useMemo, type ReactNode } from "react";
-import {
-  createDynamicComponent,
-  type DynamicViewProps,
-} from "@/lib/portfolio/component-renderer";
+import { Component, type ReactNode } from "react";
 import type { PortfolioData } from "@/app/api/portfolio/positions/route";
 import type { ClassifiedPortfolio } from "@/lib/portfolio/types";
 import type { CorrelationData } from "@/lib/portfolio/ai-views-types";
+import type { DeclarativeChartSpec } from "@/lib/portfolio/chart-spec-types";
+import { ChartRenderer } from "@/lib/portfolio/chart-renderer";
 
 // ─── Error Boundary ─────────────────────────────────────────────────────────
 
@@ -50,7 +48,10 @@ class ViewErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState
 // ─── Dynamic View Wrapper ───────────────────────────────────────────────────
 
 interface Props {
-  code: string;
+  /** Declarative chart spec (new approach). */
+  chartSpec?: DeclarativeChartSpec | null;
+  /** @deprecated Legacy code string — only used for backward compat. */
+  code?: string;
   portfolioData: PortfolioData;
   classifiedPortfolio: ClassifiedPortfolio;
   hideValues: boolean;
@@ -58,39 +59,52 @@ interface Props {
 }
 
 export function DynamicViewWrapper({
+  chartSpec,
   code,
   portfolioData,
   classifiedPortfolio,
   hideValues,
   correlationData,
 }: Props) {
-  const result = useMemo(() => createDynamicComponent(code), [code]);
+  // Prefer declarative chart spec over legacy code
+  if (chartSpec) {
+    return (
+      <ViewErrorBoundary>
+        <div className="rounded-lg border bg-white p-4 sm:p-6">
+          <ChartRenderer
+            spec={chartSpec}
+            portfolioData={portfolioData}
+            classifiedPortfolio={classifiedPortfolio}
+            hideValues={hideValues}
+            correlationData={correlationData}
+          />
+        </div>
+      </ViewErrorBoundary>
+    );
+  }
 
-  if (!result.component) {
+  // Legacy fallback for old views that still have component_code
+  if (code) {
     return (
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
         <p className="text-sm font-medium text-amber-700">
-          Failed to load view component
+          Legacy view format
         </p>
         <p className="mt-1 text-xs text-amber-600">
-          {result.error || "The AI-generated code could not be compiled. Try regenerating."}
+          This view uses an older format. Regenerate your AI views to get the improved version.
         </p>
       </div>
     );
   }
 
-  const DynamicComp = result.component;
-
   return (
-    <ViewErrorBoundary>
-      <div className="rounded-lg border bg-white p-4 sm:p-6">
-        <DynamicComp
-          portfolioData={portfolioData as unknown}
-          classifiedPortfolio={classifiedPortfolio as unknown}
-          hideValues={hideValues}
-          correlationData={correlationData as unknown}
-        />
-      </div>
-    </ViewErrorBoundary>
+    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+      <p className="text-sm font-medium text-amber-700">
+        No chart data available
+      </p>
+      <p className="mt-1 text-xs text-amber-600">
+        Try regenerating this view.
+      </p>
+    </div>
   );
 }

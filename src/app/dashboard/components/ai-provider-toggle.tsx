@@ -7,7 +7,10 @@ interface Props {
 
 export function AIProviderToggle({ value, onChange }: Props) {
   return (
-    <div className="inline-flex rounded-full bg-gray-100 p-0.5">
+    <div
+      className="inline-flex rounded-full bg-gray-100 p-0.5"
+      title="Both providers generate views — this filters which ones are shown"
+    >
       <button
         onClick={() => onChange("gemini")}
         className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
