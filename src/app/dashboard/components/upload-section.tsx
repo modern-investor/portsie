@@ -167,9 +167,41 @@ export function UploadSection({
 
         // Reconstruct state for uploads that are still processing on the backend
         // (e.g. user refreshed mid-processing). Use updated_at as approximate start time.
-        const inFlight = data.filter(
-          (u: UploadedStatement) => u.parse_status === "processing"
-        );
+        // If an upload has been "processing" for >7 min, it's stuck (Vercel killed the
+        // function). Mark it failed so auto-process can retry it.
+        const STALE_PROCESSING_MS = 7 * 60 * 1000;
+        const now = Date.now();
+        const stale: UploadedStatement[] = [];
+        const inFlight: UploadedStatement[] = [];
+
+        for (const u of data.filter((u: UploadedStatement) => u.parse_status === "processing")) {
+          const age = now - new Date(u.updated_at).getTime();
+          if (age > STALE_PROCESSING_MS) {
+            stale.push(u);
+          } else {
+            inFlight.push(u);
+          }
+        }
+
+        // Auto-reset stale uploads via API (fire-and-forget)
+        for (const u of stale) {
+          fetch(`/api/upload/${u.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ parse_status: "failed", parse_error: "Processing timed out" }),
+          }).catch(() => {});
+        }
+        if (stale.length > 0) {
+          // Update local state immediately so auto-process can pick them up
+          setUploads((prev) =>
+            prev.map((u) =>
+              stale.some((s) => s.id === u.id)
+                ? { ...u, parse_status: "failed", parse_error: "Processing timed out" }
+                : u
+            )
+          );
+        }
+
         if (inFlight.length > 0) {
           setProcessingIds((prev) => {
             const next = new Set(prev);
@@ -187,12 +219,14 @@ export function UploadSection({
           });
         }
 
-        // Auto-process any pending/failed files from previous sessions (once)
+        // Auto-process any pending/failed/stale files from previous sessions (once)
         if (!hasAutoProcessed.current) {
           hasAutoProcessed.current = true;
+          const staleIds = new Set(stale.map((u) => u.id));
           const pendingIds = data
             .filter((u: UploadedStatement) =>
-              (u.parse_status === "pending" || u.parse_status === "failed") && !u.confirmed_at
+              ((u.parse_status === "pending" || u.parse_status === "failed") && !u.confirmed_at)
+              || staleIds.has(u.id)
             )
             .map((u: UploadedStatement) => u.id);
           if (pendingIds.length > 0) {
