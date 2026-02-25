@@ -249,6 +249,38 @@ const INVESTING_QUOTES = [
   { text: "The only value of stock forecasters is to make fortune-tellers look good.", author: "Warren Buffett" },
 ];
 
+/** Consistent avatar colors keyed by author name */
+const AUTHOR_STYLES: Record<string, { bg: string; text: string; accent: string }> = {
+  "Warren Buffett":               { bg: "bg-amber-100",   text: "text-amber-700",   accent: "from-amber-50" },
+  "Robert Arnott":                { bg: "bg-blue-100",    text: "text-blue-700",    accent: "from-blue-50" },
+  "Ben Graham":                   { bg: "bg-emerald-100", text: "text-emerald-700", accent: "from-emerald-50" },
+  "Mellody Hobson":               { bg: "bg-purple-100",  text: "text-purple-700",  accent: "from-purple-50" },
+  "George Soros":                 { bg: "bg-slate-200",   text: "text-slate-700",   accent: "from-slate-50" },
+  "Peter Lynch":                  { bg: "bg-teal-100",    text: "text-teal-700",    accent: "from-teal-50" },
+  "Sir John Templeton":           { bg: "bg-indigo-100",  text: "text-indigo-700",  accent: "from-indigo-50" },
+  "Robert Olstein":               { bg: "bg-cyan-100",    text: "text-cyan-700",    accent: "from-cyan-50" },
+  "Paul Samuelson":               { bg: "bg-rose-100",    text: "text-rose-700",    accent: "from-rose-50" },
+  "Charlie Munger":               { bg: "bg-orange-100",  text: "text-orange-700",  accent: "from-orange-50" },
+  "Mark Twain":                   { bg: "bg-pink-100",    text: "text-pink-700",    accent: "from-pink-50" },
+  "Albert Einstein (attributed)": { bg: "bg-violet-100",  text: "text-violet-700",  accent: "from-violet-50" },
+  "Benjamin Franklin":            { bg: "bg-lime-100",    text: "text-lime-700",    accent: "from-lime-50" },
+  "Philip Fisher":                { bg: "bg-fuchsia-100", text: "text-fuchsia-700", accent: "from-fuchsia-50" },
+  "Bill Ackman":                  { bg: "bg-sky-100",     text: "text-sky-700",     accent: "from-sky-50" },
+  "Ken Fisher":                   { bg: "bg-yellow-100",  text: "text-yellow-700",  accent: "from-yellow-50" },
+};
+
+const DEFAULT_AUTHOR_STYLE = { bg: "bg-gray-100", text: "text-gray-600", accent: "from-gray-50" };
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter((w) => !w.startsWith("("))
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 /** Rotating investing wisdom quotes shown during processing */
 function ProcessingQuotes() {
   const [index, setIndex] = useState(() => Math.floor(Math.random() * INVESTING_QUOTES.length));
@@ -268,16 +300,52 @@ function ProcessingQuotes() {
   }, [advance]);
 
   const quote = INVESTING_QUOTES[index];
+  const style = AUTHOR_STYLES[quote.author] || DEFAULT_AUTHOR_STYLE;
+  const initials = getInitials(quote.author);
 
   return (
-    <div className="mt-3 flex items-start gap-2.5 rounded-lg border border-dashed border-gray-200 bg-gray-50/50 px-4 py-3">
-      <span className="mt-0.5 shrink-0 text-lg leading-none text-gray-300">&ldquo;</span>
-      <div
-        className={`min-h-[2.5rem] transition-opacity duration-400 ${fade ? "opacity-100" : "opacity-0"}`}
+    <div className={`relative mt-5 overflow-hidden rounded-2xl bg-gradient-to-br ${style.accent} to-white border border-gray-200/70 px-7 py-6 shadow-sm`}>
+      {/* Large decorative opening quote mark */}
+      <svg
+        className="absolute -top-1 left-3 h-20 w-20 opacity-[0.08]"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        aria-hidden="true"
       >
-        <p className="text-sm italic text-gray-500">{quote.text}</p>
-        <p className="mt-1 text-xs font-medium text-gray-400">&mdash; {quote.author}</p>
+        <path d="M4.583 17.321C3.553 16.227 3 15 3 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311C9.591 11.69 11 13.166 11 15c0 1.933-1.567 3.5-3.5 3.5-1.171 0-2.272-.548-2.917-1.179zm10 0C13.553 16.227 13 15 13 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311C19.591 11.69 21 13.166 21 15c0 1.933-1.567 3.5-3.5 3.5-1.171 0-2.272-.548-2.917-1.179z" />
+      </svg>
+
+      <div
+        className={`relative flex items-center gap-5 transition-all duration-500 ease-in-out ${fade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
+      >
+        {/* Author initials avatar */}
+        <div
+          className={`shrink-0 flex h-12 w-12 items-center justify-center rounded-full ${style.bg} ring-2 ring-white shadow-sm`}
+        >
+          <span className={`text-sm font-bold tracking-tight ${style.text}`}>
+            {initials}
+          </span>
+        </div>
+
+        <div className="flex-1 min-h-[3.5rem]">
+          <p className="text-[15px] leading-relaxed text-gray-700 italic font-medium">
+            &ldquo;{quote.text}&rdquo;
+          </p>
+          <p className="mt-2 text-sm font-semibold text-gray-500 tracking-wide">
+            {quote.author}
+          </p>
+        </div>
       </div>
+
+      {/* Large decorative closing quote mark */}
+      <svg
+        className="absolute -bottom-2 right-4 h-16 w-16 opacity-[0.06] rotate-180"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        aria-hidden="true"
+      >
+        <path d="M4.583 17.321C3.553 16.227 3 15 3 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311C9.591 11.69 11 13.166 11 15c0 1.933-1.567 3.5-3.5 3.5-1.171 0-2.272-.548-2.917-1.179zm10 0C13.553 16.227 13 15 13 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311C19.591 11.69 21 13.166 21 15c0 1.933-1.567 3.5-3.5 3.5-1.171 0-2.272-.548-2.917-1.179z" />
+      </svg>
     </div>
   );
 }
