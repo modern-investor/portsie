@@ -1,16 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Brain, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Brain, AlertTriangle, ShieldCheck, Activity } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LLMSettings } from "./llm-settings";
 import { ExtractionFailures } from "./extraction-failures";
 import { QualityChecks } from "./quality-checks";
+import { AdminDiagnostics } from "./admin-diagnostics";
 
-type SettingsTab = "llm" | "failures" | "quality";
+type SettingsTab = "llm" | "failures" | "quality" | "diagnostics";
 
 const STORAGE_KEY = "portsie:settings-tab";
-const VALID_TABS: SettingsTab[] = ["llm", "failures", "quality"];
+const VALID_TABS: SettingsTab[] = ["llm", "failures", "quality", "diagnostics"];
 
 export function SettingsPanel() {
   const [tab, setTab] = useState<SettingsTab>("llm");
@@ -18,10 +19,28 @@ export function SettingsPanel() {
   // Restore saved tab from localStorage after hydration to avoid React #418
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY) as SettingsTab | null;
-    if (saved && VALID_TABS.includes(saved)) setTab(saved);
+    // Don't restore "diagnostics" tab until we know admin status
+    if (saved && VALID_TABS.includes(saved) && saved !== "diagnostics") setTab(saved);
   }, []);
   const [unresolvedCount, setUnresolvedCount] = useState(0);
   const [qcIssueCount, setQcIssueCount] = useState(0);
+  const [showAdmin, setShowAdmin] = useState(false);
+
+  // Check admin status on mount
+  useEffect(() => {
+    fetch("/api/admin/status")
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.isAdmin) {
+          setShowAdmin(true);
+          // Restore diagnostics tab if it was previously saved
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved === "diagnostics") setTab("diagnostics");
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Fetch unresolved failure count on mount (for badge)
   useEffect(() => {
@@ -71,6 +90,12 @@ export function SettingsPanel() {
               </span>
             )}
           </TabsTrigger>
+          {showAdmin && (
+            <TabsTrigger value="diagnostics">
+              <Activity className="size-4" />
+              Diagnostics
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="llm">
@@ -82,6 +107,11 @@ export function SettingsPanel() {
         <TabsContent value="quality">
           <QualityChecks onUnresolvedCount={setQcIssueCount} />
         </TabsContent>
+        {showAdmin && (
+          <TabsContent value="diagnostics">
+            <AdminDiagnostics />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
