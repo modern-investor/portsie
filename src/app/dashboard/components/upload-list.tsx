@@ -279,61 +279,67 @@ const PROCESSING_ITEMS: ProcessingItem[] = [
   { type: "quote", text: "I'd be a bum on the street with a tin cup if the markets were always efficient.", author: "Warren Buffett" },
   { type: "quote", text: "Diversification is protection against ignorance. It makes little sense if you know what you are doing.", author: "Warren Buffett" },
   { type: "quote", text: "Investing isn't about beating others at their game. It's about controlling yourself at your own game.", author: "Ben Graham" },
-  // ── Educational Facts (54) ──────────────────────────────────────────
-  { type: "fact", text: "The S&P 500 has delivered positive returns in roughly 73% of all calendar years since 1928.", category: "Market History" },
-  { type: "fact", text: "Missing just the 10 best trading days over a 20-year period can cut your total return by more than half.", category: "Market History" },
-  { type: "fact", text: "Since 1950, the average bear market has lasted 13 months. The average bull market? 67 months.", category: "Market History" },
-  { type: "fact", text: "The Dow Jones was 66 points in 1900. It took 72 years to first reach 1,000.", category: "Market History" },
-  { type: "fact", text: "From 1926 to 2024, small-cap value stocks outperformed large-cap growth by roughly 3% per year.", category: "Market History" },
-  { type: "fact", text: "The 'January effect' — small caps outperforming in January — has largely disappeared since it was first published in 1976.", category: "Market History" },
-  { type: "fact", text: "In 1987, the Dow fell 22.6% in a single day — Black Monday. It recovered to pre-crash levels within two years.", category: "Market History" },
-  { type: "fact", text: "US equities have delivered a real (inflation-adjusted) return of about 6.4% per year since 1900.", category: "Market History" },
-  { type: "fact", text: "The longest US bull market ran from March 2009 to February 2020 — nearly 11 years.", category: "Market History" },
-  { type: "fact", text: "Adding uncorrelated assets to a portfolio can reduce volatility without reducing expected return — the only 'free lunch' in finance.", category: "Portfolio Theory" },
-  { type: "fact", text: "A 60/40 stock/bond portfolio has historically captured ~90% of equity returns with ~60% of the volatility.", category: "Portfolio Theory" },
-  { type: "fact", text: "Rebalancing a diversified portfolio annually has historically added 0.5–1% in returns versus a never-rebalanced portfolio.", category: "Portfolio Theory" },
-  { type: "fact", text: "Beyond about 30 stocks, additional diversification reduces portfolio-specific risk only marginally.", category: "Portfolio Theory" },
-  { type: "fact", text: "The Sharpe ratio was developed by William Sharpe in 1966 and remains the most widely used risk-adjusted performance metric.", category: "Portfolio Theory" },
-  { type: "fact", text: "Low-volatility stocks have historically outperformed high-volatility stocks on a risk-adjusted basis — the 'low-vol anomaly.'", category: "Portfolio Theory" },
-  { type: "fact", text: "Currency hedging in international equity portfolios has minimal impact on long-term returns but significantly reduces short-term volatility.", category: "Portfolio Theory" },
-  { type: "fact", text: "Investors typically feel losses 2–2.5x more intensely than equivalent gains — a phenomenon called loss aversion.", category: "Behavioral Finance" },
-  { type: "fact", text: "The disposition effect — selling winners too early and holding losers too long — is one of the most documented investor biases.", category: "Behavioral Finance" },
-  { type: "fact", text: "Studies show that investors who check their portfolios daily earn significantly less than those who check quarterly or annually.", category: "Behavioral Finance" },
-  { type: "fact", text: "Overconfidence leads the average active trader to underperform the market by 2–4% annually after transaction costs.", category: "Behavioral Finance" },
-  { type: "fact", text: "Anchoring: investors fixate on their purchase price as a reference point, even though the market doesn't know or care what you paid.", category: "Behavioral Finance" },
-  { type: "fact", text: "The endowment effect causes investors to value assets they own 2–3x more than identical assets they don't own.", category: "Behavioral Finance" },
-  { type: "fact", text: "Herding intensifies during crashes — forced selling begets more selling, often driving prices well below fundamental value.", category: "Behavioral Finance" },
-  { type: "fact", text: "Recency bias leads investors to overweight recent performance. Top-performing funds rarely repeat in the following period.", category: "Behavioral Finance" },
-  { type: "fact", text: "US Treasury bonds have never defaulted in over 230 years, making them the global benchmark for 'risk-free' assets.", category: "Asset Classes" },
-  { type: "fact", text: "Gold has maintained purchasing power for millennia — an ounce bought a fine toga in ancient Rome and buys a fine suit today.", category: "Asset Classes" },
-  { type: "fact", text: "REITs have outperformed the S&P 500 over several multi-decade periods with only 0.6 correlation to equities.", category: "Asset Classes" },
-  { type: "fact", text: "High-yield bonds were essentially invented by Michael Milken in the 1980s and are now a $1.5 trillion market.", category: "Asset Classes" },
-  { type: "fact", text: "Commodities have near-zero long-term real returns but serve as effective inflation hedges during supply shocks.", category: "Asset Classes" },
-  { type: "fact", text: "Private equity looks ~3% better than public markets, but much of that premium disappears after adjusting for leverage and illiquidity.", category: "Asset Classes" },
-  { type: "fact", text: "TIPS guarantee a real return above inflation — but that real yield has sometimes been negative.", category: "Asset Classes" },
-  { type: "fact", text: "The average hedge fund has underperformed a simple 60/40 portfolio since 2009, net of fees.", category: "Asset Classes" },
-  { type: "fact", text: "Volatility clusters: large daily moves tend to be followed by more large moves — the basis of GARCH models used across Wall Street.", category: "Risk & Return" },
-  { type: "fact", text: "The S&P 500 has experienced a drawdown of 10% or more in roughly half of all calendar years since 1928.", category: "Risk & Return" },
-  { type: "fact", text: "Historically, buying the S&P 500 when the VIX is above 30 has produced above-average 12-month forward returns.", category: "Risk & Return" },
-  { type: "fact", text: "A 50% portfolio loss requires a 100% gain just to break even — which is why drawdown management matters more than chasing returns.", category: "Risk & Return" },
-  { type: "fact", text: "The equity risk premium — the excess return of stocks over bonds — has averaged about 4–5% globally since 1900.", category: "Risk & Return" },
-  { type: "fact", text: "Roughly 40% of the S&P 500's total return since 1928 came from just the 10 best days in each decade.", category: "Risk & Return" },
-  { type: "fact", text: "The Sortino ratio improves on the Sharpe by penalizing only downside volatility — more relevant for loss-averse investors.", category: "Risk & Return" },
-  { type: "fact", text: "Japan's Nikkei 225 peaked at 38,957 in December 1989 and took over 34 years to surpass that level.", category: "Global Markets" },
-  { type: "fact", text: "Emerging markets represent over 40% of global GDP but only about 12% of global equity market capitalization.", category: "Global Markets" },
-  { type: "fact", text: "The US stock market's share of global market cap grew from about 30% in 1990 to over 60% by 2024.", category: "Global Markets" },
-  { type: "fact", text: "Currency movements can add or subtract 5–10% per year from international equity returns for unhedged investors.", category: "Global Markets" },
-  { type: "fact", text: "China's stock market has returned under 2% annually in real terms since 2007, despite GDP growth averaging above 6%.", category: "Global Markets" },
-  { type: "fact", text: "The 'home bias' — investors overweighting domestic stocks — is one of the most persistent inefficiencies in global markets.", category: "Global Markets" },
-  { type: "fact", text: "$1 invested in the S&P 500 in 1926 would be worth over $13,000 today — the compounding effect of ~10% annual returns.", category: "Economics" },
-  { type: "fact", text: "The Fed has raised rates in 14 tightening cycles since 1955. Equities were positive during 12 of the 14.", category: "Economics" },
-  { type: "fact", text: "Inflation above 4% correlates with higher equity volatility and lower P/E multiples across developed markets.", category: "Economics" },
-  { type: "fact", text: "Corporate buybacks have exceeded dividends as the primary method of returning cash to shareholders since the mid-2000s.", category: "Economics" },
-  { type: "fact", text: "The average US equity fund expense ratio fell from 1.0% in 2000 to under 0.4% by 2024 — a massive long-term tailwind.", category: "Economics" },
-  { type: "fact", text: "Tax-loss harvesting can add 0.5–1.5% in after-tax returns annually for taxable accounts.", category: "Economics" },
-  { type: "fact", text: "About 40% of stocks in the Russell 3000 have experienced a decline of 70%+ from their peak at some point.", category: "Economics" },
-  { type: "fact", text: "The '4% rule' for retirement withdrawals was derived from data showing balanced portfolios survived 30-year periods at that rate.", category: "Economics" },
-  { type: "fact", text: "Between 1900 and 2024, equities outperformed bonds, bills, and inflation in every major economy studied — the equity premium is universal.", category: "Global Markets" },
+  // ── Legendary Trades & Investors ────────────────────────────────────
+  { type: "fact", text: "George Soros made $1 billion in a single day by shorting the British pound in 1992 — forever known as 'the man who broke the Bank of England.'", category: "Legendary Trades" },
+  { type: "fact", text: "Jim Simons' Medallion Fund averaged 66% annual returns before fees from 1988–2018 — the greatest track record in investing history. It's been closed to outsiders since 1993.", category: "Legendary Trades" },
+  { type: "fact", text: "Jesse Livermore made $100 million shorting the 1929 crash — about $1.7 billion today. He later lost it all and died broke.", category: "Legendary Trades" },
+  { type: "fact", text: "Michael Burry saw the 2008 housing crisis coming years early. His investors begged him to stop. He made them $700 million.", category: "Legendary Trades" },
+  { type: "fact", text: "Ronald Read was a janitor and gas station attendant in Vermont. He quietly invested in blue chips for decades and left behind $8 million when he died in 2014.", category: "Legendary Trades" },
+  { type: "fact", text: "Paul Tudor Jones predicted Black Monday in 1987 and reportedly tripled his money while the market crashed 22% in a single day.", category: "Legendary Trades" },
+  { type: "fact", text: "Bill Ackman turned a $27 million hedge into $2.6 billion in just 3 weeks during the March 2020 COVID crash — one of the most profitable single trades ever.", category: "Legendary Trades" },
+  { type: "fact", text: "Nassim Taleb's strategy of buying cheap, far out-of-the-money options returned 4,000%+ during the 2008 crisis while most funds were imploding.", category: "Legendary Trades" },
+  // ── Mind-Bending Numbers ──────────────────────────────────────────
+  { type: "fact", text: "$10,000 invested in the S&P 500 in 1980 would be worth over $1.2 million today — through dot-com, 2008, and COVID.", category: "Mind-Bending Numbers" },
+  { type: "fact", text: "$1,000 in Amazon at its 1997 IPO would be worth over $2.3 million today. Bezos almost couldn't raise the initial funding.", category: "Mind-Bending Numbers" },
+  { type: "fact", text: "$1,000 in Apple at its 1980 IPO would be worth over $2.5 million today — despite the company almost going bankrupt in 1997.", category: "Mind-Bending Numbers" },
+  { type: "fact", text: "$1,000 in Netflix at its 2002 IPO would be worth over $400,000 today. It was a DVD-by-mail company.", category: "Mind-Bending Numbers" },
+  { type: "fact", text: "$1,000 in Nvidia in 2015 would be worth over $250,000 today — it was mostly known for gaming GPUs before AI changed everything.", category: "Mind-Bending Numbers" },
+  { type: "fact", text: "A single Bitcoin cost $0.003 in 2010. At its peak, that same Bitcoin was worth over $73,000 — a 24-million-percent return.", category: "Mind-Bending Numbers" },
+  { type: "fact", text: "Apple generates more annual revenue than the GDP of 150+ countries. Its cash reserves once exceeded the US Treasury's operating balance.", category: "Mind-Bending Numbers" },
+  { type: "fact", text: "The total value of global derivatives outstanding exceeds $600 trillion — roughly 6x the entire world's GDP.", category: "Mind-Bending Numbers" },
+  { type: "fact", text: "If you had invested $1 in the US stock market in 1802, it would be worth over $2 million today in real terms. Bonds? About $1,800. Gold? $4.50.", category: "Mind-Bending Numbers" },
+  // ── Bubbles & Crashes ─────────────────────────────────────────────
+  { type: "fact", text: "In 1637 Amsterdam, a single tulip bulb sold for more than a canal house. When the bubble popped, prices fell 99% in weeks.", category: "Bubbles & Crashes" },
+  { type: "fact", text: "At the peak of Japan's 1989 bubble, the Imperial Palace grounds in Tokyo were valued higher than all the real estate in California.", category: "Bubbles & Crashes" },
+  { type: "fact", text: "Pets.com went from IPO to bankruptcy in 268 days. Its sock puppet mascot was later sold to a competitor.", category: "Bubbles & Crashes" },
+  { type: "fact", text: "In 2000, Yahoo had the chance to buy Google for $1 billion. They passed. Alphabet is now worth over $2 trillion.", category: "Bubbles & Crashes" },
+  { type: "fact", text: "Amazon dropped 95% from its 1999 peak to its 2001 low. Investors who held through earned 30,000%+ over the next two decades.", category: "Bubbles & Crashes" },
+  { type: "fact", text: "During the 2010 Flash Crash, Accenture briefly traded at $0.01 per share and P&G dropped 37% in minutes. Both recovered within an hour.", category: "Bubbles & Crashes" },
+  { type: "fact", text: "The entire Icelandic stock market went to essentially zero in October 2008 when all three major banks collapsed in a single week.", category: "Bubbles & Crashes" },
+  { type: "fact", text: "At the peak of the South Sea Bubble in 1720, one company raised money for 'an undertaking of great advantage, but nobody to know what it is.' It sold out in hours.", category: "Bubbles & Crashes" },
+  { type: "fact", text: "Isaac Newton lost £20,000 (~$4M today) in the South Sea Bubble and reportedly said: 'I can calculate the motions of heavenly bodies, but not the madness of people.'", category: "Bubbles & Crashes" },
+  { type: "fact", text: "Japan's Nikkei 225 peaked at 38,957 in December 1989 and took over 34 years to surpass that level.", category: "Bubbles & Crashes" },
+  // ── Counterintuitive ──────────────────────────────────────────────
+  { type: "fact", text: "Fidelity reportedly found that their best-performing accounts belonged to investors who were dead — or had forgotten they had accounts.", category: "Counterintuitive" },
+  { type: "fact", text: "A 20-year-old investing $200/month at 10% will have more at 65 than a 30-year-old investing $400/month at the same rate. Starting early beats saving more.", category: "Counterintuitive" },
+  { type: "fact", text: "The best day in the market and the worst day almost always happen within two weeks of each other. You can't just dodge the bad ones.", category: "Counterintuitive" },
+  { type: "fact", text: "The stocks that returned the most over the past century were mostly boring companies — tobacco, food, and utilities — not exciting tech.", category: "Counterintuitive" },
+  { type: "fact", text: "40% of all stocks that ever traded on the Russell 3000 lost at least 70% of their value permanently. A handful of mega-winners drove all the index gains.", category: "Counterintuitive" },
+  { type: "fact", text: "The average investor earns 2–3% less than the funds they invest in, because they buy high after rallies and sell low after drops.", category: "Counterintuitive" },
+  { type: "fact", text: "A 50% loss requires a 100% gain just to get back to even. That asymmetry is why protecting capital matters more than chasing returns.", category: "Counterintuitive" },
+  { type: "fact", text: "Warren Buffett made over 99% of his $100+ billion fortune after his 50th birthday. The secret wasn't stock-picking — it was time.", category: "Counterintuitive" },
+  { type: "fact", text: "The S&P 500 has dropped 10%+ in roughly half of all years since 1928 — yet it still returns ~10% annually on average.", category: "Counterintuitive" },
+  // ── Strange But True ──────────────────────────────────────────────
+  { type: "fact", text: "Nintendo was founded in 1889 as a playing card company. It survived two world wars and reinvented itself three times before video games.", category: "Strange But True" },
+  { type: "fact", text: "Coca-Cola has split its stock so many times that a single share bought at its 1919 IPO would be over 9,000 shares today.", category: "Strange But True" },
+  { type: "fact", text: "The two most expensive pizzas ever purchased cost 10,000 Bitcoin in 2010 — worth over $700 million at Bitcoin's peak.", category: "Strange But True" },
+  { type: "fact", text: "Berkshire Hathaway's Class A shares trade above $600,000 each because Buffett has refused to ever split the stock.", category: "Strange But True" },
+  { type: "fact", text: "The NYSE was founded in 1792 under a buttonwood tree by 24 stockbrokers. The original agreement was two sentences long.", category: "Strange But True" },
+  { type: "fact", text: "The London Stock Exchange shut down for five months at the start of World War I — the longest closure in its history.", category: "Strange But True" },
+  { type: "fact", text: "The first-ever stock exchange opened in Amsterdam in 1602 to trade shares of the Dutch East India Company — the first publicly traded company.", category: "Strange But True" },
+  { type: "fact", text: "Enron was named 'America's Most Innovative Company' by Fortune magazine for six consecutive years before its fraud was exposed.", category: "Strange But True" },
+  { type: "fact", text: "Saudi Aramco's 2019 IPO valued the company at $1.7 trillion — the most valuable IPO ever — and they only listed 1.5% of shares.", category: "Strange But True" },
+  // ── Compounding ───────────────────────────────────────────────────
+  { type: "fact", text: "At 10% annual returns, your money doubles every 7.2 years. At 7%, every 10.3 years. At 3%, every 24 years. Small rate differences become enormous over time.", category: "Compounding" },
+  { type: "fact", text: "Warren Buffett started investing at age 11 and says his biggest regret is not starting even earlier.", category: "Compounding" },
+  { type: "fact", text: "If Peter Minuit's $24 purchase of Manhattan in 1626 had been invested at 6.5% interest, it would be worth more than all of Manhattan's real estate today.", category: "Compounding" },
+  { type: "fact", text: "Reinvesting dividends has accounted for roughly 85% of the S&P 500's total return since 1960. Price appreciation alone is surprisingly small.", category: "Compounding" },
+  // ── Modern Markets ────────────────────────────────────────────────
+  { type: "fact", text: "High-frequency trading firms now account for roughly 50% of all US equity volume. Their average holding period is measured in milliseconds.", category: "Modern Markets" },
+  { type: "fact", text: "Index funds now own over 50% of the US stock market. Jack Bogle's 'crazy idea' in 1976 completely reshaped global finance.", category: "Modern Markets" },
+  { type: "fact", text: "The 'Magnificent Seven' tech stocks accounted for over 30% of the S&P 500's market cap in 2024 — the highest concentration since the dot-com era.", category: "Modern Markets" },
+  { type: "fact", text: "Dark pools — private exchanges invisible to public markets — handle roughly 40% of all US stock trades.", category: "Modern Markets" },
+  { type: "fact", text: "Retail traders on Reddit's r/WallStreetBets drove GameStop from $20 to $483 in January 2021, costing short sellers over $6 billion in a single week.", category: "Modern Markets" },
 ];
 
 /** Consistent avatar colors keyed by author name */
@@ -365,13 +371,13 @@ const AUTHOR_STYLES: Record<string, { bg: string; text: string; accent: string }
 
 /** Color palette for educational fact categories */
 const CATEGORY_STYLES: Record<string, { bg: string; text: string; accent: string }> = {
-  "Market History":      { bg: "bg-blue-100",    text: "text-blue-600",    accent: "from-blue-50" },
-  "Portfolio Theory":    { bg: "bg-emerald-100", text: "text-emerald-600", accent: "from-emerald-50" },
-  "Behavioral Finance":  { bg: "bg-violet-100",  text: "text-violet-600",  accent: "from-violet-50" },
-  "Asset Classes":       { bg: "bg-amber-100",   text: "text-amber-600",   accent: "from-amber-50" },
-  "Risk & Return":       { bg: "bg-rose-100",    text: "text-rose-600",    accent: "from-rose-50" },
-  "Global Markets":      { bg: "bg-cyan-100",    text: "text-cyan-600",    accent: "from-cyan-50" },
-  "Economics":           { bg: "bg-lime-100",    text: "text-lime-600",    accent: "from-lime-50" },
+  "Legendary Trades":      { bg: "bg-amber-100",   text: "text-amber-600",   accent: "from-amber-50" },
+  "Mind-Bending Numbers":  { bg: "bg-violet-100",  text: "text-violet-600",  accent: "from-violet-50" },
+  "Bubbles & Crashes":     { bg: "bg-rose-100",    text: "text-rose-600",    accent: "from-rose-50" },
+  "Counterintuitive":      { bg: "bg-cyan-100",    text: "text-cyan-600",    accent: "from-cyan-50" },
+  "Strange But True":      { bg: "bg-pink-100",    text: "text-pink-600",    accent: "from-pink-50" },
+  "Compounding":           { bg: "bg-emerald-100", text: "text-emerald-600", accent: "from-emerald-50" },
+  "Modern Markets":        { bg: "bg-blue-100",    text: "text-blue-600",    accent: "from-blue-50" },
 };
 
 const DEFAULT_STYLE = { bg: "bg-gray-100", text: "text-gray-600", accent: "from-gray-50" };
@@ -403,7 +409,11 @@ function ProcessingQuotes() {
   const advance = useCallback(() => {
     setFade(false);
     setTimeout(() => {
-      setIndex((prev) => (prev + 1) % PROCESSING_ITEMS.length);
+      setIndex((prev) => {
+        let next;
+        do { next = Math.floor(Math.random() * PROCESSING_ITEMS.length); } while (next === prev);
+        return next;
+      });
       setFade(true);
     }, 400);
   }, []);
