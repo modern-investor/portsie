@@ -9,20 +9,25 @@ import { extractViaCLI } from "./llm-cli";
 import { extractViaGemini } from "./llm-gemini";
 import type { ProcessingSettings } from "./types";
 
+/** Minimum remaining time (ms) needed to attempt a fallback extraction. */
+const MIN_FALLBACK_BUDGET_MS = 60_000; // 60 seconds
+
 /**
  * Dispatch document extraction to the configured LLM backend.
  *
  * Default pipeline (no user settings):
  *   1. Try Gemini 3 Flash (fast, cheap, high quality)
  *   2. On failure, fall back to Claude Sonnet 4.6 via CLI wrapper
+ *      — but ONLY if enough time remains before the deadline
  *
  * Users can override to:
  *   - "cli" — force Claude via CLI wrapper (Max plan, no per-token cost)
  *   - "api" — Anthropic API with their own key (per-token billing)
  *   - "gemini" — Gemini 3 Flash only (no fallback)
  *
- * Returns a validated PortsieExtraction (Stage 1+2) and the raw LLM response
- * for debugging/audit purposes.
+ * The `deadlineMs` parameter is an epoch timestamp. If set, the dispatcher
+ * will check remaining time before attempting a fallback to avoid starting
+ * extractions that will be killed by the Vercel timeout.
  */
 export async function extractFinancialData(
   supabase: SupabaseClient,
@@ -30,7 +35,8 @@ export async function extractFinancialData(
   processedFile: ProcessedFile,
   fileType: UploadFileType,
   filename: string,
-  processingSettings?: ProcessingSettings
+  processingSettings?: ProcessingSettings,
+  deadlineMs?: number
 ): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
   // ── Preset-based routing (from upload page dropdown) ──
   if (processingSettings) {
@@ -56,6 +62,17 @@ export async function extractFinancialData(
       );
     } catch (geminiError) {
       const errorMsg = geminiError instanceof Error ? geminiError.message : String(geminiError);
+
+      // Check if we have enough time budget for a CLI fallback
+      if (deadlineMs && Date.now() + MIN_FALLBACK_BUDGET_MS > deadlineMs) {
+        const remainingSec = Math.round((deadlineMs - Date.now()) / 1000);
+        safeLog("error", "Dispatcher", `Gemini failed and only ${remainingSec}s remain — skipping CLI fallback`, { error: errorMsg });
+        throw new Error(
+          `Gemini extraction failed and not enough time for fallback (${remainingSec}s remaining). ` +
+          `Original error: ${errorMsg}`
+        );
+      }
+
       safeLog("error", "Dispatcher", "Gemini extraction failed, falling back to CLI", { error: errorMsg });
       const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
       return extractViaCLI(processedFile, fileType, filename, cliEndpoint, "claude-sonnet-4-6");
@@ -102,6 +119,17 @@ export async function extractFinancialData(
     );
   } catch (geminiError) {
     const errorMsg = geminiError instanceof Error ? geminiError.message : String(geminiError);
+
+    // Check if we have enough time budget for a CLI fallback
+    if (deadlineMs && Date.now() + MIN_FALLBACK_BUDGET_MS > deadlineMs) {
+      const remainingSec = Math.round((deadlineMs - Date.now()) / 1000);
+      safeLog("error", "Dispatcher", `Gemini failed and only ${remainingSec}s remain — skipping CLI fallback`, { error: errorMsg });
+      throw new Error(
+        `Gemini extraction failed and not enough time for fallback (${remainingSec}s remaining). ` +
+        `Original error: ${errorMsg}`
+      );
+    }
+
     console.error(`[Dispatcher] Gemini extraction failed, falling back to CLI: ${errorMsg}`);
 
     // Fall back to Claude Sonnet 4.6 via CLI wrapper

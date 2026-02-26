@@ -6,6 +6,7 @@ import type { PortsieExtraction } from "@/lib/extraction/schema";
 import type { ProcessingPreset } from "@/lib/llm/types";
 import { PRESET_LABELS } from "./processing-preset-select";
 import { UploadReview } from "./upload-review";
+import { STEP_LABELS } from "@/lib/extraction/processing-log";
 
 const STATUS_STYLES: Record<
   string,
@@ -643,10 +644,15 @@ export function UploadList({
                     </span>
                   )}
                 </div>
-                {/* Processing model — 3rd line */}
+                {/* Processing step + model — 3rd line */}
                 {(isLiveProcessing || isQueued) && (
-                  <div className="text-xs font-mono text-blue-400">
-                    {PRESET_LABELS[processingPreset]}
+                  <div className="text-xs text-blue-400">
+                    {isLiveProcessing && upload.processing_step && (
+                      <span className="mr-2 font-medium text-blue-600">
+                        {STEP_LABELS[upload.processing_step] ?? upload.processing_step}
+                      </span>
+                    )}
+                    <span className="font-mono">{PRESET_LABELS[processingPreset]}</span>
                   </div>
                 )}
                 {!isLiveProcessing && !isQueued && upload.processing_settings && (

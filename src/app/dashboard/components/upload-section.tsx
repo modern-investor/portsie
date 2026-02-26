@@ -280,10 +280,11 @@ export function UploadSection({
     });
   }
 
-  // Trigger LLM processing for a single upload (auto-links account and saves data).
-  // Returns true if auto-confirm succeeded (data was written to DB).
+  // Trigger LLM processing for a single upload.
+  // Pipeline: extract → confirm → verify (3 separate API calls, each with own 300s budget).
+  // Returns true if data was confirmed (written to DB).
   async function handleProcess(uploadId: string): Promise<boolean> {
-    let autoConfirmed = false;
+    let confirmed = false;
     setProcessingIds((prev) => new Set(prev).add(uploadId));
     setProcessCount((prev) => ({ ...prev, [uploadId]: (prev[uploadId] ?? 0) + 1 }));
     // Record processing start timestamp (keep existing q timestamp)
@@ -293,16 +294,48 @@ export function UploadSection({
     }));
 
     try {
-      const res = await fetch(`/api/upload/${uploadId}/extract?auto_confirm=true&preset=${processingPreset}`, {
-        method: "POST",
-        signal: AbortSignal.timeout(270_000), // 4.5 min — abort before Vercel's 5 min hard kill
-      });
-      const body = await res.json().catch(() => null);
-      if (res.ok && body) {
-        autoConfirmed = !!body.autoConfirmed;
+      // ── Stage 1: Extract (LLM extraction + validation) ──
+      const extractRes = await fetch(
+        `/api/upload/${uploadId}/extract?preset=${processingPreset}`,
+        { method: "POST" }
+      );
+      const extractBody = await extractRes.json().catch(() => null);
+
+      if (!extractRes.ok) {
+        // Extract failed — error is already stored in DB by the route
+        return false;
       }
+
+      // Refresh upload record after extraction
+      await refreshUpload(uploadId);
+
+      // Check if extraction produced data
+      const parseStatus = extractBody?.parseStatus;
+      if (parseStatus === "partial" || !extractBody?.summary) {
+        // Extraction returned partial/no data — don't auto-confirm
+        return false;
+      }
+
+      // ── Stage 2: Confirm (account matching + DB writes) ──
+      try {
+        const confirmRes = await fetch(`/api/upload/${uploadId}/confirm`, {
+          method: "POST",
+        });
+        if (confirmRes.ok) {
+          confirmed = true;
+        }
+      } catch {
+        // Confirm network error — extraction is still saved, user can confirm manually
+      }
+
+      // Refresh upload record after confirm
+      await refreshUpload(uploadId);
+
+      // ── Stage 3: Verify (fire-and-forget, non-blocking) ──
+      fetch(`/api/upload/${uploadId}/verify`, { method: "POST" }).catch(() => {});
+
     } catch {
-      // Network error — status will be reflected in the refreshed upload record
+      // Network error on extract — status will be reflected in the refreshed upload record
     } finally {
       // Record end timestamp
       setTimestamps((prev) => ({
@@ -310,26 +343,8 @@ export function UploadSection({
         [uploadId]: { ...prev[uploadId], e: new Date().toISOString() },
       }));
 
-      // Refresh the upload record — retry with increasing delays if status is
-      // still "processing" (DB write from the extract endpoint may not have
-      // propagated yet, or the Vercel function may have timed out mid-write).
-      const retryDelays = [0, 2000, 3000, 5000, 5000];
-      for (let attempt = 0; attempt < retryDelays.length; attempt++) {
-        try {
-          if (retryDelays[attempt] > 0) await new Promise((r) => setTimeout(r, retryDelays[attempt]));
-          const detailRes = await fetch(`/api/upload/${uploadId}`);
-          if (detailRes.ok) {
-            const updated = await detailRes.json();
-            setUploads((prev) =>
-              prev.map((u) => (u.id === uploadId ? updated : u))
-            );
-            // If we got a terminal status, no need to retry
-            if (updated.parse_status !== "processing") break;
-          }
-        } catch {
-          // Silently fail — polling will catch up
-        }
-      }
+      // Final refresh with retry delays for propagation
+      await refreshUpload(uploadId, true);
 
       setProcessingIds((prev) => {
         const next = new Set(prev);
@@ -337,7 +352,27 @@ export function UploadSection({
         return next;
       });
     }
-    return autoConfirmed;
+    return confirmed;
+  }
+
+  /** Refresh a single upload record from the API. With retry=true, retries with delays. */
+  async function refreshUpload(uploadId: string, withRetry = false): Promise<void> {
+    const delays = withRetry ? [0, 2000, 3000, 5000] : [0];
+    for (let i = 0; i < delays.length; i++) {
+      try {
+        if (delays[i] > 0) await new Promise((r) => setTimeout(r, delays[i]));
+        const res = await fetch(`/api/upload/${uploadId}`);
+        if (res.ok) {
+          const updated = await res.json();
+          setUploads((prev) =>
+            prev.map((u) => (u.id === uploadId ? updated : u))
+          );
+          if (updated.parse_status !== "processing") break;
+        }
+      } catch {
+        // Silently fail — polling will catch up
+      }
+    }
   }
 
   // Batch process: run sequentially so only one is actively processing at a time.

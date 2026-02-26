@@ -5,10 +5,13 @@
 // ============================================
 
 const http = require("http");
+const fs = require("fs");
 const { spawn } = require("child_process");
 const { writeFile, unlink, rm, mkdtemp } = require("fs/promises");
 const { join } = require("path");
 const { tmpdir } = require("os");
+
+const DIAGNOSTICS_FILE = join(__dirname, "diagnostics.jsonl");
 
 const PORT = parseInt(process.env.PORT || "8910", 10);
 const AUTH_TOKEN = process.env.AUTH_TOKEN; // shared secret with Vercel
@@ -215,6 +218,59 @@ function readBody(req) {
   });
 }
 
+/**
+ * Analyze a failed processing log using Claude.
+ * Runs asynchronously — does not block the diagnostics response.
+ */
+async function analyzeFailure(processingLog, uploadId) {
+  const waypointSummary = (processingLog.waypoints || [])
+    .map((w) => `  ${w.step}: ${w.status} (${w.durationMs ?? "?"}ms)${w.error ? " ERROR: " + w.error : ""}`)
+    .join("\n");
+
+  const prompt = `You are a DevOps analyst. Analyze this extraction processing failure and suggest the most likely root cause and fix.
+
+Upload: ${processingLog.fileInfo?.filename ?? "unknown"} (${processingLog.fileInfo?.fileType ?? "?"}, ${processingLog.fileInfo?.sizeBytes ?? "?"} bytes)
+Backend: ${processingLog.backend ?? "?"} / ${processingLog.model ?? "?"}
+Preset: ${processingLog.preset ?? "?"}
+Duration: ${processingLog.totalDurationMs ?? "?"}ms
+Error Category: ${processingLog.errorCategory ?? "?"}
+Error: ${processingLog.errorMessage ?? "none"}
+
+Waypoints:
+${waypointSummary || "  (none recorded)"}
+
+Is this a transient issue (retry will help) or systematic (code change needed)? Be concise — max 3 sentences.`;
+
+  return new Promise((resolve, reject) => {
+    const child = spawn("claude", ["-p", prompt, "--model", "claude-sonnet-4-6", "--output-format", "json", "--dangerously-skip-permissions"], {
+      env: { ...process.env, CI: "true", HOME: process.env.HOME || "/home/bugfixer" },
+      stdio: ["ignore", "pipe", "pipe"],
+      timeout: 60000,
+    });
+
+    let stdout = "";
+    child.stdout.on("data", (chunk) => { stdout += chunk.toString(); });
+    child.on("close", (code) => {
+      let analysis = stdout;
+      try {
+        const parsed = JSON.parse(stdout);
+        analysis = typeof parsed.result === "string" ? parsed.result : JSON.stringify(parsed.result);
+      } catch {}
+
+      const logLine = JSON.stringify({
+        type: "analysis",
+        uploadId,
+        receivedAt: new Date().toISOString(),
+        analysis,
+      });
+      fs.appendFileSync(DIAGNOSTICS_FILE, logLine + "\n");
+      log(`Diagnostics analysis saved for ${uploadId} (${analysis.length} chars)`);
+      resolve(analysis);
+    });
+    child.on("error", reject);
+  });
+}
+
 const server = http.createServer(async (req, res) => {
   // Health check
   if (req.method === "GET" && req.url === "/health") {
@@ -247,6 +303,83 @@ const server = http.createServer(async (req, res) => {
       status: started ? "warming" : "skipped",
       reason: started ? "warmup spawned" : "already busy",
     }));
+    return;
+  }
+
+  // ── POST /diagnostics — receive processing log snapshots from Vercel ──
+  if (req.method === "POST" && req.url === "/diagnostics") {
+    if (AUTH_TOKEN) {
+      const authHeader = req.headers["authorization"];
+      if (authHeader !== `Bearer ${AUTH_TOKEN}`) {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Unauthorized" }));
+        return;
+      }
+    }
+
+    try {
+      const body = await readBody(req);
+      const { processingLog, uploadId } = JSON.parse(body);
+
+      // Persist to JSONL file
+      const logLine = JSON.stringify({
+        receivedAt: new Date().toISOString(),
+        uploadId,
+        ...processingLog,
+      });
+      fs.appendFileSync(DIAGNOSTICS_FILE, logLine + "\n");
+      log(`Diagnostics received for ${uploadId}: ${processingLog?.outcome ?? "?"} (${processingLog?.totalDurationMs ?? "?"}ms)`);
+
+      // If failed, trigger async Claude analysis (fire-and-forget)
+      if (processingLog?.outcome === "failed" || processingLog?.outcome === "timeout") {
+        analyzeFailure(processingLog, uploadId).catch((err) =>
+          log(`Diagnostics analysis error: ${err.message}`)
+        );
+      }
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ status: "received" }));
+    } catch (err) {
+      log(`Diagnostics error: ${err.message}`);
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // ── GET /diagnostics — view recent diagnostics logs ──
+  if (req.method === "GET" && req.url.startsWith("/diagnostics")) {
+    if (AUTH_TOKEN) {
+      const authHeader = req.headers["authorization"];
+      if (authHeader !== `Bearer ${AUTH_TOKEN}`) {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Unauthorized" }));
+        return;
+      }
+    }
+
+    try {
+      if (!fs.existsSync(DIAGNOSTICS_FILE)) {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ entries: [], count: 0 }));
+        return;
+      }
+
+      const lines = fs.readFileSync(DIAGNOSTICS_FILE, "utf8")
+        .split("\n")
+        .filter(Boolean)
+        .slice(-50); // Last 50 entries
+
+      const entries = lines.map((line) => {
+        try { return JSON.parse(line); } catch { return { raw: line }; }
+      });
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ entries, count: entries.length }));
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err.message }));
+    }
     return;
   }
 

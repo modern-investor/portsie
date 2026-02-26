@@ -175,6 +175,8 @@ export interface UploadedStatement {
     model: string;
   } | null;
   verification_error: string | null;
+  processing_step: string | null;
+  processing_log: import("@/lib/extraction/processing-log").ProcessingLogData | null;
   source_file_expires_at: string | null;
   source_file_purged_at: string | null;
   created_at: string;
