@@ -3,6 +3,7 @@ import type { ProcessedFile } from "../upload/file-processor";
 import type { UploadFileType } from "../upload/types";
 import type { PortsieExtraction } from "../extraction/schema";
 import { validateExtraction } from "../extraction/validate";
+import { withRetry } from "./retry";
 
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 const GEMINI_UPLOAD_URL = "https://generativelanguage.googleapis.com/upload/v1beta/files";
@@ -116,37 +117,47 @@ export async function extractViaGemini(
   const url = `${GEMINI_API_URL}/${geminiModel}:streamGenerateContent?alt=sse&key=${apiKey}`;
   const jsonBody = JSON.stringify(requestBody);
 
-  let response: Response;
-  try {
-    response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: jsonBody,
-      signal: AbortSignal.timeout(600_000), // 10 min for large extractions
-    });
-  } catch (fetchErr) {
-    const cause = fetchErr instanceof Error && 'cause' in fetchErr
-      ? ` cause: ${(fetchErr as { cause?: unknown }).cause}`
-      : "";
-    throw new Error(
-      `Gemini fetch failed (body size: ${(jsonBody.length / 1024).toFixed(0)} KB): ${fetchErr instanceof Error ? fetchErr.message : fetchErr}${cause}`
-    );
-  }
+  // Fetch with retry on transient errors (429, 503).
+  // Timeout reduced from 600s to 240s to fit within 300s Vercel budget.
+  const response = await withRetry(
+    async () => {
+      let resp: Response;
+      try {
+        resp = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: jsonBody,
+          signal: AbortSignal.timeout(240_000), // 4 min — leave room for fallback
+        });
+      } catch (fetchErr) {
+        const cause = fetchErr instanceof Error && 'cause' in fetchErr
+          ? ` cause: ${(fetchErr as { cause?: unknown }).cause}`
+          : "";
+        throw new Error(
+          `Gemini fetch failed (body size: ${(jsonBody.length / 1024).toFixed(0)} KB): ${fetchErr instanceof Error ? fetchErr.message : fetchErr}${cause}`
+        );
+      }
 
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => "Unknown error");
-    throw new Error(`Gemini API error (${response.status}): ${errorText}`);
-  }
+      if (!resp.ok) {
+        const errorText = await resp.text().catch(() => "Unknown error");
+        throw new Error(`Gemini API error (${resp.status}): ${errorText}`);
+      }
+      return resp;
+    },
+    { maxAttempts: 3, baseDelayMs: 2000, label: "Gemini" }
+  );
 
   // Collect SSE chunks into full text + metadata
-  const { text: fullText, finishReason, usageMetadata } = await collectSSEStream(response);
+  const { text: fullText, finishReason, usageMetadata, malformedChunks } = await collectSSEStream(response);
 
   if (!fullText) {
     throw new Error(`No text in Gemini response. Finish reason: ${finishReason ?? "unknown"}`);
   }
 
   if (finishReason && finishReason !== "STOP") {
-    console.warn(`[Gemini] Warning: finishReason=${finishReason} — response may be truncated`);
+    throw new Error(
+      `Gemini response truncated (finishReason=${finishReason}). The document may be too large for this model.`
+    );
   }
 
   // Validate against PortsieExtraction schema (Stage 2)
@@ -162,14 +173,23 @@ export async function extractViaGemini(
 
   // Persist validation warnings/coercions in extraction notes for traceability
   let extraction = validationResult.extraction;
+  const extraNotes: string[] = [];
+
   if (validationResult.coercions.length > 0 || validationResult.warnings.length > 0) {
-    const validationNotes = [
+    extraNotes.push(
       ...validationResult.coercions.map((c) => `[Coercion] ${c}`),
       ...validationResult.warnings.map((w) => `[Warning] ${w.path}: ${w.message}`),
-    ];
+    );
+  }
+
+  if (malformedChunks > 5) {
+    extraNotes.push(`[Warning] ${malformedChunks} malformed SSE chunks during streaming — extraction may be incomplete`);
+  }
+
+  if (extraNotes.length > 0) {
     extraction = {
       ...extraction,
-      notes: [...(extraction.notes || []), ...validationNotes],
+      notes: [...(extraction.notes || []), ...extraNotes],
     };
   }
 
@@ -187,6 +207,7 @@ async function collectSSEStream(response: Response): Promise<{
   text: string;
   finishReason: string | undefined;
   usageMetadata: unknown;
+  malformedChunks: number;
 }> {
   const body = response.body;
   if (!body) throw new Error("No response body from Gemini stream");
@@ -197,6 +218,7 @@ async function collectSSEStream(response: Response): Promise<{
   let fullText = "";
   let finishReason: string | undefined;
   let usageMetadata: unknown;
+  let malformedChunks = 0;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -225,12 +247,19 @@ async function collectSSEStream(response: Response): Promise<{
         if (candidate?.finishReason) finishReason = candidate.finishReason;
         if (chunk.usageMetadata) usageMetadata = chunk.usageMetadata;
       } catch {
-        // Skip malformed chunks
+        malformedChunks++;
+        if (malformedChunks <= 3) {
+          console.warn(`[Gemini] Malformed SSE chunk #${malformedChunks}: ${trimmed.slice(0, 100)}`);
+        }
       }
     }
   }
 
-  return { text: fullText, finishReason, usageMetadata };
+  if (malformedChunks > 0) {
+    console.warn(`[Gemini] Total malformed SSE chunks: ${malformedChunks}`);
+  }
+
+  return { text: fullText, finishReason, usageMetadata, malformedChunks };
 }
 
 // ── File API upload for large files ──

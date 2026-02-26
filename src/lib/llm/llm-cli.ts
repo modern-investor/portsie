@@ -9,6 +9,7 @@ import type { ProcessedFile } from "../upload/file-processor";
 import type { UploadFileType } from "../upload/types";
 import type { PortsieExtraction } from "../extraction/schema";
 import { validateExtraction } from "../extraction/validate";
+import { withRetry } from "./retry";
 
 const execFileAsync = promisify(execFile);
 
@@ -156,19 +157,27 @@ async function extractViaCLIRemote(
     headers["Authorization"] = `Bearer ${authToken}`;
   }
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(300_000), // 5 minute timeout
-  });
+  // Fetch with retry on transient errors (429, 503, connection reset).
+  // Timeout reduced from 300s to 240s to fit within Vercel budget.
+  const response = await withRetry(
+    async () => {
+      const resp = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(240_000), // 4 min — leave room for overhead
+      });
 
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => "Unknown error");
-    throw new Error(
-      `CLI remote endpoint error (${response.status}): ${errorText}`
-    );
-  }
+      if (!resp.ok) {
+        const errorText = await resp.text().catch(() => "Unknown error");
+        throw new Error(
+          `CLI remote endpoint error (${resp.status}): ${errorText}`
+        );
+      }
+      return resp;
+    },
+    { maxAttempts: 2, baseDelayMs: 3000, label: "CLI-Remote" }
+  );
 
   const cliResponse = await response.json();
   const resultText =

@@ -2,16 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { processFileForLLM } from "@/lib/upload/file-processor";
 import { extractFinancialData } from "@/lib/llm/dispatcher";
-import { getLLMSettings } from "@/lib/llm/settings";
-import {
-  loadExistingAccountsForMatching,
-  matchAccounts,
-} from "@/lib/extraction/account-matcher";
-import { writeExtraction } from "@/lib/extraction/db-writer";
-import { extractViaCLI } from "@/lib/llm/llm-cli";
-import { extractViaGemini } from "@/lib/llm/llm-gemini";
 import type { UploadFileType } from "@/lib/upload/types";
-import type { PortsieExtraction } from "@/lib/extraction/schema";
 import { PROCESSING_PRESETS, DEFAULT_PRESET } from "@/lib/llm/types";
 import type { ProcessingPreset, ProcessingSettings } from "@/lib/llm/types";
 import {
@@ -20,31 +11,40 @@ import {
   buildDebugContext,
   safeLog,
 } from "@/lib/privacy";
+import { ProcessingLogger } from "@/lib/extraction/processing-log";
+import { classifyError } from "@/lib/extraction/errors";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // LLM extraction can take several minutes for large PDF/CSV files
 export const maxDuration = 300; // 5 minutes
 
+// Self-imposed deadline: 280s (20s before Vercel kills at 300s)
+// This ensures we always write a failure record instead of silent death.
+const DEADLINE_MS = 280_000;
+
 /**
  * POST /api/upload/[id]/extract
  *
- * Stage 1+2: LLM extraction → schema validation.
+ * Stage 1+2: LLM extraction + schema validation ONLY.
  * Stores the validated PortsieExtraction in extracted_data.
- * Sets parse_status to "extracted".
+ * Sets parse_status to "extracted" or "partial".
+ *
+ * Auto-confirm and verification have been moved to separate endpoints:
+ *   - POST /api/upload/[id]/confirm  — account matching + DB writes
+ *   - POST /api/upload/[id]/verify   — verification extraction
+ *
+ * The client orchestrates calling these 3 endpoints sequentially,
+ * giving each its own 300s budget.
  *
  * Privacy: raw_llm_response is NOT persisted (strict mode default).
  * A minimal debug_context is stored instead for diagnostics.
- *
- * Query params:
- *   ?auto_confirm=true — Chains all stages (extract → match → write) in one call.
- *                         This is the fire-and-forget mode for batch processing.
  */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const autoConfirm =
-    request.nextUrl.searchParams.get("auto_confirm") === "true";
+  const routeStartMs = Date.now();
   const presetParam = request.nextUrl.searchParams.get("preset") as ProcessingPreset | null;
   const processingSettings: ProcessingSettings =
     presetParam && PROCESSING_PRESETS[presetParam]
@@ -77,9 +77,19 @@ export async function POST(
   // Track processing attempt count
   const newProcessCount = (statement.process_count ?? 0) + 1;
 
+  // Initialize processing log
+  const log = new ProcessingLogger(id, newProcessCount, {
+    filename: statement.filename,
+    fileType: statement.file_type,
+    sizeBytes: statement.file_size_bytes ?? 0,
+  });
+  log.setBackendInfo(
+    processingSettings.backend,
+    processingSettings.model,
+    presetParam ?? processingSettings.preset
+  );
+
   // Atomic CAS lock: transition to "processing" only from allowed prior states.
-  // This eliminates the TOCTOU race where two concurrent requests both pass
-  // a status check and then both start processing the same upload.
   const lockId = crypto.randomUUID();
   const { data: lockRow } = await supabase
     .from("uploaded_statements")
@@ -90,6 +100,8 @@ export async function POST(
       confirmed_at: null,
       processing_lock_id: lockId,
       processing_started_at: new Date().toISOString(),
+      processing_step: "downloading",
+      processing_log: log.toJSON(),
     })
     .eq("id", id)
     .eq("user_id", user.id)
@@ -105,9 +117,10 @@ export async function POST(
   }
 
   try {
-    const extractionStartTime = Date.now();
+    // ── Step 1: Download file from Supabase Storage ──
+    log.startStep("downloading", "Downloading file from storage");
+    await flushLog(supabase, id, log);
 
-    // Download file from Supabase Storage
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("statements")
       .download(statement.file_path);
@@ -117,26 +130,48 @@ export async function POST(
         `Failed to download file: ${downloadError?.message ?? "No data"}`
       );
     }
+    log.completeStep("downloading");
+
+    // ── Deadline check ──
+    checkDeadline(routeStartMs);
+
+    // ── Step 2: Pre-process the file ──
+    log.startStep("preprocessing", "Preparing file for AI");
+    await flushLog(supabase, id, log);
 
     const buffer = Buffer.from(await fileData.arrayBuffer());
     const fileType = statement.file_type as UploadFileType;
-
-    // Pre-process the file for Claude
     const processedFile = processFileForLLM(buffer, fileType, fileData.type);
+    log.completeStep("preprocessing");
 
-    // ── Stage 1+2: LLM extraction + validation ──
+    // ── Deadline check ──
+    checkDeadline(routeStartMs);
+
+    // ── Step 3: LLM extraction + validation ──
+    log.startStep(
+      "extracting",
+      "AI is reading your document",
+      `${processingSettings.label} — ${processingSettings.model}`
+    );
+    await flushLog(supabase, id, log);
+
+    // Pass deadline to dispatcher so it can gate fallback decisions
+    const deadlineMs = routeStartMs + DEADLINE_MS;
     const { extraction } = await extractFinancialData(
       supabase,
       user.id,
       processedFile,
       fileType,
       statement.filename,
-      processingSettings
+      processingSettings,
+      deadlineMs
     );
+    log.completeStep("extracting");
 
-    const primaryDurationMs = Date.now() - extractionStartTime;
+    // ── Step 4: Validate & count results ──
+    log.startStep("validating", "Checking extracted data");
+    await flushLog(supabase, id, log);
 
-    // Determine if extraction produced data
     const totalPositions =
       extraction.accounts.reduce((sum, a) => sum + a.positions.length, 0) +
       extraction.unallocated_positions.length;
@@ -150,12 +185,12 @@ export async function POST(
     );
     const hasData = totalPositions > 0 || totalTransactions > 0 || totalBalances > 0;
 
-    // ── Privacy: sanitize extraction and build debug context ──
+    // Privacy: sanitize extraction and build debug context
     const sanitizedExtraction = sanitizeExtractionForStorage(extraction, privacyConfig);
     const debugContext = buildDebugContext({
       backend: processingSettings.backend,
       model: processingSettings.model,
-      durationMs: primaryDurationMs,
+      durationMs: log.elapsedMs(),
       preset: presetParam ?? undefined,
     });
 
@@ -164,7 +199,11 @@ export async function POST(
       ? new Date(Date.now() + privacyConfig.sourceFileRetentionDays * 86400_000).toISOString()
       : null;
 
-    // Save extraction results — parse_status = "extracted"
+    log.completeStep("validating");
+
+    // ── Finalize: save extraction results ──
+    log.finalize("success");
+
     await supabase
       .from("uploaded_statements")
       .update({
@@ -181,164 +220,142 @@ export async function POST(
         verification_data: null,
         verification_settings: null,
         verification_error: null,
+        processing_step: null,
+        processing_log: log.toJSON(),
       })
       .eq("id", id);
 
-    // ── Auto-confirm mode: chain into Stage 2.5+3 (uses primary data) ──
-    let autoConfirmed = false;
-    let autoConfirmError: string | null = null;
-    let writeReport = null;
-
-    if (autoConfirm && hasData) {
-      try {
-        const existingAccounts = await loadExistingAccountsForMatching(
-          supabase,
-          user.id
-        );
-        const accountMap = matchAccounts(extraction, existingAccounts);
-        writeReport = await writeExtraction(
-          supabase,
-          user.id,
-          id,
-          extraction,
-          accountMap
-        );
-        autoConfirmed = true;
-      } catch (confirmErr) {
-        autoConfirmError =
-          confirmErr instanceof Error
-            ? confirmErr.message
-            : "Unknown auto-confirm error";
-        safeLog("error", "Extract", "Auto-confirm failed", { error: autoConfirmError, uploadId: id });
-
-        await supabase
-          .from("uploaded_statements")
-          .update({ parse_error: `Auto-confirm failed: ${autoConfirmError}` })
-          .eq("id", id);
-      }
-    }
-
-    // ── Verification extraction (runs after primary + auto-confirm) ──
-    const userSettings = await getLLMSettings(supabase, user.id);
-    const verificationEnabled = userSettings?.verificationEnabled ?? true;
-
-    if (verificationEnabled && hasData) {
-      // Skip verification if primary took > 180s (safety margin for 300s timeout)
-      if (primaryDurationMs > 180_000) {
-        safeLog("warn", "Verification", `Skipping — primary took ${Math.round(primaryDurationMs / 1000)}s (>180s limit)`);
-        await supabase
-          .from("uploaded_statements")
-          .update({
-            verification_error: `Skipped — primary extraction took ${Math.round(primaryDurationMs / 1000)}s`,
-            verification_settings: {
-              backend: userSettings?.verificationBackend ?? "cli",
-              model: userSettings?.verificationModel ?? "claude-sonnet-4-6",
-            },
-          })
-          .eq("id", id);
-      } else {
-        const verBackend = userSettings?.verificationBackend ?? "cli";
-        const verModel = userSettings?.verificationModel ?? "claude-sonnet-4-6";
-
-        try {
-          let verificationResult: { extraction: PortsieExtraction; rawResponse: unknown };
-
-          if (verBackend === "gemini") {
-            const geminiApiKey = process.env.GEMINI_API_KEY;
-            if (!geminiApiKey) throw new Error("GEMINI_API_KEY not set for verification");
-            verificationResult = await extractViaGemini(
-              geminiApiKey, processedFile, fileType, statement.filename, verModel
-            );
-          } else {
-            const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
-            verificationResult = await extractViaCLI(
-              processedFile, fileType, statement.filename, cliEndpoint, verModel
-            );
-          }
-
-          // Privacy: sanitize verification data, do not persist raw response
-          const sanitizedVerification = sanitizeExtractionForStorage(
-            verificationResult.extraction, privacyConfig
-          );
-
-          const verificationUpdate: Record<string, unknown> = {
-            verification_data: privacyConfig.retainVerificationData ? sanitizedVerification : null,
-            verification_settings: { backend: verBackend, model: verModel },
-            verification_error: null,
-          };
-
-          await supabase
-            .from("uploaded_statements")
-            .update(verificationUpdate)
-            .eq("id", id);
-        } catch (verErr) {
-          const verErrMsg = verErr instanceof Error ? verErr.message : "Unknown verification error";
-          safeLog("error", "Verification", "Extraction failed", { error: verErrMsg });
-          await supabase
-            .from("uploaded_statements")
-            .update({
-              verification_error: verErrMsg,
-              verification_settings: { backend: verBackend, model: verModel },
-            })
-            .eq("id", id);
-        }
-      }
-    }
+    // Fire-and-forget: send diagnostics to DO server
+    sendDiagnostics(log);
 
     // ── Build response ──
-    const responseData: Record<string, unknown> = {
+    return NextResponse.json({
       extraction,
-      autoConfirmed,
-      parseStatus: autoConfirmed ? "completed" : hasData ? "extracted" : "partial",
-    };
-
-    if (writeReport) responseData.writeReport = writeReport;
-    if (autoConfirmError) responseData.autoConfirmError = autoConfirmError;
-    if (!autoConfirm) {
-      responseData.summary = {
+      parseStatus: hasData ? "extracted" : "partial",
+      summary: {
         accounts: extraction.accounts.length,
         totalPositions,
         totalTransactions,
         totalBalances,
         unallocatedPositions: extraction.unallocated_positions.length,
         confidence: extraction.confidence,
-      };
-    }
-
-    return NextResponse.json(responseData);
+      },
+      processingLog: log.toJSON(),
+    });
   } catch (err) {
-    const errorMessage =
-      err instanceof Error ? err.message : "Unknown processing error";
-    safeLog("error", "Extract", "LLM extraction failed", { error: errorMessage, uploadId: id });
+    // Classify the error for user-facing messages and diagnostics
+    const classified = classifyError(err, log.currentStep());
+
+    // Update the processing log
+    log.failStep(log.currentStep(), classified.technicalDetail);
+    log.finalize(
+      classified.category === "timeout" ? "timeout" : "failed",
+      classified.category,
+      classified.userMessage
+    );
+
+    safeLog("error", "Extract", "LLM extraction failed", {
+      error: classified.technicalDetail,
+      category: classified.category,
+      retryable: classified.retryable,
+      uploadId: id,
+      step: log.currentStep(),
+    });
 
     await supabase
       .from("uploaded_statements")
       .update({
         parse_status: "failed",
-        parse_error: errorMessage,
+        parse_error: classified.userMessage,
+        processing_step: null,
+        processing_log: log.toJSON(),
       })
       .eq("id", id);
 
-    // Log extraction failure on 2nd+ attempt
-    if (newProcessCount >= 2) {
-      try {
-        const settings = await getLLMSettings(supabase, user.id);
-        await supabase.from("extraction_failures").insert({
-          user_id: user.id,
-          upload_id: id,
-          filename: statement.filename,
-          file_type: statement.file_type,
-          file_path: statement.file_path,
-          attempt_number: newProcessCount,
-          error_message: errorMessage,
-          llm_mode: settings?.llmMode ?? "cli",
-          file_size_bytes: statement.file_size_bytes,
-        });
-      } catch (logErr) {
-        safeLog("error", "Extract", "Failed to log extraction failure", { error: logErr });
-      }
+    // Log extraction failure on EVERY attempt (not just 2nd+)
+    try {
+      await supabase.from("extraction_failures").insert({
+        user_id: user.id,
+        upload_id: id,
+        filename: statement.filename,
+        file_type: statement.file_type,
+        file_path: statement.file_path,
+        attempt_number: newProcessCount,
+        error_message: classified.technicalDetail,
+        llm_mode: processingSettings.backend,
+        file_size_bytes: statement.file_size_bytes,
+        error_category: classified.category,
+        processing_step: log.currentStep(),
+        backend_used: processingSettings.backend,
+        model_used: processingSettings.model,
+        duration_ms: log.elapsedMs(),
+        processing_log: log.toJSON(),
+        processing_settings: processingSettings,
+      });
+    } catch (logErr) {
+      safeLog("error", "Extract", "Failed to log extraction failure", { error: logErr });
     }
 
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    // Fire-and-forget: send diagnostics to DO server
+    sendDiagnostics(log);
+
+    return NextResponse.json(
+      {
+        error: classified.userMessage,
+        errorCategory: classified.category,
+        retryable: classified.retryable,
+        processingLog: log.toJSON(),
+      },
+      { status: 500 }
+    );
   }
+}
+
+// ── Helpers ──
+
+/** Flush processing log to DB so polling clients can see current step. */
+async function flushLog(
+  supabase: SupabaseClient,
+  uploadId: string,
+  log: ProcessingLogger
+): Promise<void> {
+  await supabase
+    .from("uploaded_statements")
+    .update({
+      processing_step: log.currentStepString(),
+      processing_log: log.toJSON(),
+    })
+    .eq("id", uploadId);
+}
+
+/** Check if we're approaching the Vercel deadline and throw if so. */
+function checkDeadline(routeStartMs: number): void {
+  const elapsed = Date.now() - routeStartMs;
+  if (elapsed > DEADLINE_MS) {
+    throw new Error(
+      `Approaching Vercel 300s limit after ${Math.round(elapsed / 1000)}s`
+    );
+  }
+}
+
+/** Fire-and-forget: send processing log to DO diagnostics endpoint. */
+function sendDiagnostics(log: ProcessingLogger): void {
+  const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT;
+  if (!cliEndpoint) return;
+
+  const diagUrl = cliEndpoint.replace(/\/extract\/?$/, "/diagnostics");
+  fetch(diagUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(process.env.PORTSIE_CLI_AUTH_TOKEN
+        ? { Authorization: `Bearer ${process.env.PORTSIE_CLI_AUTH_TOKEN}` }
+        : {}),
+    },
+    body: JSON.stringify({
+      processingLog: log.toJSON(),
+      uploadId: log.toJSON().uploadId,
+    }),
+    signal: AbortSignal.timeout(5_000),
+  }).catch(() => {}); // Silent — diagnostics must never block processing
 }
