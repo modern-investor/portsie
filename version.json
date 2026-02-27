@@ -1,12 +1,12 @@
 {
-  "version": "v260226.01 3:07a",
-  "release": 151,
-  "sha": "90057349",
-  "fullSha": "90057349f5d75652ab9e0b81c31e3e784444c782",
+  "version": "v260227.01 8:10a",
+  "release": 152,
+  "sha": "897b51e6",
+  "fullSha": "897b51e6a7195e9769936c608ff2d122f5a8e260",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000463",
-  "pushedAt": "2026-02-26T09:07:18Z",
-  "commits": [{"sha": "90057349f5d75652ab9e0b81c31e3e784444c782", "short_sha": "90057349", "author": "rahulio", "message": "Replace boring processing factoids with jaw-dropping finance stories"}]
+  "machine": "GitHub Actions 1000000467",
+  "pushedAt": "2026-02-27T14:10:44Z",
+  "commits": [{"sha": "897b51e6a7195e9769936c608ff2d122f5a8e260", "short_sha": "897b51e6", "author": "rahulio", "message": "Add adaptive ingestion governance and observability foundation."}]
 }
