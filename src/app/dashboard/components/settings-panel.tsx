@@ -7,6 +7,7 @@ import { LLMSettings } from "./llm-settings";
 import { ExtractionFailures } from "./extraction-failures";
 import { QualityChecks } from "./quality-checks";
 import { AdminDiagnostics } from "./admin-diagnostics";
+import { FailureAnalyses } from "./failure-analyses";
 
 type SettingsTab = "llm" | "failures" | "quality" | "diagnostics";
 
@@ -19,25 +20,19 @@ export function SettingsPanel() {
   // Restore saved tab from localStorage after hydration to avoid React #418
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY) as SettingsTab | null;
-    // Don't restore "diagnostics" tab until we know admin status
-    if (saved && VALID_TABS.includes(saved) && saved !== "diagnostics") setTab(saved);
+    if (saved && VALID_TABS.includes(saved)) setTab(saved);
   }, []);
   const [unresolvedCount, setUnresolvedCount] = useState(0);
   const [qcIssueCount, setQcIssueCount] = useState(0);
   const [showAdmin, setShowAdmin] = useState(false);
 
-  // Check admin status on mount
+  // Check admin status on mount (admin gets additional diagnostics section)
   useEffect(() => {
     fetch("/api/admin/status")
       .then(async (res) => {
         if (!res.ok) return;
         const data = await res.json();
-        if (data.isAdmin) {
-          setShowAdmin(true);
-          // Restore diagnostics tab if it was previously saved
-          const saved = localStorage.getItem(STORAGE_KEY);
-          if (saved === "diagnostics") setTab("diagnostics");
-        }
+        if (data.isAdmin) setShowAdmin(true);
       })
       .catch(() => {});
   }, []);
@@ -90,12 +85,10 @@ export function SettingsPanel() {
               </span>
             )}
           </TabsTrigger>
-          {showAdmin && (
-            <TabsTrigger value="diagnostics">
-              <Activity className="size-4" />
-              Diagnostics
-            </TabsTrigger>
-          )}
+          <TabsTrigger value="diagnostics">
+            <Activity className="size-4" />
+            Diagnostics
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="llm">
@@ -107,11 +100,10 @@ export function SettingsPanel() {
         <TabsContent value="quality">
           <QualityChecks onUnresolvedCount={setQcIssueCount} />
         </TabsContent>
-        {showAdmin && (
-          <TabsContent value="diagnostics">
-            <AdminDiagnostics />
-          </TabsContent>
-        )}
+        <TabsContent value="diagnostics">
+          <FailureAnalyses />
+          {showAdmin && <AdminDiagnostics />}
+        </TabsContent>
       </Tabs>
     </div>
   );

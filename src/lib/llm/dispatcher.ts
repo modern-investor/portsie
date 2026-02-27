@@ -46,10 +46,29 @@ export async function extractFinancialData(
         processingSettings.model
       );
     }
+
+    // Large file auto-routing: files >5 MB base64 (~3.75 MB raw) go directly
+    // to CLI backend, which runs on a persistent DO server without Vercel's
+    // 300s timeout constraint. This prevents deterministic timeouts from
+    // File API upload overhead + Gemini processing on large PDFs.
+    const base64Size = processedFile.base64Data?.length ?? 0;
+    const LARGE_FILE_THRESHOLD = 5_000_000; // 5 MB base64
+    const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
+
+    if (base64Size > LARGE_FILE_THRESHOLD && cliEndpoint) {
+      safeLog("info", "Dispatcher",
+        `Large file (${(base64Size / 1_048_576).toFixed(1)} MB base64) — routing directly to CLI to avoid Vercel timeout`,
+        { filename, fileType, base64Size }
+      );
+      return extractViaCLI(
+        processedFile, fileType, filename, cliEndpoint,
+        processingSettings.model || "claude-sonnet-4-6"
+      );
+    }
+
     const geminiApiKey = process.env.GEMINI_API_KEY;
     if (!geminiApiKey) {
       safeLog("warn", "Dispatcher", "GEMINI_API_KEY not set, falling back to CLI");
-      const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
       return extractViaCLI(processedFile, fileType, filename, cliEndpoint);
     }
     try {
@@ -57,7 +76,8 @@ export async function extractFinancialData(
         geminiApiKey, processedFile, fileType, filename,
         processingSettings.model,
         processingSettings.thinkingLevel,
-        processingSettings.mediaResolution
+        processingSettings.mediaResolution,
+        deadlineMs
       );
     } catch (geminiError) {
       const errorMsg = geminiError instanceof Error ? geminiError.message : String(geminiError);
@@ -114,7 +134,11 @@ export async function extractFinancialData(
       geminiApiKey,
       processedFile,
       fileType,
-      filename
+      filename,
+      undefined, // model
+      undefined, // thinkingLevel
+      undefined, // mediaResolution
+      deadlineMs
     );
   } catch (geminiError) {
     const errorMsg = geminiError instanceof Error ? geminiError.message : String(geminiError);

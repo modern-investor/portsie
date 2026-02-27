@@ -26,7 +26,8 @@ export async function extractViaGemini(
   filename: string,
   model?: string,
   thinkingLevelOverride?: "minimal" | "low" | "medium" | "high",
-  mediaResolutionOverride?: string
+  mediaResolutionOverride?: string,
+  deadlineMs?: number
 ): Promise<ExtractionResult> {
   const geminiModel = model || DEFAULT_MODEL;
   const systemPrompt = buildExtractionPrompt();
@@ -117,8 +118,14 @@ export async function extractViaGemini(
   const url = `${GEMINI_API_URL}/${geminiModel}:streamGenerateContent?alt=sse&key=${apiKey}`;
   const jsonBody = JSON.stringify(requestBody);
 
+  // Adaptive timeout: if we have a deadline, compute remaining time minus a 10s buffer.
+  // This prevents starting a long Gemini call when we've already spent 200s on file upload.
+  // Falls back to 240s if no deadline is provided.
+  const fetchTimeoutMs = deadlineMs
+    ? Math.max(deadlineMs - Date.now() - 10_000, 30_000) // at least 30s, leave 10s buffer
+    : 240_000;
+
   // Fetch with retry on transient errors (429, 503).
-  // Timeout reduced from 600s to 240s to fit within 300s Vercel budget.
   const response = await withRetry(
     async () => {
       let resp: Response;
@@ -127,7 +134,7 @@ export async function extractViaGemini(
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: jsonBody,
-          signal: AbortSignal.timeout(240_000), // 4 min — leave room for fallback
+          signal: AbortSignal.timeout(fetchTimeoutMs),
         });
       } catch (fetchErr) {
         const cause = fetchErr instanceof Error && 'cause' in fetchErr
@@ -344,19 +351,21 @@ async function uploadFileToGemini(
     throw new Error(`No file URI in Gemini upload response: ${JSON.stringify(fileInfo).slice(0, 200)}`);
   }
 
-  // Wait for file to be ACTIVE (processing can take a few seconds)
+  // Wait for file to be ACTIVE (processing can take a few seconds).
+  // Tightened: 20 polls × (3s timeout + 500ms sleep) = 70s worst case (down from 110s).
+  // Most files become ACTIVE in 1-3s, so this rarely loops more than 3-4 times.
   const fileName = fileInfo.file?.name;
   if (fileName) {
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 20; i++) {
       const statusResp = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`,
-        { signal: AbortSignal.timeout(10_000) } // 10s timeout per status check
+        { signal: AbortSignal.timeout(3_000) } // 3s timeout per status check
       );
       if (statusResp.ok) {
         const status = await statusResp.json();
         if (status.state === "ACTIVE") break;
       }
-      await new Promise((r) => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 500));
     }
   }
 

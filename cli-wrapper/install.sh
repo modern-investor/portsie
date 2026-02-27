@@ -52,6 +52,11 @@ AUTH_TOKEN=
 
 # Max processing time per request (ms)
 MAX_TIMEOUT_MS=180000
+
+# Supabase credentials (for persisting failure analyses to DB)
+# Copy from your Portsie .env.local or Supabase dashboard
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
 ENVEOF
     chown bugfixer:bugfixer "$ENV_FILE"
     chmod 600 "$ENV_FILE"
@@ -75,6 +80,7 @@ echo ""
 echo "Next steps:"
 echo "  1. Edit $ENV_FILE:"
 echo "     - Set AUTH_TOKEN to a random secret"
+echo "     - Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (for failure analysis persistence)"
 echo ""
 echo "  2. Add the same token to Vercel env vars as PORTSIE_CLI_AUTH_TOKEN"
 echo ""

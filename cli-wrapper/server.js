@@ -16,6 +16,8 @@ const DIAGNOSTICS_FILE = join(__dirname, "diagnostics.jsonl");
 const PORT = parseInt(process.env.PORT || "8910", 10);
 const AUTH_TOKEN = process.env.AUTH_TOKEN; // shared secret with Vercel
 const MAX_TIMEOUT_MS = parseInt(process.env.MAX_TIMEOUT_MS || "300000", 10); // 5 min
+const SUPABASE_URL = process.env.SUPABASE_URL; // for persisting failure analyses
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const MAX_BODY_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_QUEUE_SIZE = 20;
 const MAX_CONCURRENT = parseInt(process.env.MAX_CONCURRENT || "3", 10); // concurrent claude processes
@@ -219,55 +221,213 @@ function readBody(req) {
 }
 
 /**
+ * Persist a failure analysis to Supabase via REST API (native fetch).
+ * Uses service role key for INSERT (RLS policy allows service role).
+ */
+async function persistAnalysis(analysisRow) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    log("Supabase credentials not configured — skipping DB persistence");
+    return null;
+  }
+
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/failure_analyses`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify(analysisRow),
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text().catch(() => "unknown");
+      log(`Supabase insert failed (${resp.status}): ${errText}`);
+      return null;
+    }
+
+    const rows = await resp.json();
+    const id = rows?.[0]?.id ?? null;
+    log(`Analysis persisted to failure_analyses: ${id}`);
+    return id;
+  } catch (err) {
+    log(`Supabase persistence error: ${err.message}`);
+    return null;
+  }
+}
+
+/**
+ * Look up user_id and file metadata from an extraction_failures row.
+ */
+async function lookupFailureContext(extractionFailureId) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !extractionFailureId) return null;
+
+  try {
+    const resp = await fetch(
+      `${SUPABASE_URL}/rest/v1/extraction_failures?id=eq.${extractionFailureId}&select=user_id,upload_id,filename,file_size_bytes,processing_settings,processing_log`,
+      {
+        headers: {
+          apikey: SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        signal: AbortSignal.timeout(5_000),
+      }
+    );
+    if (!resp.ok) return null;
+    const rows = await resp.json();
+    return rows?.[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Analyze a failed processing log using Claude.
  * Runs asynchronously — does not block the diagnostics response.
+ *
+ * Enhanced: requests structured JSON output from Claude and persists
+ * the analysis to the `failure_analyses` Supabase table.
  */
-async function analyzeFailure(processingLog, uploadId) {
+async function analyzeFailure(processingLog, uploadId, extractionFailureId) {
+  const startMs = Date.now();
+
+  // Look up context from the extraction_failures record
+  const failureCtx = await lookupFailureContext(extractionFailureId);
+
   const waypointSummary = (processingLog.waypoints || [])
     .map((w) => `  ${w.step}: ${w.status} (${w.durationMs ?? "?"}ms)${w.error ? " ERROR: " + w.error : ""}`)
     .join("\n");
 
-  const prompt = `You are a DevOps analyst. Analyze this extraction processing failure and suggest the most likely root cause and fix.
+  const prompt = `You are a DevOps analyst for Portsie, a financial document extraction system. Analyze this processing failure and return ONLY a JSON object (no markdown, no code fences).
+
+## Failure Context
 
 Upload: ${processingLog.fileInfo?.filename ?? "unknown"} (${processingLog.fileInfo?.fileType ?? "?"}, ${processingLog.fileInfo?.sizeBytes ?? "?"} bytes)
 Backend: ${processingLog.backend ?? "?"} / ${processingLog.model ?? "?"}
 Preset: ${processingLog.preset ?? "?"}
-Duration: ${processingLog.totalDurationMs ?? "?"}ms
+Total Duration: ${processingLog.totalDurationMs ?? "?"}ms
+Outcome: ${processingLog.outcome ?? "?"}
 Error Category: ${processingLog.errorCategory ?? "?"}
-Error: ${processingLog.errorMessage ?? "none"}
+Error Message: ${processingLog.errorMessage ?? "none"}
+Attempt Number: ${processingLog.attemptNumber ?? "?"}
 
-Waypoints:
+## Processing Steps (Waypoints)
 ${waypointSummary || "  (none recorded)"}
 
-Is this a transient issue (retry will help) or systematic (code change needed)? Be concise — max 3 sentences.`;
+## System Architecture
+- Vercel serverless: 300s hard limit, 280s self-imposed deadline
+- Gemini 3 Flash: primary extraction engine (streaming SSE)
+- Files >4MB base64: uploaded via Gemini File API (resumable upload + poll ACTIVE)
+- Files >5MB base64: routed to CLI backend (persistent DO server, no timeout constraint)
+- Claude Sonnet 4.6 via CLI wrapper: fallback on Gemini failure (if >60s remaining)
+
+## Required JSON Output
+
+Return exactly this JSON structure:
+{
+  "root_cause": "1-2 sentence root cause explanation",
+  "affected_step": "downloading|preprocessing|extracting|validating|confirming",
+  "timing_breakdown": { "step_name_ms": number_or_null },
+  "recommended_fix": "1-2 sentence actionable recommendation",
+  "severity": "low|medium|high|critical"
+}
+
+Severity guide:
+- critical: deterministic failure, same file will always fail
+- high: likely to recur for similar files
+- medium: transient but frequent
+- low: one-off / unlikely to recur`;
 
   return new Promise((resolve, reject) => {
     const child = spawn("claude", ["-p", prompt, "--model", "claude-sonnet-4-6", "--output-format", "json", "--dangerously-skip-permissions"], {
       env: { ...process.env, CI: "true", HOME: process.env.HOME || "/home/bugfixer" },
       stdio: ["ignore", "pipe", "pipe"],
-      timeout: 60000,
+      timeout: 90000, // 90s for analysis
     });
 
     let stdout = "";
     child.stdout.on("data", (chunk) => { stdout += chunk.toString(); });
-    child.on("close", (code) => {
-      let analysis = stdout;
+    child.on("close", async (code) => {
+      const durationMs = Date.now() - startMs;
+
+      // Parse Claude's response — try to extract the JSON object
+      let analysis = null;
+      let rawText = stdout;
       try {
         const parsed = JSON.parse(stdout);
-        analysis = typeof parsed.result === "string" ? parsed.result : JSON.stringify(parsed.result);
+        rawText = typeof parsed.result === "string" ? parsed.result : JSON.stringify(parsed.result);
       } catch {}
 
+      // Try to parse the structured JSON from the response text
+      try {
+        // Strip markdown code fences if present
+        let jsonStr = rawText;
+        const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (fenceMatch) jsonStr = fenceMatch[1];
+        jsonStr = jsonStr.trim();
+
+        // Find the JSON object boundaries
+        const startIdx = jsonStr.indexOf("{");
+        const endIdx = jsonStr.lastIndexOf("}");
+        if (startIdx !== -1 && endIdx > startIdx) {
+          jsonStr = jsonStr.slice(startIdx, endIdx + 1);
+        }
+
+        analysis = JSON.parse(jsonStr);
+      } catch {
+        // Fallback: treat entire response as root_cause text
+        analysis = {
+          root_cause: rawText.slice(0, 500),
+          affected_step: processingLog.waypoints?.find((w) => w.status === "failed")?.step ?? null,
+          timing_breakdown: null,
+          recommended_fix: null,
+          severity: "medium",
+        };
+      }
+
+      // Write to local JSONL (backup)
       const logLine = JSON.stringify({
         type: "analysis",
         uploadId,
+        extractionFailureId,
         receivedAt: new Date().toISOString(),
+        durationMs,
         analysis,
       });
       fs.appendFileSync(DIAGNOSTICS_FILE, logLine + "\n");
-      log(`Diagnostics analysis saved for ${uploadId} (${analysis.length} chars)`);
+      log(`Diagnostics analysis saved for ${uploadId} (${durationMs}ms, severity: ${analysis.severity})`);
+
+      // Persist to Supabase failure_analyses table
+      const analysisRow = {
+        user_id: failureCtx?.user_id ?? null,
+        upload_id: failureCtx?.upload_id ?? null,
+        extraction_failure_id: extractionFailureId ?? null,
+        root_cause: analysis.root_cause ?? "Unknown",
+        affected_step: analysis.affected_step ?? null,
+        timing_breakdown: analysis.timing_breakdown ?? null,
+        recommended_fix: analysis.recommended_fix ?? null,
+        severity: ["low", "medium", "high", "critical"].includes(analysis.severity)
+          ? analysis.severity
+          : "medium",
+        analysis_model: "claude-sonnet-4-6",
+        analysis_duration_ms: durationMs,
+        raw_analysis: analysis,
+        filename: processingLog.fileInfo?.filename ?? failureCtx?.filename ?? null,
+        file_size_bytes: processingLog.fileInfo?.sizeBytes ?? failureCtx?.file_size_bytes ?? null,
+        processing_settings: failureCtx?.processing_settings ?? null,
+        processing_log: processingLog ?? null,
+      };
+
+      await persistAnalysis(analysisRow);
       resolve(analysis);
     });
-    child.on("error", reject);
+    child.on("error", (err) => {
+      log(`Analysis spawn error: ${err.message}`);
+      reject(err);
+    });
   });
 }
 
@@ -319,20 +479,21 @@ const server = http.createServer(async (req, res) => {
 
     try {
       const body = await readBody(req);
-      const { processingLog, uploadId } = JSON.parse(body);
+      const { processingLog, uploadId, extractionFailureId } = JSON.parse(body);
 
       // Persist to JSONL file
       const logLine = JSON.stringify({
         receivedAt: new Date().toISOString(),
         uploadId,
+        extractionFailureId,
         ...processingLog,
       });
       fs.appendFileSync(DIAGNOSTICS_FILE, logLine + "\n");
-      log(`Diagnostics received for ${uploadId}: ${processingLog?.outcome ?? "?"} (${processingLog?.totalDurationMs ?? "?"}ms)`);
+      log(`Diagnostics received for ${uploadId}: ${processingLog?.outcome ?? "?"} (${processingLog?.totalDurationMs ?? "?"}ms)${extractionFailureId ? ` failureId=${extractionFailureId}` : ""}`);
 
       // If failed, trigger async Claude analysis (fire-and-forget)
       if (processingLog?.outcome === "failed" || processingLog?.outcome === "timeout") {
-        analyzeFailure(processingLog, uploadId).catch((err) =>
+        analyzeFailure(processingLog, uploadId, extractionFailureId).catch((err) =>
           log(`Diagnostics analysis error: ${err.message}`)
         );
       }

@@ -348,8 +348,9 @@ export async function POST(
     }
 
     // Log extraction failure on EVERY attempt (not just 2nd+)
+    let extractionFailureId: string | null = null;
     try {
-      await supabase.from("extraction_failures").insert({
+      const { data: failureRow } = await supabase.from("extraction_failures").insert({
         user_id: user.id,
         upload_id: id,
         filename: statement.filename,
@@ -366,13 +367,14 @@ export async function POST(
         duration_ms: log.elapsedMs(),
         processing_log: log.toJSON(),
         processing_settings: processingSettings,
-      });
+      }).select("id").single();
+      extractionFailureId = failureRow?.id ?? null;
     } catch (logErr) {
       safeLog("error", "Extract", "Failed to log extraction failure", { error: logErr });
     }
 
-    // Fire-and-forget: send diagnostics to DO server
-    sendDiagnostics(log);
+    // Fire-and-forget: send diagnostics to DO server (includes failure ID for analysis linkage)
+    sendDiagnostics(log, extractionFailureId);
 
     return NextResponse.json(
       {
@@ -414,7 +416,7 @@ function checkDeadline(routeStartMs: number): void {
 }
 
 /** Fire-and-forget: send processing log to DO diagnostics endpoint. */
-function sendDiagnostics(log: ProcessingLogger): void {
+function sendDiagnostics(log: ProcessingLogger, extractionFailureId?: string | null): void {
   const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT;
   if (!cliEndpoint) return;
 
@@ -430,6 +432,7 @@ function sendDiagnostics(log: ProcessingLogger): void {
     body: JSON.stringify({
       processingLog: log.toJSON(),
       uploadId: log.toJSON().uploadId,
+      extractionFailureId: extractionFailureId ?? undefined,
     }),
     signal: AbortSignal.timeout(5_000),
   }).catch(() => {}); // Silent — diagnostics must never block processing
