@@ -41,11 +41,23 @@ CREATE INDEX IF NOT EXISTS idx_failure_analyses_failure
 -- RLS: users can only read their own analyses
 ALTER TABLE failure_analyses ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can read own failure analyses"
-  ON failure_analyses FOR SELECT
-  USING (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'failure_analyses' AND policyname = 'Users can read own failure analyses'
+  ) THEN
+    CREATE POLICY "Users can read own failure analyses"
+      ON failure_analyses FOR SELECT
+      USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
 -- Service role can insert (CLI wrapper uses service role key)
-CREATE POLICY "Service role can insert failure analyses"
-  ON failure_analyses FOR INSERT
-  WITH CHECK (true);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'failure_analyses' AND policyname = 'Service role can insert failure analyses'
+  ) THEN
+    CREATE POLICY "Service role can insert failure analyses"
+      ON failure_analyses FOR INSERT
+      WITH CHECK (true);
+  END IF;
+END $$;
