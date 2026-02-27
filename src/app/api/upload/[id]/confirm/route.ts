@@ -7,6 +7,11 @@ import {
 import { writeExtraction } from "@/lib/extraction/db-writer";
 import { checkExtractionIntegrity } from "@/lib/extraction/integrity-check";
 import type { PortsieExtraction, AccountMapResult } from "@/lib/extraction/schema";
+import {
+  completeIngestionRun,
+  failIngestionRun,
+  startIngestionRun,
+} from "@/lib/extraction/ingestion-runs";
 
 export const maxDuration = 300; // 5 minutes — large extractions (50+ accounts) need time for sequential DB writes
 
@@ -36,6 +41,12 @@ export async function POST(
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const runId = await startIngestionRun(supabase, {
+    userId: user.id,
+    sourceKey: "upload_document",
+    runKind: "confirm",
+    uploadedStatementId: id,
+  });
 
   // Parse optional overrides from request body
   let accountMapOverrides: Partial<AccountMapResult> | undefined;
@@ -55,10 +66,24 @@ export async function POST(
     .single();
 
   if (error || !statement) {
+    if (runId) {
+      await failIngestionRun(supabase, {
+        runId,
+        errorCategory: "not_found",
+        errorMessage: "Upload not found",
+      });
+    }
     return NextResponse.json({ error: "Upload not found" }, { status: 404 });
   }
 
   if (!statement.extracted_data) {
+    if (runId) {
+      await failIngestionRun(supabase, {
+        runId,
+        errorCategory: "missing_extraction",
+        errorMessage: "No extraction data to confirm",
+      });
+    }
     return NextResponse.json(
       {
         error: "No extraction data to confirm. Extract the file first.",
@@ -114,6 +139,17 @@ export async function POST(
       .update({ integrity_report: integrityReport })
       .eq("id", id);
 
+    if (runId) {
+      await completeIngestionRun(supabase, {
+        runId,
+        diagnostics: {
+          matchedAccounts: accountMap.mappings.filter((m) => m.action === "match_existing").length,
+          newAccounts: accountMap.mappings.filter((m) => m.action === "create_new").length,
+          warnings: writeReport.warnings.length,
+        },
+      });
+    }
+
     return NextResponse.json({
       success: true,
       writeReport,
@@ -131,6 +167,14 @@ export async function POST(
         parse_error: `Confirm failed: ${errorMessage}`,
       })
       .eq("id", id);
+
+    if (runId) {
+      await failIngestionRun(supabase, {
+        runId,
+        errorCategory: "confirm_failed",
+        errorMessage,
+      });
+    }
 
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }

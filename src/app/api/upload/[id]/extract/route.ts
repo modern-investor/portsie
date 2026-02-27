@@ -14,6 +14,16 @@ import {
 import { ProcessingLogger } from "@/lib/extraction/processing-log";
 import { classifyError } from "@/lib/extraction/errors";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { detectUploadSource } from "@/lib/upload/source-detector";
+import {
+  completeIngestionRun,
+  failIngestionRun,
+  startIngestionRun,
+} from "@/lib/extraction/ingestion-runs";
+import { persistObservations, recordStructureSignature } from "@/lib/extraction/governance";
+import { AdapterRegistry } from "@/lib/extraction/adapters/registry";
+import { UploadExtractionAdapter } from "@/lib/extraction/adapters/upload-adapter";
+import type { ValidationObservation } from "@/lib/extraction/schema";
 
 // LLM extraction can take several minutes for large PDF/CSV files
 export const maxDuration = 300; // 5 minutes
@@ -50,6 +60,7 @@ export async function POST(
     presetParam && PROCESSING_PRESETS[presetParam]
       ? PROCESSING_PRESETS[presetParam]
       : PROCESSING_PRESETS[DEFAULT_PRESET];
+  let ingestionRunId: string | null = null;
 
   const privacyConfig = getPrivacyConfig();
 
@@ -73,6 +84,20 @@ export async function POST(
   if (error || !statement) {
     return NextResponse.json({ error: "Upload not found" }, { status: 404 });
   }
+
+  ingestionRunId = await startIngestionRun(supabase, {
+    userId: user.id,
+    sourceKey: "upload_document",
+    runKind: "extract",
+    uploadedStatementId: id,
+    backend: processingSettings.backend,
+    model: processingSettings.model,
+    diagnostics: {
+      filename: statement.filename,
+      fileType: statement.file_type,
+      preset: presetParam ?? processingSettings.preset,
+    },
+  });
 
   // Track processing attempt count
   const newProcessCount = (statement.process_count ?? 0) + 1;
@@ -110,6 +135,13 @@ export async function POST(
     .maybeSingle();
 
   if (!lockRow) {
+    if (ingestionRunId) {
+      await failIngestionRun(supabase, {
+        runId: ingestionRunId,
+        errorCategory: "already_processing",
+        errorMessage: "This file is already being processed",
+      });
+    }
     return NextResponse.json(
       { error: "This file is already being processed" },
       { status: 409 }
@@ -141,6 +173,18 @@ export async function POST(
 
     const buffer = Buffer.from(await fileData.arrayBuffer());
     const fileType = statement.file_type as UploadFileType;
+    const detection = detectUploadSource(statement.filename, fileData.type, buffer);
+    await recordStructureSignature(
+      supabase,
+      "upload_document",
+      detection.structureSignature,
+      1,
+      {
+        kind: detection.kind,
+        confidence: detection.confidence,
+        reasons: detection.reasons,
+      }
+    );
     const processedFile = processFileForLLM(buffer, fileType, fileData.type);
     log.completeStep("preprocessing");
 
@@ -157,7 +201,7 @@ export async function POST(
 
     // Pass deadline to dispatcher so it can gate fallback decisions
     const deadlineMs = routeStartMs + DEADLINE_MS;
-    const { extraction } = await extractFinancialData(
+    const { extraction, rawResponse } = await extractFinancialData(
       supabase,
       user.id,
       processedFile,
@@ -166,6 +210,18 @@ export async function POST(
       processingSettings,
       deadlineMs
     );
+    const adapterRegistry = new AdapterRegistry([new UploadExtractionAdapter()]);
+    const uploadAdapter = adapterRegistry.resolve({
+      kind: `upload_${detection.kind}`,
+      payload: extraction,
+      metadata: { fileType, filename: statement.filename },
+    });
+    const adapted = await uploadAdapter.normalize({
+      kind: `upload_${detection.kind}`,
+      payload: extraction,
+      metadata: { fileType, filename: statement.filename },
+    });
+    const normalizedExtraction = adapted.extraction ?? extraction;
     log.completeStep("extracting");
 
     // ── Step 4: Validate & count results ──
@@ -173,20 +229,20 @@ export async function POST(
     await flushLog(supabase, id, log);
 
     const totalPositions =
-      extraction.accounts.reduce((sum, a) => sum + a.positions.length, 0) +
-      extraction.unallocated_positions.length;
-    const totalTransactions = extraction.accounts.reduce(
+      normalizedExtraction.accounts.reduce((sum, a) => sum + a.positions.length, 0) +
+      normalizedExtraction.unallocated_positions.length;
+    const totalTransactions = normalizedExtraction.accounts.reduce(
       (sum, a) => sum + a.transactions.length,
       0
     );
-    const totalBalances = extraction.accounts.reduce(
+    const totalBalances = normalizedExtraction.accounts.reduce(
       (sum, a) => sum + a.balances.length,
       0
     );
     const hasData = totalPositions > 0 || totalTransactions > 0 || totalBalances > 0;
 
     // Privacy: sanitize extraction and build debug context
-    const sanitizedExtraction = sanitizeExtractionForStorage(extraction, privacyConfig);
+    const sanitizedExtraction = sanitizeExtractionForStorage(normalizedExtraction, privacyConfig);
     const debugContext = buildDebugContext({
       backend: processingSettings.backend,
       model: processingSettings.model,
@@ -211,9 +267,9 @@ export async function POST(
         parsed_at: new Date().toISOString(),
         extracted_data: sanitizedExtraction,
         debug_context: debugContext,
-        extraction_schema_version: extraction.schema_version,
-        statement_start_date: extraction.document.statement_start_date,
-        statement_end_date: extraction.document.statement_end_date,
+        extraction_schema_version: normalizedExtraction.schema_version,
+        statement_start_date: normalizedExtraction.document.statement_start_date,
+        statement_end_date: normalizedExtraction.document.statement_end_date,
         parse_error: null,
         processing_settings: processingSettings,
         source_file_expires_at: sourceFileExpiresAt,
@@ -225,20 +281,48 @@ export async function POST(
       })
       .eq("id", id);
 
+    const observationsFromValidation: ValidationObservation[] = Array.isArray(
+      (rawResponse as { validationObservations?: unknown })?.validationObservations
+    )
+      ? ((rawResponse as { validationObservations: ValidationObservation[] }).validationObservations ?? [])
+      : [];
+
+    await persistObservations(supabase, {
+      ingestionRunId,
+      userId: user.id,
+      sourceKey: "upload_document",
+      observations: [...observationsFromValidation, ...adapted.observations],
+      maxRows: 100,
+    });
+
+    if (ingestionRunId) {
+      await completeIngestionRun(supabase, {
+        runId: ingestionRunId,
+        diagnostics: {
+          accounts: normalizedExtraction.accounts.length,
+          totalPositions,
+          totalTransactions,
+          totalBalances,
+          detection,
+          observationCount: observationsFromValidation.length + adapted.observations.length,
+        },
+      });
+    }
+
     // Fire-and-forget: send diagnostics to DO server
     sendDiagnostics(log);
 
     // ── Build response ──
     return NextResponse.json({
-      extraction,
+      extraction: normalizedExtraction,
       parseStatus: hasData ? "extracted" : "partial",
       summary: {
-        accounts: extraction.accounts.length,
+        accounts: normalizedExtraction.accounts.length,
         totalPositions,
         totalTransactions,
         totalBalances,
-        unallocatedPositions: extraction.unallocated_positions.length,
-        confidence: extraction.confidence,
+        unallocatedPositions: normalizedExtraction.unallocated_positions.length,
+        confidence: normalizedExtraction.confidence,
       },
       processingLog: log.toJSON(),
     });
@@ -271,6 +355,18 @@ export async function POST(
         processing_log: log.toJSON(),
       })
       .eq("id", id);
+
+    if (ingestionRunId) {
+      await failIngestionRun(supabase, {
+        runId: ingestionRunId,
+        errorCategory: classified.category,
+        errorMessage: classified.userMessage,
+        diagnostics: {
+          processingStep: log.currentStep(),
+          retryable: classified.retryable,
+        },
+      });
+    }
 
     // Log extraction failure on EVERY attempt (not just 2nd+)
     try {

@@ -338,6 +338,12 @@ export interface ValidationWarning {
   message: string;
 }
 
+export interface ValidationObservation {
+  path: string;
+  value: unknown;
+  confidence: Confidence;
+}
+
 export interface ValidationResult {
   /** Whether the extraction is valid */
   valid: boolean;
@@ -349,6 +355,8 @@ export interface ValidationResult {
   warnings: ValidationWarning[];
   /** Type coercions that were applied, e.g. "total_amount coerced from string to number" */
   coercions: string[];
+  /** Unknown/unmapped fields observed during validation */
+  observations: ValidationObservation[];
 }
 
 // ── JSON Schema for runtime validation ──

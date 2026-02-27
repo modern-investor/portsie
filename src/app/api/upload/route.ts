@@ -4,6 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { MIME_TO_FILE_TYPE } from "@/lib/upload/types";
 import { UPLOAD_CONFIG } from "@/lib/upload/config";
 import { warmupCliEndpoint } from "@/lib/llm/warmup";
+import { detectUploadSource } from "@/lib/upload/source-detector";
+import {
+  completeIngestionRun,
+  failIngestionRun,
+  startIngestionRun,
+} from "@/lib/extraction/ingestion-runs";
 
 /** POST /api/upload — Upload a file and create a metadata record */
 export async function POST(request: NextRequest) {
@@ -18,6 +24,7 @@ export async function POST(request: NextRequest) {
 
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
+  let runId: string | null = null;
 
   if (!file) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -44,6 +51,21 @@ export async function POST(request: NextRequest) {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
   const fileHash = createHash("sha256").update(buffer).digest("hex");
+  const detection = detectUploadSource(file.name, file.type, buffer);
+
+  runId = await startIngestionRun(supabase, {
+    userId: user.id,
+    sourceKey: "upload_document",
+    runKind: "upload",
+    diagnostics: {
+      filename: file.name,
+      mimeType: file.type,
+      fileType,
+      fileSizeBytes: file.size,
+      detection,
+      duplicateCheckHash: fileHash.slice(0, 12),
+    },
+  });
 
   // Check for duplicate upload (same file content for same user)
   const { data: existing } = await supabase
@@ -56,6 +78,16 @@ export async function POST(request: NextRequest) {
 
   // If a record with the same hash already exists, return it instead of creating a duplicate
   if (existing) {
+    if (runId) {
+      await completeIngestionRun(supabase, {
+        runId,
+        diagnostics: {
+          duplicate: true,
+          uploadedStatementId: existing.id,
+          detection,
+        },
+      });
+    }
     return NextResponse.json(existing, { status: 200 });
   }
 
@@ -66,6 +98,14 @@ export async function POST(request: NextRequest) {
     .upload(filePath, buffer, { contentType: file.type });
 
   if (storageError) {
+    if (runId) {
+      await failIngestionRun(supabase, {
+        runId,
+        errorCategory: "storage_upload_error",
+        errorMessage: storageError.message,
+        diagnostics: { detection, stage: "storage_upload" },
+      });
+    }
     console.error("Storage upload failed:", storageError);
     return NextResponse.json(
       { error: `Storage upload failed: ${storageError.message}` },
@@ -93,6 +133,14 @@ export async function POST(request: NextRequest) {
   if (dbError) {
     // Clean up storage file on DB failure
     await supabase.storage.from("statements").remove([filePath]);
+    if (runId) {
+      await failIngestionRun(supabase, {
+        runId,
+        errorCategory: "db_insert_error",
+        errorMessage: dbError.message,
+        diagnostics: { detection, stage: "uploaded_statements_insert" },
+      });
+    }
     console.error("Failed to create upload record:", dbError);
     return NextResponse.json(
       { error: `Failed to create record: ${dbError.message}` },
@@ -104,6 +152,17 @@ export async function POST(request: NextRequest) {
   warmupCliEndpoint(supabase, user.id).catch(() => {
     // Silently ignore warmup failures — it's just an optimization
   });
+
+  if (runId) {
+    await completeIngestionRun(supabase, {
+      runId,
+      diagnostics: {
+        duplicate: false,
+        uploadedStatementId: statement.id,
+        detection,
+      },
+    });
+  }
 
   return NextResponse.json(statement, { status: 201 });
 }

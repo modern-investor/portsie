@@ -193,7 +193,10 @@ export async function extractViaGemini(
     };
   }
 
-  const rawResponse = { text: fullText, finishReason, usageMetadata };
+  const rawResponse = {
+    providerResponse: { text: fullText, finishReason, usageMetadata },
+    validationObservations: validationResult.observations,
+  };
   return { extraction, rawResponse };
 }
 

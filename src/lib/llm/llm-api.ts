@@ -111,5 +111,11 @@ export async function extractViaAPI(
     };
   }
 
-  return { extraction, rawResponse: response };
+  return {
+    extraction,
+    rawResponse: {
+      providerResponse: response,
+      validationObservations: validationResult.observations,
+    },
+  };
 }

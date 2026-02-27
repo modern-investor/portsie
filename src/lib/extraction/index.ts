@@ -34,6 +34,7 @@ export type {
   WriteReport,
   ValidationError,
   ValidationWarning,
+  ValidationObservation,
   ValidationResult,
 } from "./schema";
 

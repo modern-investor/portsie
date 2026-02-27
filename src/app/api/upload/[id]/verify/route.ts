@@ -10,6 +10,11 @@ import {
   sanitizeExtractionForStorage,
   safeLog,
 } from "@/lib/privacy";
+import {
+  completeIngestionRun,
+  failIngestionRun,
+  startIngestionRun,
+} from "@/lib/extraction/ingestion-runs";
 
 // Verification extraction is a standalone LLM call
 export const maxDuration = 300; // 5 minutes
@@ -60,13 +65,28 @@ export async function POST(
   // Check user's verification settings
   const userSettings = await getLLMSettings(supabase, user.id);
   const verificationEnabled = userSettings?.verificationEnabled ?? true;
+  const verBackend = userSettings?.verificationBackend ?? "cli";
+  const verModel = userSettings?.verificationModel ?? "claude-sonnet-4-6";
+  const runId = await startIngestionRun(supabase, {
+    userId: user.id,
+    sourceKey: "upload_document",
+    runKind: "verify",
+    uploadedStatementId: id,
+    backend: verBackend,
+    model: verModel,
+  });
 
   if (!verificationEnabled) {
+    if (runId) {
+      await completeIngestionRun(supabase, {
+        runId,
+        status: "partial",
+        diagnostics: { skipped: true, reason: "Verification disabled in settings" },
+      });
+    }
     return NextResponse.json({ skipped: true, reason: "Verification disabled in settings" });
   }
 
-  const verBackend = userSettings?.verificationBackend ?? "cli";
-  const verModel = userSettings?.verificationModel ?? "claude-sonnet-4-6";
   const privacyConfig = getPrivacyConfig();
 
   try {
@@ -115,6 +135,13 @@ export async function POST(
       .update(verificationUpdate)
       .eq("id", id);
 
+    if (runId) {
+      await completeIngestionRun(supabase, {
+        runId,
+        diagnostics: { success: true, backend: verBackend, model: verModel },
+      });
+    }
+
     return NextResponse.json({
       success: true,
       backend: verBackend,
@@ -131,6 +158,15 @@ export async function POST(
         verification_settings: { backend: verBackend, model: verModel },
       })
       .eq("id", id);
+
+    if (runId) {
+      await failIngestionRun(supabase, {
+        runId,
+        errorCategory: "verify_failed",
+        errorMessage: verErrMsg,
+        diagnostics: { backend: verBackend, model: verModel },
+      });
+    }
 
     // Return 200 — verification failure is non-critical
     return NextResponse.json({

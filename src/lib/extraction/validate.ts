@@ -18,6 +18,7 @@ import type {
   ValidationResult,
   ValidationError,
   ValidationWarning,
+  ValidationObservation,
   TransactionAction,
   AssetType,
   AccountType,
@@ -304,6 +305,8 @@ class ExtractionValidator {
   private errors: ValidationError[] = [];
   private warnings: ValidationWarning[] = [];
   private coercions: string[] = [];
+  private observations: ValidationObservation[] = [];
+  private readonly maxObservations = 100;
 
   private addError(path: string, message: string, value: unknown) {
     this.errors.push({ path, message, value });
@@ -326,10 +329,29 @@ class ExtractionValidator {
     this.coercions.push(description);
   }
 
+  private addObservation(path: string, value: unknown, confidence: Confidence = "low") {
+    if (this.observations.length >= this.maxObservations) return;
+    this.observations.push({ path, value, confidence });
+  }
+
+  private recordUnknownKeys(
+    raw: Record<string, unknown>,
+    allowed: string[],
+    path: string
+  ) {
+    const allowedSet = new Set(allowed);
+    for (const [key, value] of Object.entries(raw)) {
+      if (!allowedSet.has(key)) {
+        this.addObservation(`${path}.${key}`, value, "low");
+      }
+    }
+  }
+
   validate(rawJson: string): ValidationResult {
     this.errors = [];
     this.warnings = [];
     this.coercions = [];
+    this.observations = [];
 
     // Step 1: Strip markdown fences
     let cleaned = rawJson.trim();
@@ -387,10 +409,30 @@ class ExtractionValidator {
       errors: this.errors,
       warnings: this.warnings,
       coercions: this.coercions,
+      observations: this.observations,
     };
   }
 
   private validateExtraction(raw: Record<string, unknown>): PortsieExtraction | null {
+    this.recordUnknownKeys(
+      raw,
+      [
+        "schema_version",
+        "document",
+        "accounts",
+        "unallocated_positions",
+        "confidence",
+        "notes",
+        "document_totals",
+        // Backward-compat fields (observed but supported)
+        "account_info",
+        "transactions",
+        "positions",
+        "balances",
+      ],
+      "$"
+    );
+
     // schema_version
     const schemaVersion = raw.schema_version;
     if (schemaVersion !== 1) {
@@ -408,6 +450,11 @@ class ExtractionValidator {
     const docRaw = raw.document;
     let document: PortsieExtraction["document"];
     if (isPlainObject(docRaw)) {
+      this.recordUnknownKeys(
+        docRaw,
+        ["institution_name", "document_type", "statement_start_date", "statement_end_date"],
+        "document"
+      );
       document = {
         institution_name:
           typeof docRaw.institution_name === "string" ? docRaw.institution_name : null,
@@ -492,6 +539,11 @@ class ExtractionValidator {
     const totalsRaw = raw.document_totals;
     let documentTotals: PortsieExtraction["document_totals"] = null;
     if (isPlainObject(totalsRaw)) {
+      this.recordUnknownKeys(
+        totalsRaw,
+        ["total_value", "total_day_change", "total_day_change_pct"],
+        "document_totals"
+      );
       documentTotals = {
         total_value: coerceNumber(totalsRaw.total_value),
         total_day_change: coerceNumber(totalsRaw.total_day_change),
@@ -542,11 +594,17 @@ class ExtractionValidator {
       this.addItemSkipped(path, "Expected object", typeof raw);
       return null;
     }
+    this.recordUnknownKeys(raw, ["account_info", "transactions", "positions", "balances"], path);
 
     // account_info
     const infoRaw = raw.account_info;
     let accountInfo: ExtractionAccountInfo;
     if (isPlainObject(infoRaw)) {
+      this.recordUnknownKeys(
+        infoRaw,
+        ["account_number", "account_type", "institution_name", "account_nickname", "account_group"],
+        `${path}.account_info`
+      );
       accountInfo = {
         account_number:
           typeof infoRaw.account_number === "string" ? infoRaw.account_number : null,
@@ -609,6 +667,25 @@ class ExtractionValidator {
       this.addItemSkipped(path, "Expected object", typeof raw);
       return null;
     }
+    this.recordUnknownKeys(
+      raw,
+      [
+        "transaction_date",
+        "settlement_date",
+        "symbol",
+        "cusip",
+        "asset_type",
+        "asset_subtype",
+        "description",
+        "action",
+        "quantity",
+        "price_per_share",
+        "total_amount",
+        "fees",
+        "commission",
+      ],
+      path
+    );
 
     // transaction_date (required)
     const txDate = coerceDate(raw.transaction_date);
@@ -692,6 +769,28 @@ class ExtractionValidator {
       this.addItemSkipped(path, "Expected object", typeof raw);
       return null;
     }
+    this.recordUnknownKeys(
+      raw,
+      [
+        "snapshot_date",
+        "symbol",
+        "cusip",
+        "asset_type",
+        "asset_subtype",
+        "description",
+        "quantity",
+        "short_quantity",
+        "average_cost_basis",
+        "market_price_per_share",
+        "market_value",
+        "cost_basis_total",
+        "unrealized_profit_loss",
+        "unrealized_profit_loss_pct",
+        "day_change_amount",
+        "day_change_pct",
+      ],
+      path
+    );
 
     // snapshot_date (required)
     const snapDate = coerceDate(raw.snapshot_date);
@@ -746,6 +845,20 @@ class ExtractionValidator {
       this.addItemSkipped(path, "Expected object", typeof raw);
       return null;
     }
+    this.recordUnknownKeys(
+      raw,
+      [
+        "snapshot_date",
+        "liquidation_value",
+        "cash_balance",
+        "available_funds",
+        "total_cash",
+        "equity",
+        "long_market_value",
+        "buying_power",
+      ],
+      path
+    );
 
     // snapshot_date (required)
     const snapDate = coerceDate(raw.snapshot_date);

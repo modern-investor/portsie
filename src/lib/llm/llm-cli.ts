@@ -106,7 +106,13 @@ async function extractViaCLILocal(
       };
     }
 
-    return { extraction, rawResponse: cliResponse };
+    return {
+      extraction,
+      rawResponse: {
+        providerResponse: cliResponse,
+        validationObservations: validationResult.observations,
+      },
+    };
   } catch (err) {
     if (
       err instanceof Error &&
@@ -209,7 +215,13 @@ async function extractViaCLIRemote(
     };
   }
 
-  return { extraction, rawResponse: cliResponse };
+  return {
+    extraction,
+    rawResponse: {
+      providerResponse: cliResponse,
+      validationObservations: validationResult.observations,
+    },
+  };
 }
 
 /**
