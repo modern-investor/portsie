@@ -7,9 +7,9 @@ import { tmpdir } from "os";
 import { buildExtractionPrompt } from "./prompts";
 import type { ProcessedFile } from "../upload/file-processor";
 import type { UploadFileType } from "../upload/types";
-import type { PortsieExtraction } from "../extraction/schema";
 import { validateExtraction } from "../extraction/validate";
 import { withRetry } from "./retry";
+import type { ExtractionResult } from "./types";
 
 const execFileAsync = promisify(execFile);
 
@@ -24,7 +24,7 @@ export async function extractViaCLI(
   filename: string,
   cliEndpoint: string | null,
   model?: string
-): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
+): Promise<ExtractionResult> {
   if (cliEndpoint) {
     return extractViaCLIRemote(cliEndpoint, processedFile, fileType, filename, model);
   }
@@ -41,7 +41,7 @@ async function extractViaCLILocal(
   fileType: UploadFileType,
   filename: string,
   model?: string
-): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
+): Promise<ExtractionResult> {
   let tempDir: string | null = null;
   let tempFilePath: string | null = null;
 
@@ -108,10 +108,8 @@ async function extractViaCLILocal(
 
     return {
       extraction,
-      rawResponse: {
-        providerResponse: cliResponse,
-        validationObservations: validationResult.observations,
-      },
+      observations: validationResult.observations,
+      rawResponse: cliResponse,
     };
   } catch (err) {
     if (
@@ -140,7 +138,7 @@ async function extractViaCLIRemote(
   fileType: UploadFileType,
   filename: string,
   model?: string
-): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
+): Promise<ExtractionResult> {
   const prompt = buildCLIPrompt(processedFile, fileType, filename, null);
 
   const body: Record<string, unknown> = { prompt };
@@ -217,10 +215,8 @@ async function extractViaCLIRemote(
 
   return {
     extraction,
-    rawResponse: {
-      providerResponse: cliResponse,
-      validationObservations: validationResult.observations,
-    },
+    observations: validationResult.observations,
+    rawResponse: cliResponse,
   };
 }
 

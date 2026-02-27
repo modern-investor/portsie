@@ -1,20 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ValidationObservation } from "./schema";
-import type { IngestionObservation } from "./adapters/types";
-
-async function resolveSourceId(
-  supabase: SupabaseClient,
-  sourceKey: string
-): Promise<string | null> {
-  const { data, error } = await supabase
-    .from("ingestion_sources")
-    .select("id")
-    .eq("key", sourceKey)
-    .eq("enabled", true)
-    .maybeSingle();
-  if (error || !data) return null;
-  return data.id;
-}
+import { resolveSourceId } from "./source-utils";
 
 export async function recordStructureSignature(
   supabase: SupabaseClient,
@@ -64,7 +50,7 @@ export async function persistObservations(
     ingestionRunId: string | null;
     userId: string;
     sourceKey: string;
-    observations: Array<ValidationObservation | IngestionObservation>;
+    observations: ValidationObservation[];
     maxRows?: number;
   }
 ): Promise<void> {

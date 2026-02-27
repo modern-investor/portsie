@@ -7,8 +7,6 @@ import {
   failIngestionRun,
   startIngestionRun,
 } from "@/lib/extraction/ingestion-runs";
-import { AdapterRegistry } from "@/lib/extraction/adapters/registry";
-import { QuilttSyncAdapter } from "@/lib/extraction/adapters/quiltt-adapter";
 import { persistObservations } from "@/lib/extraction/governance";
 
 /**
@@ -48,14 +46,18 @@ export async function POST() {
     }
 
     const result = await syncAllQuilttAccounts(supabase, user.id, profileId);
-    const registry = new AdapterRegistry([new QuilttSyncAdapter()]);
-    const adapter = registry.resolve({ kind: "quiltt_sync", payload: result });
-    const adapted = await adapter.normalize({ kind: "quiltt_sync", payload: result });
+
     await persistObservations(supabase, {
       ingestionRunId: runId,
       userId: user.id,
       sourceKey: "quiltt_sync",
-      observations: adapted.observations,
+      observations: [
+        {
+          path: "quiltt_sync.summary",
+          value: result,
+          confidence: "low" as const,
+        },
+      ],
       maxRows: 25,
     });
 

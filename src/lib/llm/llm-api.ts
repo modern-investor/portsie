@@ -3,8 +3,8 @@ import { UPLOAD_CONFIG } from "../upload/config";
 import { buildExtractionPrompt } from "./prompts";
 import type { ProcessedFile } from "../upload/file-processor";
 import type { UploadFileType } from "../upload/types";
-import type { PortsieExtraction } from "../extraction/schema";
 import { validateExtraction } from "../extraction/validate";
+import type { ExtractionResult } from "./types";
 
 /**
  * API backend: uses @anthropic-ai/sdk with a per-user API key.
@@ -15,7 +15,7 @@ export async function extractViaAPI(
   processedFile: ProcessedFile,
   fileType: UploadFileType,
   filename: string
-): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
+): Promise<ExtractionResult> {
   const client = new Anthropic({ apiKey });
 
   // Build content blocks for the user message
@@ -113,9 +113,7 @@ export async function extractViaAPI(
 
   return {
     extraction,
-    rawResponse: {
-      providerResponse: response,
-      validationObservations: validationResult.observations,
-    },
+    observations: validationResult.observations,
+    rawResponse: response,
   };
 }
