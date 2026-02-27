@@ -21,9 +21,6 @@ import {
   startIngestionRun,
 } from "@/lib/extraction/ingestion-runs";
 import { persistObservations, recordStructureSignature } from "@/lib/extraction/governance";
-import { AdapterRegistry } from "@/lib/extraction/adapters/registry";
-import { UploadExtractionAdapter } from "@/lib/extraction/adapters/upload-adapter";
-import type { ValidationObservation } from "@/lib/extraction/schema";
 
 // LLM extraction can take several minutes for large PDF/CSV files
 export const maxDuration = 300; // 5 minutes
@@ -201,7 +198,7 @@ export async function POST(
 
     // Pass deadline to dispatcher so it can gate fallback decisions
     const deadlineMs = routeStartMs + DEADLINE_MS;
-    const { extraction, rawResponse } = await extractFinancialData(
+    const { extraction, observations: validationObservations } = await extractFinancialData(
       supabase,
       user.id,
       processedFile,
@@ -210,18 +207,6 @@ export async function POST(
       processingSettings,
       deadlineMs
     );
-    const adapterRegistry = new AdapterRegistry([new UploadExtractionAdapter()]);
-    const uploadAdapter = adapterRegistry.resolve({
-      kind: `upload_${detection.kind}`,
-      payload: extraction,
-      metadata: { fileType, filename: statement.filename },
-    });
-    const adapted = await uploadAdapter.normalize({
-      kind: `upload_${detection.kind}`,
-      payload: extraction,
-      metadata: { fileType, filename: statement.filename },
-    });
-    const normalizedExtraction = adapted.extraction ?? extraction;
     log.completeStep("extracting");
 
     // ── Step 4: Validate & count results ──
@@ -229,20 +214,20 @@ export async function POST(
     await flushLog(supabase, id, log);
 
     const totalPositions =
-      normalizedExtraction.accounts.reduce((sum, a) => sum + a.positions.length, 0) +
-      normalizedExtraction.unallocated_positions.length;
-    const totalTransactions = normalizedExtraction.accounts.reduce(
+      extraction.accounts.reduce((sum, a) => sum + a.positions.length, 0) +
+      extraction.unallocated_positions.length;
+    const totalTransactions = extraction.accounts.reduce(
       (sum, a) => sum + a.transactions.length,
       0
     );
-    const totalBalances = normalizedExtraction.accounts.reduce(
+    const totalBalances = extraction.accounts.reduce(
       (sum, a) => sum + a.balances.length,
       0
     );
     const hasData = totalPositions > 0 || totalTransactions > 0 || totalBalances > 0;
 
     // Privacy: sanitize extraction and build debug context
-    const sanitizedExtraction = sanitizeExtractionForStorage(normalizedExtraction, privacyConfig);
+    const sanitizedExtraction = sanitizeExtractionForStorage(extraction, privacyConfig);
     const debugContext = buildDebugContext({
       backend: processingSettings.backend,
       model: processingSettings.model,
@@ -267,9 +252,9 @@ export async function POST(
         parsed_at: new Date().toISOString(),
         extracted_data: sanitizedExtraction,
         debug_context: debugContext,
-        extraction_schema_version: normalizedExtraction.schema_version,
-        statement_start_date: normalizedExtraction.document.statement_start_date,
-        statement_end_date: normalizedExtraction.document.statement_end_date,
+        extraction_schema_version: extraction.schema_version,
+        statement_start_date: extraction.document.statement_start_date,
+        statement_end_date: extraction.document.statement_end_date,
         parse_error: null,
         processing_settings: processingSettings,
         source_file_expires_at: sourceFileExpiresAt,
@@ -281,17 +266,11 @@ export async function POST(
       })
       .eq("id", id);
 
-    const observationsFromValidation: ValidationObservation[] = Array.isArray(
-      (rawResponse as { validationObservations?: unknown })?.validationObservations
-    )
-      ? ((rawResponse as { validationObservations: ValidationObservation[] }).validationObservations ?? [])
-      : [];
-
     await persistObservations(supabase, {
       ingestionRunId,
       userId: user.id,
       sourceKey: "upload_document",
-      observations: [...observationsFromValidation, ...adapted.observations],
+      observations: validationObservations,
       maxRows: 100,
     });
 
@@ -299,12 +278,12 @@ export async function POST(
       await completeIngestionRun(supabase, {
         runId: ingestionRunId,
         diagnostics: {
-          accounts: normalizedExtraction.accounts.length,
+          accounts: extraction.accounts.length,
           totalPositions,
           totalTransactions,
           totalBalances,
           detection,
-          observationCount: observationsFromValidation.length + adapted.observations.length,
+          observationCount: validationObservations.length,
         },
       });
     }
@@ -314,15 +293,15 @@ export async function POST(
 
     // ── Build response ──
     return NextResponse.json({
-      extraction: normalizedExtraction,
+      extraction: extraction,
       parseStatus: hasData ? "extracted" : "partial",
       summary: {
-        accounts: normalizedExtraction.accounts.length,
+        accounts: extraction.accounts.length,
         totalPositions,
         totalTransactions,
         totalBalances,
-        unallocatedPositions: normalizedExtraction.unallocated_positions.length,
-        confidence: normalizedExtraction.confidence,
+        unallocatedPositions: extraction.unallocated_positions.length,
+        confidence: extraction.confidence,
       },
       processingLog: log.toJSON(),
     });

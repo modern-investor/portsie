@@ -1,5 +1,18 @@
 // LLM settings types
 
+import type { PortsieExtraction, ValidationObservation } from "@/lib/extraction/schema";
+
+/**
+ * Unified return type for all LLM extraction backends.
+ * `observations` are unknown/unmapped fields detected during validation.
+ * `rawResponse` is the provider-specific response (opaque, for diagnostics only).
+ */
+export interface ExtractionResult {
+  extraction: PortsieExtraction;
+  observations: ValidationObservation[];
+  rawResponse: unknown;
+}
+
 /**
  * LLM backend modes:
  * - "gemini"  — Gemini 3 Flash via Google REST API (default, server-side key)

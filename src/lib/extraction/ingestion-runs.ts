@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { resolveSourceId } from "./source-utils";
 
 type RunKind = "upload" | "extract" | "confirm" | "verify" | "api_sync" | "webhook";
 type RunStatus = "pending" | "running" | "completed" | "partial" | "failed";
@@ -26,23 +27,6 @@ interface FailRunInput {
   diagnostics?: Record<string, unknown>;
 }
 
-const runningSince = new Map<string, number>();
-
-async function resolveSourceId(
-  supabase: SupabaseClient,
-  sourceKey: string
-): Promise<string | null> {
-  const { data, error } = await supabase
-    .from("ingestion_sources")
-    .select("id")
-    .eq("key", sourceKey)
-    .eq("enabled", true)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  return data.id;
-}
-
 export async function startIngestionRun(
   supabase: SupabaseClient,
   input: StartRunInput
@@ -67,8 +51,26 @@ export async function startIngestionRun(
       .single();
 
     if (error || !data) return null;
-    runningSince.set(data.id, Date.now());
     return data.id;
+  } catch {
+    return null;
+  }
+}
+
+/** Read started_at from the DB row and compute elapsed ms. */
+async function computeDuration(
+  supabase: SupabaseClient,
+  runId: string
+): Promise<number | null> {
+  try {
+    const { data } = await supabase
+      .from("ingestion_runs")
+      .select("started_at")
+      .eq("id", runId)
+      .single();
+
+    if (!data?.started_at) return null;
+    return Date.now() - new Date(data.started_at as string).getTime();
   } catch {
     return null;
   }
@@ -79,8 +81,7 @@ export async function completeIngestionRun(
   input: CompleteRunInput
 ): Promise<void> {
   try {
-    const startedAt = runningSince.get(input.runId);
-    const durationMs = startedAt ? Date.now() - startedAt : null;
+    const durationMs = await computeDuration(supabase, input.runId);
 
     await supabase
       .from("ingestion_runs")
@@ -91,8 +92,6 @@ export async function completeIngestionRun(
         diagnostics: input.diagnostics ?? undefined,
       })
       .eq("id", input.runId);
-
-    runningSince.delete(input.runId);
   } catch {
     // Intentionally non-fatal
   }
@@ -103,8 +102,7 @@ export async function failIngestionRun(
   input: FailRunInput
 ): Promise<void> {
   try {
-    const startedAt = runningSince.get(input.runId);
-    const durationMs = startedAt ? Date.now() - startedAt : null;
+    const durationMs = await computeDuration(supabase, input.runId);
 
     await supabase
       .from("ingestion_runs")
@@ -117,8 +115,6 @@ export async function failIngestionRun(
         diagnostics: input.diagnostics ?? undefined,
       })
       .eq("id", input.runId);
-
-    runningSince.delete(input.runId);
   } catch {
     // Intentionally non-fatal
   }
