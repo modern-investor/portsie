@@ -1,12 +1,12 @@
 {
-  "version": "v260227.01 8:10a",
-  "release": 152,
-  "sha": "897b51e6",
-  "fullSha": "897b51e6a7195e9769936c608ff2d122f5a8e260",
+  "version": "v260227.02 3:36p",
+  "release": 153,
+  "sha": "97788868",
+  "fullSha": "9778886839b458674131b177f8df5ae00c9dc911",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000467",
-  "pushedAt": "2026-02-27T14:10:44Z",
-  "commits": [{"sha": "897b51e6a7195e9769936c608ff2d122f5a8e260", "short_sha": "897b51e6", "author": "rahulio", "message": "Add adaptive ingestion governance and observability foundation."}]
+  "machine": "GitHub Actions 1000000473",
+  "pushedAt": "2026-02-27T21:36:07Z",
+  "commits": [{"sha": "9778886839b458674131b177f8df5ae00c9dc911", "short_sha": "97788868", "author": "rahulio", "message": "Remove premature adapter abstractions, type extraction pipeline"}]
 }
