@@ -1,9 +1,9 @@
 import { buildExtractionPrompt } from "./prompts";
 import type { ProcessedFile } from "../upload/file-processor";
 import type { UploadFileType } from "../upload/types";
-import type { PortsieExtraction } from "../extraction/schema";
 import { validateExtraction } from "../extraction/validate";
 import { withRetry } from "./retry";
+import type { ExtractionResult } from "./types";
 
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 const GEMINI_UPLOAD_URL = "https://generativelanguage.googleapis.com/upload/v1beta/files";
@@ -27,7 +27,7 @@ export async function extractViaGemini(
   model?: string,
   thinkingLevelOverride?: "minimal" | "low" | "medium" | "high",
   mediaResolutionOverride?: string
-): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
+): Promise<ExtractionResult> {
   const geminiModel = model || DEFAULT_MODEL;
   const systemPrompt = buildExtractionPrompt();
 
@@ -193,11 +193,11 @@ export async function extractViaGemini(
     };
   }
 
-  const rawResponse = {
-    providerResponse: { text: fullText, finishReason, usageMetadata },
-    validationObservations: validationResult.observations,
+  return {
+    extraction,
+    observations: validationResult.observations,
+    rawResponse: { text: fullText, finishReason, usageMetadata },
   };
-  return { extraction, rawResponse };
 }
 
 // ── SSE stream collector ──

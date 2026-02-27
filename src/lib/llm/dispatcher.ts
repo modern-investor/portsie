@@ -1,13 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ProcessedFile } from "../upload/file-processor";
 import type { UploadFileType } from "../upload/types";
-import type { PortsieExtraction } from "../extraction/schema";
-import { getLLMSettings, getLLMApiKey, getLLMCliEndpoint } from "./settings";
+import { getLLMSettings, getLLMApiKey } from "./settings";
 import { safeLog } from "@/lib/privacy";
 import { extractViaAPI } from "./llm-api";
 import { extractViaCLI } from "./llm-cli";
 import { extractViaGemini } from "./llm-gemini";
-import type { ProcessingSettings } from "./types";
+import type { ExtractionResult, ProcessingSettings } from "./types";
 
 /** Minimum remaining time (ms) needed to attempt a fallback extraction. */
 const MIN_FALLBACK_BUDGET_MS = 60_000; // 60 seconds
@@ -37,7 +36,7 @@ export async function extractFinancialData(
   filename: string,
   processingSettings?: ProcessingSettings,
   deadlineMs?: number
-): Promise<{ extraction: PortsieExtraction; rawResponse: unknown }> {
+): Promise<ExtractionResult> {
   // ── Preset-based routing (from upload page dropdown) ──
   if (processingSettings) {
     if (processingSettings.backend === "cli") {
