@@ -810,11 +810,25 @@ class ExtractionValidator {
       return null;
     }
 
-    // quantity (required)
-    const quantity = coerceNumber(raw.quantity);
+    // quantity (required, but infer from market_value/price if missing)
+    let quantity = coerceNumber(raw.quantity);
     if (quantity === null) {
-      this.addItemSkipped(`${path}.quantity`, "Required number", raw.quantity);
-      return null;
+      const mv = coerceNumber(raw.market_value);
+      const price = coerceNumber(raw.market_price_per_share);
+      if (mv !== null && price !== null && price !== 0) {
+        // Infer quantity from market_value / price (e.g. options with known value)
+        quantity = +(mv / price).toFixed(4);
+        this.addCoercion(`${path}.quantity inferred from market_value / market_price_per_share`);
+      } else if (mv !== null) {
+        // Market value is known but quantity/price aren't — use qty=1 as a
+        // placeholder so the position isn't dropped. The market_value carries
+        // the real information for portfolio valuation.
+        quantity = 1;
+        this.addCoercion(`${path}.quantity defaulted to 1 (market_value=${mv} available)`);
+      } else {
+        this.addItemSkipped(`${path}.quantity`, "Required number", raw.quantity);
+        return null;
+      }
     }
 
     return {

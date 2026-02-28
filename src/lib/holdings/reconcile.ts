@@ -124,6 +124,13 @@ export async function reconcileHoldings(
       });
     }
 
+    // Compute market_value if LLM didn't provide it but we have qty + price
+    const computedMV = pos.market_value ?? (
+      (pos.quantity != null && pos.market_price_per_share != null)
+        ? +(pos.quantity * pos.market_price_per_share).toFixed(2)
+        : null
+    );
+
     const holdingData = {
       user_id: userId,
       account_id: accountId,
@@ -140,7 +147,7 @@ export async function reconcileHoldings(
       purchase_price: pos.average_cost_basis ?? null,
       cost_basis_total: pos.cost_basis_total ?? null,
       current_price: pos.market_price_per_share ?? null,
-      market_value: pos.market_value ?? null,
+      market_value: computedMV,
       valuation_date: pos.snapshot_date,
       valuation_source: "statement",
       day_profit_loss: pos.day_change_amount ?? null,

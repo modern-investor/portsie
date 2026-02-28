@@ -227,5 +227,30 @@ export function parseAndValidateExtraction(rawText: string): LLMExtractionResult
     ),
   }));
 
+  // Per-position field validation: compute market_value from qty * price when missing.
+  // The LLM prompt says "use exact Market Value column", but many documents (e.g.
+  // Robinhood) don't have one. Without this, positions show $0 value on the dashboard.
+  const computePositionValues = (positions: typeof result.positions) =>
+    positions.map((p) => ({
+      ...p,
+      market_value: p.market_value ?? (
+        (p.quantity != null && p.market_price_per_share != null)
+          ? +(p.quantity * p.market_price_per_share).toFixed(2)
+          : null
+      ),
+    }));
+
+  result.positions = computePositionValues(result.positions);
+
+  if (result.unallocated_positions && result.unallocated_positions.length > 0) {
+    result.unallocated_positions = computePositionValues(result.unallocated_positions);
+  }
+
+  if (Array.isArray(result.accounts)) {
+    for (const acct of result.accounts as ExtractedAccount[]) {
+      acct.positions = computePositionValues(acct.positions);
+    }
+  }
+
   return result;
 }

@@ -113,7 +113,14 @@ export async function writeExtractedData(
     }
 
     const deduped = Array.from(positionMap.values());
-    const positionRows = deduped.map((p) => ({
+    const positionRows = deduped.map((p) => {
+      // Compute market_value if LLM didn't provide it but we have qty + price
+      const computedMV = p.market_value ?? (
+        (p.quantity != null && p.market_price_per_share != null)
+          ? +(p.quantity * p.market_price_per_share).toFixed(2)
+          : null
+      );
+      return {
       user_id: userId,
       account_id: accountId,
       snapshot_date: p.snapshot_date,
@@ -132,12 +139,13 @@ export async function writeExtractedData(
       purchase_price: p.average_cost_basis ?? null,
       average_cost_basis: p.average_cost_basis ?? null,
       market_price_per_share: p.market_price_per_share ?? null,
-      market_value: p.market_value ?? null,
+      market_value: computedMV,
       cost_basis_total: p.cost_basis_total ?? null,
       unrealized_profit_loss: p.unrealized_profit_loss ?? null,
       unrealized_profit_loss_pct: p.unrealized_profit_loss_pct ?? null,
       valuation_source: "statement",
-    }));
+    };
+    });
 
     const { data, error } = await supabase
       .from("position_snapshots")
