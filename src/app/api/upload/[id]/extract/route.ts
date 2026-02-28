@@ -21,6 +21,8 @@ import {
   startIngestionRun,
 } from "@/lib/extraction/ingestion-runs";
 import { persistObservations, recordStructureSignature } from "@/lib/extraction/governance";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { validateExtraction } from "@/lib/extraction/validate";
 
 // LLM extraction can take several minutes for large PDF/CSV files
 export const maxDuration = 300; // 5 minutes
@@ -189,25 +191,80 @@ export async function POST(
     checkDeadline(routeStartMs);
 
     // ── Step 3: LLM extraction + validation ──
-    log.startStep(
-      "extracting",
-      "AI is reading your document",
-      `${processingSettings.label} — ${processingSettings.model}`
-    );
-    await flushLog(supabase, id, log);
+    // First, check if a previous CLI run cached a result (survives Vercel timeouts)
+    let extraction: Awaited<ReturnType<typeof extractFinancialData>>["extraction"] | null = null;
+    let validationObservations: Awaited<ReturnType<typeof extractFinancialData>>["observations"] = [];
+    const cachedResult = await checkExtractionCache(id);
+    if (cachedResult) {
+      log.startStep("extracting", "Using cached result from previous run", "CLI cache hit");
+      await flushLog(supabase, id, log);
 
-    // Pass deadline to dispatcher so it can gate fallback decisions
-    const deadlineMs = routeStartMs + DEADLINE_MS;
-    const { extraction, observations: validationObservations } = await extractFinancialData(
-      supabase,
-      user.id,
-      processedFile,
-      fileType,
-      statement.filename,
-      processingSettings,
-      deadlineMs
-    );
-    log.completeStep("extracting");
+      // Validate the cached result through the same schema validation.
+      // The CLI wrapper stores the full claude response object which has a `result` field,
+      // or it could be a direct JSON string.
+      const rawResult = cachedResult.result as Record<string, unknown> | string;
+      const resultText = typeof rawResult === "string"
+        ? rawResult
+        : typeof rawResult?.result === "string"
+          ? rawResult.result
+          : JSON.stringify(rawResult?.result ?? rawResult);
+      const validationResult = validateExtraction(resultText);
+      if (validationResult.valid && validationResult.extraction) {
+        extraction = validationResult.extraction;
+        validationObservations = validationResult.observations;
+
+        // Persist coercions/warnings in extraction notes
+        if (validationResult.coercions.length > 0 || validationResult.warnings.length > 0) {
+          const validationNotes = [
+            ...validationResult.coercions.map((c) => `[Coercion] ${c}`),
+            ...validationResult.warnings.map((w) => `[Warning] ${w.path}: ${w.message}`),
+          ];
+          extraction = {
+            ...extraction,
+            notes: [...(extraction.notes || []), ...validationNotes],
+          };
+        }
+
+        safeLog("info", "Extract", "Using cached CLI extraction result", {
+          uploadId: id,
+          cachedDurationMs: cachedResult.duration_ms,
+        });
+        log.completeStep("extracting");
+      } else {
+        safeLog("warn", "Extract", "Cached result failed validation, proceeding with fresh extraction", {
+          uploadId: id,
+          errors: validationResult.errors.map((e) => `${e.path}: ${e.message}`),
+        });
+        // Delete invalid cache entry
+        await deleteExtractionCache(id);
+      }
+    }
+
+    // If no valid cached result, run the LLM extraction
+    if (!extraction) {
+      log.startStep(
+        "extracting",
+        "AI is reading your document",
+        `${processingSettings.label} — ${processingSettings.model}`
+      );
+      await flushLog(supabase, id, log);
+
+      // Pass deadline and uploadId to dispatcher so CLI wrapper can cache the result
+      const deadlineMs = routeStartMs + DEADLINE_MS;
+      const result = await extractFinancialData(
+        supabase,
+        user.id,
+        processedFile,
+        fileType,
+        statement.filename,
+        processingSettings,
+        deadlineMs,
+        id
+      );
+      extraction = result.extraction;
+      validationObservations = result.observations;
+      log.completeStep("extracting");
+    }
 
     // ── Step 4: Validate & count results ──
     log.startStep("validating", "Checking extracted data");
@@ -290,6 +347,9 @@ export async function POST(
 
     // Fire-and-forget: send diagnostics to DO server
     sendDiagnostics(log, { userId: user.id, stage: "extract" });
+
+    // Clean up any cache entries for this upload
+    deleteExtractionCache(id).catch(() => {});
 
     // ── Build response ──
     return NextResponse.json({
@@ -412,6 +472,51 @@ function checkDeadline(routeStartMs: number): void {
     throw new Error(
       `Approaching Vercel 300s limit after ${Math.round(elapsed / 1000)}s`
     );
+  }
+}
+
+/**
+ * Check cli_extraction_cache for a result from a previous CLI run that
+ * survived a Vercel timeout. Uses the admin client (service role) since
+ * the cache table has no RLS.
+ */
+async function checkExtractionCache(
+  uploadId: string
+): Promise<{ result: unknown; duration_ms: number | null } | null> {
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("cli_extraction_cache")
+      .select("id, result, duration_ms, created_at")
+      .eq("upload_id", uploadId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) return null;
+
+    // Only use cache entries less than 30 minutes old
+    const ageMs = Date.now() - new Date(data.created_at).getTime();
+    if (ageMs > 30 * 60 * 1000) {
+      await admin.from("cli_extraction_cache").delete().eq("id", data.id);
+      return null;
+    }
+
+    return { result: data.result, duration_ms: data.duration_ms };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Delete cache entries for an upload (after consuming or on invalid data).
+ */
+async function deleteExtractionCache(uploadId: string): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    await admin.from("cli_extraction_cache").delete().eq("upload_id", uploadId);
+  } catch {
+    // Non-critical — stale entries will be ignored by age check
   }
 }
 

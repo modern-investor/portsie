@@ -11,7 +11,7 @@ import { DEFAULT_PRESET } from "@/lib/llm/types";
 import type { ProcessingPreset } from "@/lib/llm/types";
 
 const POLL_STATUSES = new Set(["processing", "qc_running", "qc_fixing"]);
-const STALE_PROCESSING_MS = 7 * 60 * 1000;
+const STALE_PROCESSING_MS = 10 * 60 * 1000;
 
 /** Build a human-readable summary of what was saved */
 function buildSavedSummary(uploads: UploadedStatement[], confirmedIds: string[]) {

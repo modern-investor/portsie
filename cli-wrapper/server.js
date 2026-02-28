@@ -118,17 +118,63 @@ async function runClaude(prompt, file, model) {
 }
 
 /**
+ * Persist a successful extraction result to cli_extraction_cache in Supabase.
+ * This ensures the result survives Vercel timeouts — on retry, the extract
+ * route checks this table before starting a new extraction.
+ */
+async function cacheExtractionResult(uploadId, result, model, durationMs) {
+  if (!uploadId || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!uploadId) log("Cache skip: no uploadId provided");
+    else log("Cache skip: Supabase credentials not configured");
+    return;
+  }
+
+  try {
+    const row = {
+      upload_id: uploadId,
+      result,
+      model: model || null,
+      duration_ms: durationMs || null,
+    };
+
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/cli_extraction_cache`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(row),
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text().catch(() => "unknown");
+      log(`Cache write failed (${resp.status}): ${errText}`);
+    } else {
+      log(`Cache write OK for upload ${uploadId}`);
+    }
+  } catch (err) {
+    log(`Cache write error: ${err.message}`);
+  }
+}
+
+/**
  * Try to drain queued requests up to MAX_CONCURRENT.
  */
 function drainQueue() {
   while (activeCount < MAX_CONCURRENT && requestQueue.length > 0) {
-    const { prompt, file, model, resolve, reject } = requestQueue.shift();
+    const { prompt, file, model, uploadId, startMs, resolve, reject } = requestQueue.shift();
     activeCount++;
-    log(`Starting extraction (active: ${activeCount}/${MAX_CONCURRENT}, queued: ${requestQueue.length}, file: ${file ? file.filename : "none"}, model: ${model || "default"})`);
+    log(`Starting extraction (active: ${activeCount}/${MAX_CONCURRENT}, queued: ${requestQueue.length}, file: ${file ? file.filename : "none"}, model: ${model || "default"}, uploadId: ${uploadId || "none"})`);
 
     runClaude(prompt, file, model)
       .then((result) => {
-        log(`Extraction complete (active: ${activeCount - 1}/${MAX_CONCURRENT}, queued: ${requestQueue.length})`);
+        const durationMs = Date.now() - startMs;
+        log(`Extraction complete (active: ${activeCount - 1}/${MAX_CONCURRENT}, queued: ${requestQueue.length}, ${durationMs}ms)`);
+        // Fire-and-forget: cache result so it survives Vercel timeouts
+        cacheExtractionResult(uploadId, result, model, durationMs).catch(() => {});
         resolve(result);
       })
       .catch((err) => {
@@ -146,14 +192,14 @@ function drainQueue() {
 /**
  * Enqueue an extraction request. Returns a promise that resolves when processing completes.
  */
-function enqueueExtraction(prompt, file, model) {
+function enqueueExtraction(prompt, file, model, uploadId) {
   return new Promise((resolve, reject) => {
     if (requestQueue.length >= MAX_QUEUE_SIZE) {
       reject(new Error("Queue full. Try again later."));
       return;
     }
     const position = requestQueue.length + activeCount;
-    requestQueue.push({ prompt, file, model, resolve, reject });
+    requestQueue.push({ prompt, file, model, uploadId, startMs: Date.now(), resolve, reject });
     log(`Queued extraction (position: ${position + 1}, active: ${activeCount}/${MAX_CONCURRENT}, queued: ${requestQueue.length})`);
     // Try to start immediately if we have capacity
     drainQueue();
@@ -569,7 +615,7 @@ const server = http.createServer(async (req, res) => {
 
   try {
     const body = await readBody(req);
-    const { prompt, file, model } = JSON.parse(body);
+    const { prompt, file, model, uploadId } = JSON.parse(body);
 
     if (!prompt) {
       res.writeHead(400, { "Content-Type": "application/json" });
@@ -578,7 +624,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     try {
-      const result = await enqueueExtraction(prompt, file || null, model || null);
+      const result = await enqueueExtraction(prompt, file || null, model || null, uploadId || null);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(result));
     } catch (err) {

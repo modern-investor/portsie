@@ -25,11 +25,12 @@ export async function extractViaCLI(
   filename: string,
   cliEndpoint: string | null,
   model?: string,
-  deadlineMs?: number
+  deadlineMs?: number,
+  uploadId?: string
 ): Promise<ExtractionResult> {
   try {
     if (cliEndpoint) {
-      return extractViaCLIRemote(cliEndpoint, processedFile, fileType, filename, model, deadlineMs);
+      return extractViaCLIRemote(cliEndpoint, processedFile, fileType, filename, model, deadlineMs, uploadId);
     }
     return extractViaCLILocal(processedFile, fileType, filename, model);
   } catch (error) {
@@ -156,12 +157,14 @@ async function extractViaCLIRemote(
   fileType: UploadFileType,
   filename: string,
   model?: string,
-  deadlineMs?: number
+  deadlineMs?: number,
+  uploadId?: string
 ): Promise<ExtractionResult> {
   const prompt = buildCLIPrompt(processedFile, fileType, filename, null);
 
   const body: Record<string, unknown> = { prompt };
   if (model) body.model = model;
+  if (uploadId) body.uploadId = uploadId;
 
   // For binary files, send the base64 content to the remote server
   if (processedFile.contentType !== "text" && processedFile.base64Data) {

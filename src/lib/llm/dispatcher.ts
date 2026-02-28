@@ -35,7 +35,8 @@ export async function extractFinancialData(
   fileType: UploadFileType,
   filename: string,
   processingSettings?: ProcessingSettings,
-  deadlineMs?: number
+  deadlineMs?: number,
+  uploadId?: string
 ): Promise<ExtractionResult> {
   // ── Preset-based routing (from upload page dropdown) ──
   if (processingSettings) {
@@ -45,7 +46,7 @@ export async function extractFinancialData(
       if (!geminiApiKey) {
         safeLog("warn", "Dispatcher", "GEMINI_API_KEY not set, falling back to CLI");
         const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
-        return extractViaCLI(processedFile, fileType, filename, cliEndpoint, "claude-sonnet-4-6", deadlineMs);
+        return extractViaCLI(processedFile, fileType, filename, cliEndpoint, "claude-sonnet-4-6", deadlineMs, uploadId);
       }
       return extractViaGemini(
         geminiApiKey, processedFile, fileType, filename,
@@ -62,7 +63,8 @@ export async function extractFinancialData(
       return await extractViaCLI(
         processedFile, fileType, filename, cliEndpoint,
         processingSettings.model || "claude-sonnet-4-6",
-        deadlineMs
+        deadlineMs,
+        uploadId
       );
     } catch (cliError) {
       const errorMsg = cliError instanceof Error ? cliError.message : String(cliError);
@@ -121,7 +123,7 @@ export async function extractFinancialData(
     if (!geminiApiKey) {
       safeLog("warn", "Dispatcher", "GEMINI_API_KEY not set, falling back to CLI");
       const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
-      return extractViaCLI(processedFile, fileType, filename, cliEndpoint, undefined, deadlineMs);
+      return extractViaCLI(processedFile, fileType, filename, cliEndpoint, undefined, deadlineMs, uploadId);
     }
     return extractViaGemini(
       geminiApiKey, processedFile, fileType, filename,
@@ -140,7 +142,8 @@ export async function extractFinancialData(
       filename,
       cliEndpoint,
       "claude-sonnet-4-6",
-      deadlineMs
+      deadlineMs,
+      uploadId
     );
   } catch (cliError) {
     const errorMsg = cliError instanceof Error ? cliError.message : String(cliError);
