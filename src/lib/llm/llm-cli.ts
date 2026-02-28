@@ -10,6 +10,7 @@ import type { UploadFileType } from "../upload/types";
 import { validateExtraction } from "../extraction/validate";
 import { withRetry } from "./retry";
 import type { ExtractionResult } from "./types";
+import { sendLlmOpsAlert } from "@/lib/email/ops-alerts";
 
 const execFileAsync = promisify(execFile);
 
@@ -25,10 +26,26 @@ export async function extractViaCLI(
   cliEndpoint: string | null,
   model?: string
 ): Promise<ExtractionResult> {
-  if (cliEndpoint) {
-    return extractViaCLIRemote(cliEndpoint, processedFile, fileType, filename, model);
+  try {
+    if (cliEndpoint) {
+      return extractViaCLIRemote(cliEndpoint, processedFile, fileType, filename, model);
+    }
+    return extractViaCLILocal(processedFile, fileType, filename, model);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await sendLlmOpsAlert({
+      reason: "cli_extraction_failed",
+      message: "Claude CLI extraction failed.",
+      details: {
+        filename,
+        fileType,
+        model: model ?? "default",
+        cliEndpoint: cliEndpoint ?? "local",
+        error: message,
+      },
+    });
+    throw error;
   }
-  return extractViaCLILocal(processedFile, fileType, filename, model);
 }
 
 /**

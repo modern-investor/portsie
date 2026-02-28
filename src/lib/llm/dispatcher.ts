@@ -3,6 +3,7 @@ import type { ProcessedFile } from "../upload/file-processor";
 import type { UploadFileType } from "../upload/types";
 import { getLLMSettings, getLLMApiKey } from "./settings";
 import { safeLog } from "@/lib/privacy";
+import { sendLlmOpsAlert } from "@/lib/email/ops-alerts";
 import { extractViaAPI } from "./llm-api";
 import { extractViaCLI } from "./llm-cli";
 import { extractViaGemini } from "./llm-gemini";
@@ -104,6 +105,12 @@ export async function extractFinancialData(
 
   // ── User explicitly chose Anthropic API mode ──
   if (mode === "api") {
+    await sendLlmOpsAlert({
+      reason: "anthropic_api_override",
+      message: "Anthropic API override mode was selected for extraction.",
+      details: { userId, filename, fileType },
+    });
+
     const apiKey = await getLLMApiKey(supabase, userId);
     if (!apiKey) {
       throw new Error(
