@@ -24,11 +24,12 @@ export async function extractViaCLI(
   fileType: UploadFileType,
   filename: string,
   cliEndpoint: string | null,
-  model?: string
+  model?: string,
+  deadlineMs?: number
 ): Promise<ExtractionResult> {
   try {
     if (cliEndpoint) {
-      return extractViaCLIRemote(cliEndpoint, processedFile, fileType, filename, model);
+      return extractViaCLIRemote(cliEndpoint, processedFile, fileType, filename, model, deadlineMs);
     }
     return extractViaCLILocal(processedFile, fileType, filename, model);
   } catch (error) {
@@ -154,7 +155,8 @@ async function extractViaCLIRemote(
   processedFile: ProcessedFile,
   fileType: UploadFileType,
   filename: string,
-  model?: string
+  model?: string,
+  deadlineMs?: number
 ): Promise<ExtractionResult> {
   const prompt = buildCLIPrompt(processedFile, fileType, filename, null);
 
@@ -179,14 +181,18 @@ async function extractViaCLIRemote(
   }
 
   // Fetch with retry on transient errors (429, 503, connection reset).
-  // Timeout reduced from 300s to 240s to fit within Vercel budget.
+  // Use remaining deadline budget if available, otherwise default to 270s.
+  // CLI is the primary backend — give it maximum time before Vercel kills at 300s.
+  const fetchTimeoutMs = deadlineMs
+    ? Math.max(deadlineMs - Date.now() - 5_000, 60_000) // leave 5s buffer, min 60s
+    : 270_000; // default: 4.5 min
   const response = await withRetry(
     async () => {
       const resp = await fetch(endpoint, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(240_000), // 4 min — leave room for overhead
+        signal: AbortSignal.timeout(fetchTimeoutMs),
       });
 
       if (!resp.ok) {

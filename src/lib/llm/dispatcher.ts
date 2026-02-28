@@ -45,7 +45,7 @@ export async function extractFinancialData(
       if (!geminiApiKey) {
         safeLog("warn", "Dispatcher", "GEMINI_API_KEY not set, falling back to CLI");
         const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
-        return extractViaCLI(processedFile, fileType, filename, cliEndpoint, "claude-sonnet-4-6");
+        return extractViaCLI(processedFile, fileType, filename, cliEndpoint, "claude-sonnet-4-6", deadlineMs);
       }
       return extractViaGemini(
         geminiApiKey, processedFile, fileType, filename,
@@ -61,7 +61,8 @@ export async function extractFinancialData(
     try {
       return await extractViaCLI(
         processedFile, fileType, filename, cliEndpoint,
-        processingSettings.model || "claude-sonnet-4-6"
+        processingSettings.model || "claude-sonnet-4-6",
+        deadlineMs
       );
     } catch (cliError) {
       const errorMsg = cliError instanceof Error ? cliError.message : String(cliError);
@@ -120,7 +121,7 @@ export async function extractFinancialData(
     if (!geminiApiKey) {
       safeLog("warn", "Dispatcher", "GEMINI_API_KEY not set, falling back to CLI");
       const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
-      return extractViaCLI(processedFile, fileType, filename, cliEndpoint);
+      return extractViaCLI(processedFile, fileType, filename, cliEndpoint, undefined, deadlineMs);
     }
     return extractViaGemini(
       geminiApiKey, processedFile, fileType, filename,
@@ -138,7 +139,8 @@ export async function extractFinancialData(
       fileType,
       filename,
       cliEndpoint,
-      "claude-sonnet-4-6"
+      "claude-sonnet-4-6",
+      deadlineMs
     );
   } catch (cliError) {
     const errorMsg = cliError instanceof Error ? cliError.message : String(cliError);
