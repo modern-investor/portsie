@@ -55,18 +55,10 @@ export default async function Home() {
             {branding.slogan}
           </h1>
 
-          {/* Vibecheck notice */}
-          <div className="text-left text-base space-y-1">
-            <p className="font-semibold text-foreground">
-              We&apos;re in vibecheck mode — sign up for our waiting list.
-            </p>
-            <p className="text-muted-foreground font-normal">
-              Open source and free.{" "}
-              <Link href="/legal/license" className="underline hover:text-foreground">
-                License (AGPL-3.0)
-              </Link>
-            </p>
-          </div>
+          {/* Waiting list prompt */}
+          <p className="text-left text-base font-semibold text-foreground">
+            We&apos;re in vibecheck mode — sign up for our waiting list.
+          </p>
 
           {/* Waiting list signup */}
           <div className="space-y-2">
@@ -101,6 +93,14 @@ export default async function Home() {
             priority
           />
         </div>
+
+        {/* Open source — bottom of page, smaller bold */}
+        <p className="text-center text-sm font-bold text-muted-foreground">
+          Open source and free.{" "}
+          <Link href="/legal/license" className="underline hover:text-foreground">
+            License (AGPL-3.0)
+          </Link>
+        </p>
       </div>
     </div>
   );

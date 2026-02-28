@@ -6,7 +6,10 @@ import { sendTemplatedEmail } from "@/lib/email";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email } = body as { email?: string };
+    const { email, modelPreference } = body as {
+      email?: string;
+      modelPreference?: "byob" | "saas";
+    };
 
     if (!email || !email.includes("@")) {
       return NextResponse.json(
@@ -16,12 +19,19 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+    const model =
+      modelPreference === "byob" || modelPreference === "saas"
+        ? modelPreference
+        : null;
     const supabase = createAdminClient();
 
     // Insert into waiting_list (unique constraint handles duplicates)
     const { error: insertError } = await supabase
       .from("waiting_list")
-      .insert({ email: normalizedEmail });
+      .insert({
+        email: normalizedEmail,
+        ...(model && { model_preference: model }),
+      });
 
     if (insertError) {
       // Duplicate email — still return success (don't leak info)
