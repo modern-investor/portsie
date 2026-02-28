@@ -1,12 +1,12 @@
 {
-  "version": "v260228.12 5:53a",
-  "release": 172,
-  "sha": "2279ee8f",
-  "fullSha": "2279ee8f17399731196b5c5a53f4a621543e5284",
+  "version": "v260228.13 6:27a",
+  "release": 173,
+  "sha": "8c0725ec",
+  "fullSha": "8c0725ecdfdd7df229015aed205dcc3b56cde24d",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000568",
-  "pushedAt": "2026-02-28T11:54:00Z",
-  "commits": [{"sha": "2279ee8f17399731196b5c5a53f4a621543e5284", "short_sha": "2279ee8f", "author": "rahulio", "message": "feat: CLI extraction cache \u2014 results survive Vercel timeouts"}]
+  "machine": "GitHub Actions 1000000572",
+  "pushedAt": "2026-02-28T12:27:23Z",
+  "commits": [{"sha": "8c0725ecdfdd7df229015aed205dcc3b56cde24d", "short_sha": "8c0725ec", "author": "rahulio", "message": "Add BYOB/SaaS waitlist choice, move open source to page bottom"}]
 }
