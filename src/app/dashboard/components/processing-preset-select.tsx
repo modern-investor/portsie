@@ -3,10 +3,10 @@
 import type { ProcessingPreset } from "@/lib/llm/types";
 
 export const PRESET_LABELS: Record<ProcessingPreset, string> = {
-  fast: "Gemini Flash 3 · standard",
-  balanced: "Gemini Flash 3 · high res scan",
-  quality: "Gemini Flash 3 · high res, deep thinking",
-  max_quality: "Claude Sonnet 4.6 · high res, deep thinking",
+  fast: "Claude Sonnet 4.6 · standard",
+  balanced: "Claude Sonnet 4.6 · high res scan",
+  quality: "Claude Sonnet 4.6 · deep thinking",
+  max_quality: "Gemini Flash 3 · deep thinking",
 };
 
 const PRESET_OPTIONS: { value: ProcessingPreset; label: string }[] = (

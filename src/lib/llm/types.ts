@@ -15,8 +15,8 @@ export interface ExtractionResult {
 
 /**
  * LLM backend modes:
- * - "gemini"  — Gemini 3 Flash via Google REST API (default, server-side key)
- * - "cli"     — Claude Sonnet 4.6 via CLI wrapper on DO (fallback)
+ * - "cli"     — Claude Sonnet 4.6 via CLI wrapper on DO (default/primary)
+ * - "gemini"  — Gemini 3 Flash via Google REST API (fallback)
  * - "api"     — Anthropic API with per-user key (user override)
  */
 export type LLMMode = "gemini" | "cli" | "api";
@@ -47,34 +47,34 @@ export interface ProcessingSettings {
 export const PROCESSING_PRESETS: Record<ProcessingPreset, ProcessingSettings> = {
   fast: {
     preset: "fast",
-    label: "Fast",
-    backend: "gemini",
-    model: "gemini-3-flash-preview",
+    label: "Standard",
+    backend: "cli",
+    model: "claude-sonnet-4-6",
     thinkingLevel: "low",
     mediaResolution: "MEDIA_RESOLUTION_DEFAULT",
   },
   balanced: {
     preset: "balanced",
     label: "Balanced",
-    backend: "gemini",
-    model: "gemini-3-flash-preview",
+    backend: "cli",
+    model: "claude-sonnet-4-6",
     thinkingLevel: "low",
     mediaResolution: "MEDIA_RESOLUTION_HIGH",
   },
   quality: {
     preset: "quality",
     label: "Quality",
-    backend: "gemini",
-    model: "gemini-3-flash-preview",
+    backend: "cli",
+    model: "claude-sonnet-4-6",
     thinkingLevel: "medium",
     mediaResolution: "MEDIA_RESOLUTION_HIGH",
   },
   max_quality: {
     preset: "max_quality",
-    label: "Max Quality",
-    backend: "cli",
-    model: "claude-sonnet-4-6",
-    thinkingLevel: "high",
+    label: "Gemini Flash",
+    backend: "gemini",
+    model: "gemini-3-flash-preview",
+    thinkingLevel: "medium",
     mediaResolution: "MEDIA_RESOLUTION_HIGH",
   },
 };

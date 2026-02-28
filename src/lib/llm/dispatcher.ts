@@ -16,14 +16,13 @@ const MIN_FALLBACK_BUDGET_MS = 60_000; // 60 seconds
  * Dispatch document extraction to the configured LLM backend.
  *
  * Default pipeline (no user settings):
- *   1. Try Gemini 3 Flash (fast, cheap, high quality)
- *   2. On failure, fall back to Claude Sonnet 4.6 via CLI wrapper
+ *   1. Try Claude Sonnet 4.6 via CLI wrapper (reliable, no Vercel timeout)
+ *   2. On failure, fall back to Gemini 3 Flash
  *      — but ONLY if enough time remains before the deadline
  *
  * Users can override to:
- *   - "cli" — force Claude via CLI wrapper (Max plan, no per-token cost)
- *   - "api" — Anthropic API with their own key (per-token billing)
- *   - "gemini" — Gemini 3 Flash only (no fallback)
+ *   - "gemini" — force Gemini 3 Flash (via preset dropdown)
+ *   - "api"    — Anthropic API with their own key (per-token billing)
  *
  * The `deadlineMs` parameter is an epoch timestamp. If set, the dispatcher
  * will check remaining time before attempting a fallback to avoid starting
@@ -40,68 +39,63 @@ export async function extractFinancialData(
 ): Promise<ExtractionResult> {
   // ── Preset-based routing (from upload page dropdown) ──
   if (processingSettings) {
-    if (processingSettings.backend === "cli") {
-      const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
-      return extractViaCLI(
-        processedFile, fileType, filename, cliEndpoint,
-        processingSettings.model
-      );
-    }
-
-    // Large file auto-routing: files >5 MB base64 (~3.75 MB raw) go directly
-    // to CLI backend, which runs on a persistent DO server without Vercel's
-    // 300s timeout constraint. This prevents deterministic timeouts from
-    // File API upload overhead + Gemini processing on large PDFs.
-    const base64Size = processedFile.base64Data?.length ?? 0;
-    const LARGE_FILE_THRESHOLD = 5_000_000; // 5 MB base64
-    const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
-
-    if (base64Size > LARGE_FILE_THRESHOLD && cliEndpoint) {
-      safeLog("info", "Dispatcher",
-        `Large file (${(base64Size / 1_048_576).toFixed(1)} MB base64) — routing directly to CLI to avoid Vercel timeout`,
-        { filename, fileType, base64Size }
-      );
-      return extractViaCLI(
-        processedFile, fileType, filename, cliEndpoint,
-        processingSettings.model || "claude-sonnet-4-6"
-      );
-    }
-
-    const geminiApiKey = process.env.GEMINI_API_KEY;
-    if (!geminiApiKey) {
-      safeLog("warn", "Dispatcher", "GEMINI_API_KEY not set, falling back to CLI");
-      return extractViaCLI(processedFile, fileType, filename, cliEndpoint);
-    }
-    try {
-      return await extractViaGemini(
+    // If preset explicitly selects Gemini, route there directly
+    if (processingSettings.backend === "gemini") {
+      const geminiApiKey = process.env.GEMINI_API_KEY;
+      if (!geminiApiKey) {
+        safeLog("warn", "Dispatcher", "GEMINI_API_KEY not set, falling back to CLI");
+        const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
+        return extractViaCLI(processedFile, fileType, filename, cliEndpoint, "claude-sonnet-4-6");
+      }
+      return extractViaGemini(
         geminiApiKey, processedFile, fileType, filename,
         processingSettings.model,
         processingSettings.thinkingLevel,
         processingSettings.mediaResolution,
         deadlineMs
       );
-    } catch (geminiError) {
-      const errorMsg = geminiError instanceof Error ? geminiError.message : String(geminiError);
+    }
 
-      // Check if we have enough time budget for a CLI fallback
+    // Default: CLI (Claude Sonnet 4.6) with Gemini fallback
+    const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
+    try {
+      return await extractViaCLI(
+        processedFile, fileType, filename, cliEndpoint,
+        processingSettings.model || "claude-sonnet-4-6"
+      );
+    } catch (cliError) {
+      const errorMsg = cliError instanceof Error ? cliError.message : String(cliError);
+
+      // Check if we have enough time budget for a Gemini fallback
       if (deadlineMs && Date.now() + MIN_FALLBACK_BUDGET_MS > deadlineMs) {
         const remainingSec = Math.round((deadlineMs - Date.now()) / 1000);
-        safeLog("error", "Dispatcher", `Gemini failed and only ${remainingSec}s remain — skipping CLI fallback`, { error: errorMsg });
+        safeLog("error", "Dispatcher", `CLI failed and only ${remainingSec}s remain — skipping Gemini fallback`, { error: errorMsg });
         throw new Error(
-          `Gemini extraction failed and not enough time for fallback (${remainingSec}s remaining). ` +
+          `CLI extraction failed and not enough time for fallback (${remainingSec}s remaining). ` +
           `Original error: ${errorMsg}`
         );
       }
 
-      safeLog("error", "Dispatcher", "Gemini extraction failed, falling back to CLI", { error: errorMsg });
-      const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
-      return extractViaCLI(processedFile, fileType, filename, cliEndpoint, "claude-sonnet-4-6");
+      const geminiApiKey = process.env.GEMINI_API_KEY;
+      if (!geminiApiKey) {
+        safeLog("error", "Dispatcher", "CLI failed and GEMINI_API_KEY not set — no fallback available", { error: errorMsg });
+        throw cliError;
+      }
+
+      safeLog("error", "Dispatcher", "CLI extraction failed, falling back to Gemini", { error: errorMsg });
+      return extractViaGemini(
+        geminiApiKey, processedFile, fileType, filename,
+        "gemini-3-flash-preview",
+        processingSettings.thinkingLevel,
+        processingSettings.mediaResolution,
+        deadlineMs
+      );
     }
   }
 
   // ── Legacy routing: user LLM settings ──
   const settings = await getLLMSettings(supabase, userId);
-  const mode = settings?.llmMode ?? "gemini";
+  const mode = settings?.llmMode ?? "cli";
 
   // ── User explicitly chose Anthropic API mode ──
   if (mode === "api") {
@@ -120,24 +114,54 @@ export async function extractFinancialData(
     return extractViaAPI(apiKey, processedFile, fileType, filename);
   }
 
-  // ── User explicitly chose CLI mode ──
-  if (mode === "cli") {
-    const cliEndpoint =
-      settings?.cliEndpoint ?? process.env.PORTSIE_CLI_ENDPOINT ?? null;
-    return extractViaCLI(processedFile, fileType, filename, cliEndpoint);
+  // ── User explicitly chose Gemini mode ──
+  if (mode === "gemini") {
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    if (!geminiApiKey) {
+      safeLog("warn", "Dispatcher", "GEMINI_API_KEY not set, falling back to CLI");
+      const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
+      return extractViaCLI(processedFile, fileType, filename, cliEndpoint);
+    }
+    return extractViaGemini(
+      geminiApiKey, processedFile, fileType, filename,
+      undefined, undefined, undefined, deadlineMs
+    );
   }
 
-  // ── Default: Gemini 3 Flash with Sonnet 4.6 CLI fallback ──
-  const geminiApiKey = process.env.GEMINI_API_KEY;
-  if (!geminiApiKey) {
-    // No Gemini key configured — fall through to CLI
-    console.warn("[Dispatcher] GEMINI_API_KEY not set, falling back to CLI");
-    const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
-    return extractViaCLI(processedFile, fileType, filename, cliEndpoint);
-  }
+  // ── Default: Claude Sonnet 4.6 CLI with Gemini fallback ──
+  const cliEndpoint =
+    settings?.cliEndpoint ?? process.env.PORTSIE_CLI_ENDPOINT ?? null;
 
   try {
-    return await extractViaGemini(
+    return await extractViaCLI(
+      processedFile,
+      fileType,
+      filename,
+      cliEndpoint,
+      "claude-sonnet-4-6"
+    );
+  } catch (cliError) {
+    const errorMsg = cliError instanceof Error ? cliError.message : String(cliError);
+
+    // Check if we have enough time budget for a Gemini fallback
+    if (deadlineMs && Date.now() + MIN_FALLBACK_BUDGET_MS > deadlineMs) {
+      const remainingSec = Math.round((deadlineMs - Date.now()) / 1000);
+      safeLog("error", "Dispatcher", `CLI failed and only ${remainingSec}s remain — skipping Gemini fallback`, { error: errorMsg });
+      throw new Error(
+        `CLI extraction failed and not enough time for fallback (${remainingSec}s remaining). ` +
+        `Original error: ${errorMsg}`
+      );
+    }
+
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    if (!geminiApiKey) {
+      safeLog("error", "Dispatcher", "CLI failed and GEMINI_API_KEY not set — no fallback available", { error: errorMsg });
+      throw cliError;
+    }
+
+    console.error(`[Dispatcher] CLI extraction failed, falling back to Gemini: ${errorMsg}`);
+
+    return extractViaGemini(
       geminiApiKey,
       processedFile,
       fileType,
@@ -146,30 +170,6 @@ export async function extractFinancialData(
       undefined, // thinkingLevel
       undefined, // mediaResolution
       deadlineMs
-    );
-  } catch (geminiError) {
-    const errorMsg = geminiError instanceof Error ? geminiError.message : String(geminiError);
-
-    // Check if we have enough time budget for a CLI fallback
-    if (deadlineMs && Date.now() + MIN_FALLBACK_BUDGET_MS > deadlineMs) {
-      const remainingSec = Math.round((deadlineMs - Date.now()) / 1000);
-      safeLog("error", "Dispatcher", `Gemini failed and only ${remainingSec}s remain — skipping CLI fallback`, { error: errorMsg });
-      throw new Error(
-        `Gemini extraction failed and not enough time for fallback (${remainingSec}s remaining). ` +
-        `Original error: ${errorMsg}`
-      );
-    }
-
-    console.error(`[Dispatcher] Gemini extraction failed, falling back to CLI: ${errorMsg}`);
-
-    // Fall back to Claude Sonnet 4.6 via CLI wrapper
-    const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
-    return extractViaCLI(
-      processedFile,
-      fileType,
-      filename,
-      cliEndpoint,
-      "claude-sonnet-4-6"
     );
   }
 }
