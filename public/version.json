@@ -1,12 +1,12 @@
 {
-  "version": "v260228.09 2:13a",
-  "release": 169,
-  "sha": "89a48f0b",
-  "fullSha": "89a48f0b7f82efc9a44302b2013cf380a7810ec4",
+  "version": "v260228.10 2:19a",
+  "release": 170,
+  "sha": "27fdb0a3",
+  "fullSha": "27fdb0a39317b16fc3b03eec2b635fe86d931636",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000553",
-  "pushedAt": "2026-02-28T08:13:55Z",
-  "commits": [{"sha": "89a48f0b7f82efc9a44302b2013cf380a7810ec4", "short_sha": "89a48f0b", "author": "rahulio", "message": "Merge branch 'ecstatic-snyder'"}, {"sha": "486787c7ec356413477cc32bbc216a68846da806", "short_sha": "486787c7", "author": "rahulio", "message": "fix: give CLI full deadline budget instead of fixed 240s timeout"}]
+  "machine": "GitHub Actions 1000000557",
+  "pushedAt": "2026-02-28T08:19:28Z",
+  "commits": [{"sha": "27fdb0a39317b16fc3b03eec2b635fe86d931636", "short_sha": "27fdb0a3", "author": "rahulio", "message": "Add AGPL license, vibecheck copy, privacy/license links on homepage and connections tabs"}]
 }
