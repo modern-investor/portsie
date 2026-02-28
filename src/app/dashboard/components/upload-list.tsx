@@ -567,9 +567,12 @@ export function UploadList({
         const isQueued = queuedIds.has(upload.id);
         const ts = timestamps[upload.id];
         const hasEnded = !!ts?.e;
-        // Only show live "Processing" spinner if THIS client session initiated it
+        // Show live "Processing" spinner if either:
+        // 1. This client session initiated it and hasn't received a response, OR
+        // 2. The DB parse_status is still "processing" (server-side still running)
         const isActivelyProcessing = processingIds.has(upload.id);
-        const isLiveProcessing = isActivelyProcessing && !hasEnded;
+        const isDbProcessing = upload.parse_status === "processing";
+        const isLiveProcessing = (isActivelyProcessing && !hasEnded) || isDbProcessing;
         // Determine display status
         const status = isLiveProcessing
           ? STATUS_STYLES.processing
@@ -704,10 +707,10 @@ export function UploadList({
               >
                 {(isLiveProcessing || isQCActive) && <Spinner className="h-3 w-3" />}
                 {isConfirmed ? "Saved" : status.label}
-                {isLiveProcessing && ts?.s && (
-                  <ElapsedTimer since={ts.s} />
+                {isLiveProcessing && (ts?.s || upload.processing_started_at) && (
+                  <ElapsedTimer since={ts?.s ?? upload.processing_started_at!} />
                 )}
-                {hasEnded && ts?.s && (
+                {!isLiveProcessing && hasEnded && ts?.s && (
                   <StaticElapsed start={ts.s} end={ts.e!} />
                 )}
               </span>
