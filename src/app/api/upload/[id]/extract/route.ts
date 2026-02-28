@@ -25,9 +25,9 @@ import { persistObservations, recordStructureSignature } from "@/lib/extraction/
 // LLM extraction can take several minutes for large PDF/CSV files
 export const maxDuration = 300; // 5 minutes
 
-// Self-imposed deadline: 280s (20s before Vercel kills at 300s)
+// Self-imposed deadline: 290s (10s before Vercel kills at 300s)
 // This ensures we always write a failure record instead of silent death.
-const DEADLINE_MS = 280_000;
+const DEADLINE_MS = 290_000;
 
 /**
  * POST /api/upload/[id]/extract
