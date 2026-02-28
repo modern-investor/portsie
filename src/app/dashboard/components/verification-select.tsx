@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 type VerificationOption = "cli" | "gemini" | "off";
 
-export function VerificationSelect({ disabled }: { disabled?: boolean }) {
+export function VerificationSelect({ disabled, hideLabel }: { disabled?: boolean; hideLabel?: boolean }) {
   const [value, setValue] = useState<VerificationOption>("cli");
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -52,12 +52,14 @@ export function VerificationSelect({ disabled }: { disabled?: boolean }) {
 
   return (
     <div className="flex items-center gap-2">
-      <label
-        htmlFor="verification-model"
-        className="text-xs font-medium text-gray-500 whitespace-nowrap"
-      >
-        Verification:
-      </label>
+      {!hideLabel && (
+        <label
+          htmlFor="verification-model"
+          className="text-xs font-medium text-gray-500 whitespace-nowrap"
+        >
+          Verification:
+        </label>
+      )}
       <select
         id="verification-model"
         value={value}

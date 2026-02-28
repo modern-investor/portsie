@@ -589,14 +589,19 @@ export function UploadSection({
 
       <UploadDropzone onUploaded={handleFileUploaded} onBatchComplete={handleBatchProcess} />
 
-      <div className="flex items-center justify-end gap-4">
+      <div className="flex items-center justify-end gap-2">
+        <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Models &ndash;</span>
+        <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Processing:</span>
         <ProcessingPresetSelect
           value={processingPreset}
           onChange={setProcessingPreset}
           disabled={processingIds.size > 0 || queuedIds.size > 0}
+          hideLabel
         />
+        <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Verification:</span>
         <VerificationSelect
           disabled={processingIds.size > 0 || queuedIds.size > 0}
+          hideLabel
         />
       </div>
 

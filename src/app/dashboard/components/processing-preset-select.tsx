@@ -17,19 +17,23 @@ export function ProcessingPresetSelect({
   value,
   onChange,
   disabled,
+  hideLabel,
 }: {
   value: ProcessingPreset;
   onChange: (preset: ProcessingPreset) => void;
   disabled?: boolean;
+  hideLabel?: boolean;
 }) {
   return (
     <div className="flex items-center gap-2">
-      <label
-        htmlFor="processing-preset"
-        className="text-xs font-medium text-gray-500 whitespace-nowrap"
-      >
-        Processing model:
-      </label>
+      {!hideLabel && (
+        <label
+          htmlFor="processing-preset"
+          className="text-xs font-medium text-gray-500 whitespace-nowrap"
+        >
+          Processing model:
+        </label>
+      )}
       <select
         id="processing-preset"
         value={value}
