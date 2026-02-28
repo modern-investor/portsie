@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Link2, Upload } from "lucide-react";
 import { SchwabConnect } from "./schwab-connect";
 import { BrokerageSelection } from "./brokerage-selection";
@@ -167,11 +168,33 @@ export function ConnectionsView({
               onBack={handleBackToList}
             />
           )}
+          <p className="text-sm text-muted-foreground">
+            <Link href="/legal/privacy" className="underline hover:text-foreground">
+              Privacy policy
+            </Link>
+            {" · "}
+            <Link href="/legal/license" className="underline hover:text-foreground">
+              License (AGPL-3.0)
+            </Link>
+          </p>
         </div>
       )}
 
       {/* Uploads content */}
-      {subTab === "uploads" && <UploadSection />}
+      {subTab === "uploads" && (
+        <div className="space-y-6">
+          <UploadSection />
+          <p className="text-sm text-muted-foreground">
+            <Link href="/legal/privacy" className="underline hover:text-foreground">
+              Privacy policy
+            </Link>
+            {" · "}
+            <Link href="/legal/license" className="underline hover:text-foreground">
+              License (AGPL-3.0)
+            </Link>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
