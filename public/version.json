@@ -1,12 +1,12 @@
 {
-  "version": "v260227.07 7:22p",
-  "release": 158,
-  "sha": "983c5831",
-  "fullSha": "983c5831bcdf2c21bf51140a2245aedf8727a3f7",
+  "version": "v260227.08 10:59p",
+  "release": 159,
+  "sha": "73030177",
+  "fullSha": "73030177fc6e193091883329cdbee4b2fef3a293",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000498",
-  "pushedAt": "2026-02-28T01:22:40Z",
-  "commits": [{"sha": "983c5831bcdf2c21bf51140a2245aedf8727a3f7", "short_sha": "983c5831", "author": "rahulio", "message": "Unified model selector label: \"Models \u2013 Processing: [] Verification: []\""}]
+  "machine": "GitHub Actions 1000000503",
+  "pushedAt": "2026-02-28T04:59:13Z",
+  "commits": [{"sha": "73030177fc6e193091883329cdbee4b2fef3a293", "short_sha": "73030177", "author": "rahulio", "message": "Add diagnostics reporting to confirm and verify upload stages"}]
 }
