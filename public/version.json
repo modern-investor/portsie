@@ -1,12 +1,12 @@
 {
-  "version": "v260227.05 6:43p",
-  "release": 156,
-  "sha": "8a2953c2",
-  "fullSha": "8a2953c26163bb1e0d6c86040beb735d6d704387",
+  "version": "v260227.06 7:09p",
+  "release": 157,
+  "sha": "5b7d815a",
+  "fullSha": "5b7d815a38b70f785f6ea1bbadd0a7ca976b532c",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000487",
-  "pushedAt": "2026-02-28T00:43:33Z",
-  "commits": [{"sha": "8a2953c26163bb1e0d6c86040beb735d6d704387", "short_sha": "8a2953c2", "author": "rahulio", "message": "Compact connection tab buttons: horizontal layout with less padding"}]
+  "machine": "GitHub Actions 1000000493",
+  "pushedAt": "2026-02-28T01:09:13Z",
+  "commits": [{"sha": "5b7d815a38b70f785f6ea1bbadd0a7ca976b532c", "short_sha": "5b7d815a", "author": "rahulio", "message": "Merge branch 'kind-feynman'"}, {"sha": "7f7b05c06608b49cf3c77f486e7e723f42573e63", "short_sha": "7f7b05c0", "author": "rahulio", "message": "Derive holdings from transaction history when no positions in extraction"}]
 }
