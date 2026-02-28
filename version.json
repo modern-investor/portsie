@@ -1,12 +1,12 @@
 {
-  "version": "v260228.07 1:38a",
-  "release": 167,
-  "sha": "4a40a9e5",
-  "fullSha": "4a40a9e5a31ed193a474041ad41267e3865be807",
+  "version": "v260228.08 2:00a",
+  "release": 168,
+  "sha": "c2ad6b12",
+  "fullSha": "c2ad6b125f87cade7cb492d962664999019ebb25",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000542",
-  "pushedAt": "2026-02-28T07:38:30Z",
-  "commits": [{"sha": "4a40a9e5a31ed193a474041ad41267e3865be807", "short_sha": "4a40a9e5", "author": "rahulio", "message": "Merge branch 'epic-noether'"}, {"sha": "504adffe3dcd95d692b6a081f6934cb9c4d963b2", "short_sha": "504adffe", "author": "rahulio", "message": "fix: \"Go now\" button in Data Saved modal now navigates to dashboard"}]
+  "machine": "GitHub Actions 1000000547",
+  "pushedAt": "2026-02-28T08:00:16Z",
+  "commits": [{"sha": "c2ad6b125f87cade7cb492d962664999019ebb25", "short_sha": "c2ad6b12", "author": "rahulio", "message": "fix: compute market_value when LLM returns null, stop dropping positions with unknown quantity"}]
 }
