@@ -1,12 +1,12 @@
 {
-  "version": "v260227.04 6:16p",
-  "release": 155,
-  "sha": "a7539c8b",
-  "fullSha": "a7539c8b8d31bcc6790f4adb950762becd582e6b",
+  "version": "v260227.05 6:43p",
+  "release": 156,
+  "sha": "8a2953c2",
+  "fullSha": "8a2953c26163bb1e0d6c86040beb735d6d704387",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000483",
-  "pushedAt": "2026-02-28T00:16:07Z",
-  "commits": [{"sha": "a7539c8b8d31bcc6790f4adb950762becd582e6b", "short_sha": "a7539c8b", "author": "rahulio", "message": "Add DIGITALOCEAN_API_TOKEN to .env.example for discoverability"}]
+  "machine": "GitHub Actions 1000000487",
+  "pushedAt": "2026-02-28T00:43:33Z",
+  "commits": [{"sha": "8a2953c26163bb1e0d6c86040beb735d6d704387", "short_sha": "8a2953c2", "author": "rahulio", "message": "Compact connection tab buttons: horizontal layout with less padding"}]
 }
