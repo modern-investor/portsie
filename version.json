@@ -1,12 +1,12 @@
 {
-  "version": "v260227.06 7:09p",
-  "release": 157,
-  "sha": "5b7d815a",
-  "fullSha": "5b7d815a38b70f785f6ea1bbadd0a7ca976b532c",
+  "version": "v260227.07 7:22p",
+  "release": 158,
+  "sha": "983c5831",
+  "fullSha": "983c5831bcdf2c21bf51140a2245aedf8727a3f7",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000493",
-  "pushedAt": "2026-02-28T01:09:13Z",
-  "commits": [{"sha": "5b7d815a38b70f785f6ea1bbadd0a7ca976b532c", "short_sha": "5b7d815a", "author": "rahulio", "message": "Merge branch 'kind-feynman'"}, {"sha": "7f7b05c06608b49cf3c77f486e7e723f42573e63", "short_sha": "7f7b05c0", "author": "rahulio", "message": "Derive holdings from transaction history when no positions in extraction"}]
+  "machine": "GitHub Actions 1000000498",
+  "pushedAt": "2026-02-28T01:22:40Z",
+  "commits": [{"sha": "983c5831bcdf2c21bf51140a2245aedf8727a3f7", "short_sha": "983c5831", "author": "rahulio", "message": "Unified model selector label: \"Models \u2013 Processing: [] Verification: []\""}]
 }
