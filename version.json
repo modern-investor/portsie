@@ -1,12 +1,12 @@
 {
-  "version": "v260228.06 1:37a",
-  "release": 166,
-  "sha": "016e8dab",
-  "fullSha": "016e8dab268742c14638e902a9a7fd15d99f88e4",
+  "version": "v260228.07 1:38a",
+  "release": 167,
+  "sha": "4a40a9e5",
+  "fullSha": "4a40a9e5a31ed193a474041ad41267e3865be807",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000537",
-  "pushedAt": "2026-02-28T07:37:16Z",
-  "commits": [{"sha": "016e8dab268742c14638e902a9a7fd15d99f88e4", "short_sha": "016e8dab", "author": "rahulio", "message": "Merge branch 'ecstatic-snyder'"}, {"sha": "3409aa263af7a900254496d0b5f89066d570df6d", "short_sha": "3409aa26", "author": "rahulio", "message": "fix: keep processing timer ticking while CLI runs server-side"}, {"sha": "30a6398091491f5e5ba24206b8c278563bd07404", "short_sha": "30a63980", "author": "rahulio", "message": "feat: flip extraction routing \u2014 Claude CLI primary, Gemini fallback"}]
+  "machine": "GitHub Actions 1000000542",
+  "pushedAt": "2026-02-28T07:38:30Z",
+  "commits": [{"sha": "4a40a9e5a31ed193a474041ad41267e3865be807", "short_sha": "4a40a9e5", "author": "rahulio", "message": "Merge branch 'epic-noether'"}, {"sha": "504adffe3dcd95d692b6a081f6934cb9c4d963b2", "short_sha": "504adffe", "author": "rahulio", "message": "fix: \"Go now\" button in Data Saved modal now navigates to dashboard"}]
 }
