@@ -253,6 +253,33 @@ export async function writeExtractedData(
     transactionsCreated = data?.length ?? 0;
   }
 
+  // ── 4b. Derive holdings from transactions if no positions were extracted ──
+  if (extractedData.positions.length === 0 && extractedData.transactions.length > 0) {
+    const { deriveHoldingsFromTransactions } = await import(
+      "@/lib/holdings/derive-from-transactions"
+    );
+    const { derivedPositions } = await deriveHoldingsFromTransactions(
+      supabase,
+      accountId,
+    );
+
+    if (derivedPositions.length > 0) {
+      const reconciliation = await reconcileHoldings(
+        supabase,
+        userId,
+        accountId,
+        derivedPositions,
+        statementId,
+      );
+      changes = reconciliation.changes;
+      holdingsCreated = reconciliation.changes.filter(
+        (c) => c.type === "new_position"
+      ).length;
+      holdingsClosed = reconciliation.closed;
+      holdingsUpdated = reconciliation.upserted;
+    }
+  }
+
   // ── 5. Update account summary (recompute from holdings + balances) ──
   const latestBalance = extractedData.balances.length > 0
     ? extractedData.balances[extractedData.balances.length - 1]

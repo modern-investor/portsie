@@ -29,6 +29,7 @@ import type {
 import { createHash } from "crypto";
 import { accountTypeToCategory } from "./account-matcher";
 import { reconcileHoldings } from "@/lib/holdings/reconcile";
+import { deriveHoldingsFromTransactions } from "@/lib/holdings/derive-from-transactions";
 import { updateAccountSummary } from "@/lib/holdings/account-summary";
 import { encryptAccountNumber } from "@/lib/privacy/mappers/accounts";
 import { safeLog } from "@/lib/privacy/redaction";
@@ -617,7 +618,14 @@ export async function writeExtraction(
     }
   }
 
-  // Also add AccountWriteResults for accounts that only had balances/transactions (no positions)
+  // Also handle accounts that only had balances/transactions (no positions).
+  // For accounts with transactions, derive holdings from transaction history.
+  const accountsWithoutPositions: {
+    accountId: string;
+    account: ExtractionAccount;
+    mapping: AccountMapping;
+  }[] = [];
+
   for (const mapping of accountMap.mappings) {
     const account = extraction.accounts[mapping.extraction_index];
     if (!account) continue;
@@ -631,25 +639,80 @@ export async function writeExtraction(
       account.balances.length > 0 || account.transactions.length > 0;
     if (!hasData) continue;
 
-    const action: "matched" | "created" =
-      mapping.action === "match_existing" && mapping.account_id
-        ? "matched"
-        : "created";
+    accountsWithoutPositions.push({ accountId, account, mapping });
+  }
 
-    accountResults.push({
-      account_id: accountId,
-      account_nickname:
-        account.account_info.account_nickname ||
-        `${account.account_info.institution_name || "Unknown"} Account`,
-      action,
-      holdings_created: 0,
-      holdings_updated: 0,
-      holdings_closed: 0,
-      snapshots_written: 0,
-      balances_written: 0,
-      transactions_created: 0,
-    });
-    totals.accounts_processed++;
+  for (let i = 0; i < accountsWithoutPositions.length; i += CONCURRENCY) {
+    const batch = accountsWithoutPositions.slice(i, i + CONCURRENCY);
+    const results = await Promise.all(
+      batch.map(async ({ accountId, account, mapping }) => {
+        const action: "matched" | "created" =
+          mapping.action === "match_existing" && mapping.account_id
+            ? "matched"
+            : "created";
+        const accountNickname =
+          account.account_info.account_nickname ||
+          `${account.account_info.institution_name || "Unknown"} Account`;
+
+        // If account has transactions, try to derive holdings from history
+        if (account.transactions.length > 0) {
+          try {
+            const { derivedPositions } = await deriveHoldingsFromTransactions(
+              supabase,
+              accountId,
+            );
+
+            if (derivedPositions.length > 0) {
+              const reconciliation = await reconcileHoldings(
+                supabase,
+                userId,
+                accountId,
+                derivedPositions as unknown as import("@/lib/upload/types").ExtractedPosition[],
+                statementId,
+              );
+
+              return {
+                account_id: accountId,
+                account_nickname: accountNickname,
+                action,
+                holdings_created: reconciliation.changes.filter(
+                  (c) => c.type === "new_position"
+                ).length,
+                holdings_updated: reconciliation.upserted,
+                holdings_closed: reconciliation.closed,
+                snapshots_written: 0,
+                balances_written: 0,
+                transactions_created: 0,
+              } as AccountWriteResult;
+            }
+          } catch (err) {
+            safeLog("error", "DBWriter", `Failed to derive holdings for account ${accountId}`, err);
+            warnings.push(`derive_holdings_failed:${accountId}:${err instanceof Error ? err.message : String(err)}`);
+          }
+        }
+
+        // Fallback: no derived positions (or no transactions)
+        return {
+          account_id: accountId,
+          account_nickname: accountNickname,
+          action,
+          holdings_created: 0,
+          holdings_updated: 0,
+          holdings_closed: 0,
+          snapshots_written: 0,
+          balances_written: 0,
+          transactions_created: 0,
+        } as AccountWriteResult;
+      })
+    );
+
+    for (const r of results) {
+      accountResults.push(r);
+      totals.accounts_processed++;
+      totals.holdings_created += r.holdings_created;
+      totals.holdings_updated += r.holdings_updated;
+      totals.holdings_closed += r.holdings_closed;
+    }
   }
 
   // ── Phase 5: Handle unallocated (aggregate) positions ──
