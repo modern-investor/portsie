@@ -12,6 +12,7 @@ import {
   failIngestionRun,
   startIngestionRun,
 } from "@/lib/extraction/ingestion-runs";
+import { ProcessingLogger, sendDiagnostics } from "@/lib/extraction/processing-log";
 
 export const maxDuration = 300; // 5 minutes — large extractions (50+ accounts) need time for sequential DB writes
 
@@ -95,8 +96,16 @@ export async function POST(
 
   const extraction = statement.extracted_data as PortsieExtraction;
 
+  // Initialize processing log for confirm stage
+  const log = new ProcessingLogger(id, statement.process_count ?? 1, {
+    filename: statement.filename,
+    fileType: statement.file_type,
+    sizeBytes: statement.file_size_bytes ?? 0,
+  });
+
   try {
     // ── Stage 2.5: Account matching ──
+    log.startStep("matching", "Matching accounts");
     const existingAccounts = await loadExistingAccountsForMatching(
       supabase,
       user.id
@@ -120,11 +129,15 @@ export async function POST(
       accountMap.aggregate_account_id =
         accountMapOverrides.aggregate_account_id;
     }
+    log.completeStep("matching");
 
     // ── Integrity check (pre-write validation) ──
+    log.startStep("validating", "Checking data integrity");
     const integrityReport = checkExtractionIntegrity(extraction);
+    log.completeStep("validating");
 
     // ── Stage 3: DB writes ──
+    log.startStep("writing", "Saving to portfolio");
     const writeReport = await writeExtraction(
       supabase,
       user.id,
@@ -138,6 +151,9 @@ export async function POST(
       .from("uploaded_statements")
       .update({ integrity_report: integrityReport })
       .eq("id", id);
+    log.completeStep("writing");
+
+    log.finalize("success");
 
     if (runId) {
       await completeIngestionRun(supabase, {
@@ -150,6 +166,8 @@ export async function POST(
       });
     }
 
+    sendDiagnostics(log, { userId: user.id, stage: "confirm" });
+
     return NextResponse.json({
       success: true,
       writeReport,
@@ -160,6 +178,9 @@ export async function POST(
     const errorMessage =
       err instanceof Error ? err.message : "Unknown error during confirmation";
     console.error("Confirm failed:", err);
+
+    log.failStep(log.currentStep(), errorMessage);
+    log.finalize("failed", "confirm_failed", errorMessage);
 
     await supabase
       .from("uploaded_statements")
@@ -175,6 +196,8 @@ export async function POST(
         errorMessage,
       });
     }
+
+    sendDiagnostics(log, { userId: user.id, stage: "confirm" });
 
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }

@@ -15,6 +15,7 @@ import {
   failIngestionRun,
   startIngestionRun,
 } from "@/lib/extraction/ingestion-runs";
+import { ProcessingLogger, sendDiagnostics } from "@/lib/extraction/processing-log";
 
 // Verification extraction is a standalone LLM call
 export const maxDuration = 300; // 5 minutes
@@ -89,8 +90,17 @@ export async function POST(
 
   const privacyConfig = getPrivacyConfig();
 
+  // Initialize processing log for verify stage
+  const log = new ProcessingLogger(id, statement.process_count ?? 1, {
+    filename: statement.filename,
+    fileType: statement.file_type,
+    sizeBytes: statement.file_size_bytes ?? 0,
+  });
+  log.setBackendInfo(verBackend, verModel);
+
   try {
     // Download and preprocess the file
+    log.startStep("downloading", "Downloading file for verification");
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("statements")
       .download(statement.file_path);
@@ -98,12 +108,16 @@ export async function POST(
     if (downloadError || !fileData) {
       throw new Error(`Failed to download file: ${downloadError?.message ?? "No data"}`);
     }
+    log.completeStep("downloading");
 
+    log.startStep("preprocessing", "Preparing file for verification");
     const buffer = Buffer.from(await fileData.arrayBuffer());
     const fileType = statement.file_type as UploadFileType;
     const processedFile = processFileForLLM(buffer, fileType, fileData.type);
+    log.completeStep("preprocessing");
 
     // Run verification extraction
+    log.startStep("verifying", "Running verification extraction", `${verBackend} — ${verModel}`);
     let verificationResult;
 
     if (verBackend === "gemini") {
@@ -118,6 +132,7 @@ export async function POST(
         processedFile, fileType, statement.filename, cliEndpoint, verModel
       );
     }
+    log.completeStep("verifying");
 
     // Privacy: sanitize verification data, do not persist raw response
     const sanitizedVerification = sanitizeExtractionForStorage(
@@ -135,12 +150,16 @@ export async function POST(
       .update(verificationUpdate)
       .eq("id", id);
 
+    log.finalize("success");
+
     if (runId) {
       await completeIngestionRun(supabase, {
         runId,
         diagnostics: { success: true, backend: verBackend, model: verModel },
       });
     }
+
+    sendDiagnostics(log, { userId: user.id, stage: "verify" });
 
     return NextResponse.json({
       success: true,
@@ -150,6 +169,9 @@ export async function POST(
   } catch (verErr) {
     const verErrMsg = verErr instanceof Error ? verErr.message : "Unknown verification error";
     safeLog("error", "Verification", "Extraction failed", { error: verErrMsg });
+
+    log.failStep(log.currentStep(), verErrMsg);
+    log.finalize("failed", "verify_failed", verErrMsg);
 
     await supabase
       .from("uploaded_statements")
@@ -167,6 +189,8 @@ export async function POST(
         diagnostics: { backend: verBackend, model: verModel },
       });
     }
+
+    sendDiagnostics(log, { userId: user.id, stage: "verify" });
 
     // Return 200 — verification failure is non-critical
     return NextResponse.json({

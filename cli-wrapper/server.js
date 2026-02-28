@@ -291,20 +291,22 @@ async function lookupFailureContext(extractionFailureId) {
  * Enhanced: requests structured JSON output from Claude and persists
  * the analysis to the `failure_analyses` Supabase table.
  */
-async function analyzeFailure(processingLog, uploadId, extractionFailureId) {
+async function analyzeFailure(processingLog, uploadId, extractionFailureId, extra = {}) {
   const startMs = Date.now();
 
-  // Look up context from the extraction_failures record
+  // Look up context from the extraction_failures record (extract stage)
   const failureCtx = await lookupFailureContext(extractionFailureId);
 
   const waypointSummary = (processingLog.waypoints || [])
     .map((w) => `  ${w.step}: ${w.status} (${w.durationMs ?? "?"}ms)${w.error ? " ERROR: " + w.error : ""}`)
     .join("\n");
 
+  const pipelineStage = extra.stage ?? "extract";
   const prompt = `You are a DevOps analyst for Portsie, a financial document extraction system. Analyze this processing failure and return ONLY a JSON object (no markdown, no code fences).
 
 ## Failure Context
 
+Pipeline Stage: ${pipelineStage}
 Upload: ${processingLog.fileInfo?.filename ?? "unknown"} (${processingLog.fileInfo?.fileType ?? "?"}, ${processingLog.fileInfo?.sizeBytes ?? "?"} bytes)
 Backend: ${processingLog.backend ?? "?"} / ${processingLog.model ?? "?"}
 Preset: ${processingLog.preset ?? "?"}
@@ -319,17 +321,19 @@ ${waypointSummary || "  (none recorded)"}
 
 ## System Architecture
 - Vercel serverless: 300s hard limit, 280s self-imposed deadline
-- Gemini 3 Flash: primary extraction engine (streaming SSE)
+- Pipeline stages: extract → confirm → verify (each a separate HTTP request with its own 300s budget)
+- Extract stage: Gemini 3 Flash primary (streaming SSE), Claude Sonnet 4.6 CLI fallback
+- Confirm stage: Account matching + DB writes (no LLM call)
+- Verify stage: Second LLM backend for cross-checking (non-critical)
 - Files >4MB base64: uploaded via Gemini File API (resumable upload + poll ACTIVE)
 - Files >5MB base64: routed to CLI backend (persistent DO server, no timeout constraint)
-- Claude Sonnet 4.6 via CLI wrapper: fallback on Gemini failure (if >60s remaining)
 
 ## Required JSON Output
 
 Return exactly this JSON structure:
 {
   "root_cause": "1-2 sentence root cause explanation",
-  "affected_step": "downloading|preprocessing|extracting|validating|confirming",
+  "affected_step": "downloading|preprocessing|extracting|validating|matching|writing|verifying",
   "timing_breakdown": { "step_name_ms": number_or_null },
   "recommended_fix": "1-2 sentence actionable recommendation",
   "severity": "low|medium|high|critical"
@@ -401,9 +405,10 @@ Severity guide:
       log(`Diagnostics analysis saved for ${uploadId} (${durationMs}ms, severity: ${analysis.severity})`);
 
       // Persist to Supabase failure_analyses table
+      // Use extra.userId as fallback when failureCtx is null (confirm/verify stages)
       const analysisRow = {
-        user_id: failureCtx?.user_id ?? null,
-        upload_id: failureCtx?.upload_id ?? null,
+        user_id: failureCtx?.user_id ?? extra.userId ?? null,
+        upload_id: failureCtx?.upload_id ?? uploadId ?? null,
         extraction_failure_id: extractionFailureId ?? null,
         root_cause: analysis.root_cause ?? "Unknown",
         affected_step: analysis.affected_step ?? null,
@@ -479,21 +484,22 @@ const server = http.createServer(async (req, res) => {
 
     try {
       const body = await readBody(req);
-      const { processingLog, uploadId, extractionFailureId } = JSON.parse(body);
+      const { processingLog, uploadId, extractionFailureId, userId, stage } = JSON.parse(body);
 
       // Persist to JSONL file
       const logLine = JSON.stringify({
         receivedAt: new Date().toISOString(),
         uploadId,
         extractionFailureId,
+        stage,
         ...processingLog,
       });
       fs.appendFileSync(DIAGNOSTICS_FILE, logLine + "\n");
-      log(`Diagnostics received for ${uploadId}: ${processingLog?.outcome ?? "?"} (${processingLog?.totalDurationMs ?? "?"}ms)${extractionFailureId ? ` failureId=${extractionFailureId}` : ""}`);
+      log(`Diagnostics received for ${uploadId}: ${processingLog?.outcome ?? "?"} (${processingLog?.totalDurationMs ?? "?"}ms)${stage ? ` stage=${stage}` : ""}${extractionFailureId ? ` failureId=${extractionFailureId}` : ""}`);
 
       // If failed, trigger async Claude analysis (fire-and-forget)
       if (processingLog?.outcome === "failed" || processingLog?.outcome === "timeout") {
-        analyzeFailure(processingLog, uploadId, extractionFailureId).catch((err) =>
+        analyzeFailure(processingLog, uploadId, extractionFailureId, { userId, stage }).catch((err) =>
           log(`Diagnostics analysis error: ${err.message}`)
         );
       }

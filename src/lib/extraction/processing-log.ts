@@ -153,3 +153,49 @@ export class ProcessingLogger {
     return Date.now() - this.startMs;
   }
 }
+
+/**
+ * Fire-and-forget: send processing log to DO diagnostics endpoint.
+ * Safe to call from any pipeline stage (extract, confirm, verify).
+ * Never blocks or throws — diagnostics must never affect the main flow.
+ *
+ * @param opts.extractionFailureId  Links to extraction_failures row (extract stage)
+ * @param opts.userId      User ID for failure_analyses attribution (all stages)
+ * @param opts.stage       Pipeline stage name for richer analysis context
+ */
+export function sendDiagnostics(
+  log: ProcessingLogger,
+  opts?: string | null | {
+    extractionFailureId?: string | null;
+    userId?: string;
+    stage?: string;
+  }
+): void {
+  const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT;
+  if (!cliEndpoint) return;
+
+  // Backwards compat: accept bare extractionFailureId string
+  const resolved = typeof opts === "string" || opts === null || opts === undefined
+    ? { extractionFailureId: opts ?? undefined }
+    : opts;
+
+  const diagUrl = cliEndpoint.replace(/\/extract\/?$/, "/diagnostics");
+  const logData = log.toJSON();
+  fetch(diagUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(process.env.PORTSIE_CLI_AUTH_TOKEN
+        ? { Authorization: `Bearer ${process.env.PORTSIE_CLI_AUTH_TOKEN}` }
+        : {}),
+    },
+    body: JSON.stringify({
+      processingLog: logData,
+      uploadId: logData.uploadId,
+      extractionFailureId: resolved.extractionFailureId ?? undefined,
+      userId: resolved.userId ?? undefined,
+      stage: resolved.stage ?? undefined,
+    }),
+    signal: AbortSignal.timeout(5_000),
+  }).catch(() => {}); // Silent — diagnostics must never block processing
+}

@@ -11,7 +11,7 @@ import {
   buildDebugContext,
   safeLog,
 } from "@/lib/privacy";
-import { ProcessingLogger } from "@/lib/extraction/processing-log";
+import { ProcessingLogger, sendDiagnostics } from "@/lib/extraction/processing-log";
 import { classifyError } from "@/lib/extraction/errors";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { detectUploadSource } from "@/lib/upload/source-detector";
@@ -289,7 +289,7 @@ export async function POST(
     }
 
     // Fire-and-forget: send diagnostics to DO server
-    sendDiagnostics(log);
+    sendDiagnostics(log, { userId: user.id, stage: "extract" });
 
     // ── Build response ──
     return NextResponse.json({
@@ -374,7 +374,7 @@ export async function POST(
     }
 
     // Fire-and-forget: send diagnostics to DO server (includes failure ID for analysis linkage)
-    sendDiagnostics(log, extractionFailureId);
+    sendDiagnostics(log, { extractionFailureId, userId: user.id, stage: "extract" });
 
     return NextResponse.json(
       {
@@ -415,25 +415,3 @@ function checkDeadline(routeStartMs: number): void {
   }
 }
 
-/** Fire-and-forget: send processing log to DO diagnostics endpoint. */
-function sendDiagnostics(log: ProcessingLogger, extractionFailureId?: string | null): void {
-  const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT;
-  if (!cliEndpoint) return;
-
-  const diagUrl = cliEndpoint.replace(/\/extract\/?$/, "/diagnostics");
-  fetch(diagUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(process.env.PORTSIE_CLI_AUTH_TOKEN
-        ? { Authorization: `Bearer ${process.env.PORTSIE_CLI_AUTH_TOKEN}` }
-        : {}),
-    },
-    body: JSON.stringify({
-      processingLog: log.toJSON(),
-      uploadId: log.toJSON().uploadId,
-      extractionFailureId: extractionFailureId ?? undefined,
-    }),
-    signal: AbortSignal.timeout(5_000),
-  }).catch(() => {}); // Silent — diagnostics must never block processing
-}
