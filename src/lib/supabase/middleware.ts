@@ -53,6 +53,7 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith("/api/market/finnhub/webhook") &&
     !request.nextUrl.pathname.startsWith("/api/waitlist") &&
     !request.nextUrl.pathname.startsWith("/archvisual") &&
+    !request.nextUrl.pathname.startsWith("/api/archvisual") &&
     request.nextUrl.pathname !== "/"
   ) {
     const url = request.nextUrl.clone();
