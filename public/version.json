@@ -1,12 +1,12 @@
 {
-  "version": "v260228.11 2:25a",
-  "release": 171,
-  "sha": "e819630b",
-  "fullSha": "e819630bba44c564fee5b71fb165c275d640e0f4",
+  "version": "v260228.12 5:53a",
+  "release": 172,
+  "sha": "2279ee8f",
+  "fullSha": "2279ee8f17399731196b5c5a53f4a621543e5284",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000562",
-  "pushedAt": "2026-02-28T08:25:22Z",
-  "commits": [{"sha": "e819630bba44c564fee5b71fb165c275d640e0f4", "short_sha": "e819630b", "author": "rahulio", "message": "feat: add BYOB vs Hosted tabbed diagrams with setup guide"}, {"sha": "aea639a93d566bfd2e2d27eda67dd39edf5550cb", "short_sha": "aea639a9", "author": "rahulio", "message": "feat: add BYOB vs Hosted tabbed diagrams with setup guide"}, {"sha": "2be47670451fca3fcd7dce828967bcde5ea69cfb", "short_sha": "2be47670", "author": "rahulio", "message": "feat: add live diagram editor chatbox to /archvisual"}, {"sha": "3106deda69171df3e67a2d0bef766eba6bda783e", "short_sha": "3106deda", "author": "rahulio", "message": "feat: add public /archvisual page for architecture diagram"}, {"sha": "9e3212b9e7b58c294ba195b3d2a4c188f6f25808", "short_sha": "9e3212b9", "author": "rahulio", "message": "feat: replace data flow tracks with SVG architecture diagram"}]
+  "machine": "GitHub Actions 1000000568",
+  "pushedAt": "2026-02-28T11:54:00Z",
+  "commits": [{"sha": "2279ee8f17399731196b5c5a53f4a621543e5284", "short_sha": "2279ee8f", "author": "rahulio", "message": "feat: CLI extraction cache \u2014 results survive Vercel timeouts"}]
 }
