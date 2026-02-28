@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { UploadDropzone } from "./upload-dropzone";
 import { UploadList } from "./upload-list";
 import { ProcessingPresetSelect } from "./processing-preset-select";
@@ -64,21 +63,20 @@ export function UploadSection({
   // IDs that should auto-open review (or redirect) when they reach a terminal state.
   // Populated when batch processing starts; consumed by an effect watching `uploads`.
   const pendingAutoReviewRef = useRef<Set<string>>(new Set());
-  const router = useRouter();
 
   // Auto-redirect countdown after save
   useEffect(() => {
     if (redirectCountdown === null) return;
     if (redirectCountdown <= 0) {
       localStorage.setItem("portsie:portfolio-tab", "assets");
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
       return;
     }
     const timer = setTimeout(() => {
       setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null));
     }, 1000);
     return () => clearTimeout(timer);
-  }, [redirectCountdown, router]);
+  }, [redirectCountdown]);
 
   function cancelRedirect() {
     setRedirectCountdown(null);
@@ -549,7 +547,7 @@ export function UploadSection({
               <button
                 onClick={() => {
                   localStorage.setItem("portsie:portfolio-tab", "assets");
-                  router.push("/dashboard");
+                  window.location.href = "/dashboard";
                 }}
                 className="rounded-lg bg-green-600 px-5 py-2 text-sm font-medium text-white hover:bg-green-700"
               >
