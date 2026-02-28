@@ -7,6 +7,7 @@ import type { PortfolioData } from "@/app/api/portfolio/positions/route";
 import type { ViewSuggestion } from "@/lib/portfolio/ai-views-types";
 import type { DeclarativeChartSpec } from "@/lib/portfolio/chart-spec-types";
 import { Upload, Link2, PieChart, Landmark, List, X, Sparkles, Trash2, RefreshCw, PanelRight } from "lucide-react";
+import { DataFlowDiagram } from "./data-flow-diagram";
 import type { PriceRefreshResult } from "@/lib/market";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PortfolioSummaryBar } from "./portfolio-summary-bar";
@@ -86,6 +87,11 @@ function PortfolioEmptyState({
           <Link2 className="h-4 w-4" />
           Connect API
         </button>
+      </div>
+
+      {/* Data flow diagram showing how each method works */}
+      <div className="mt-8 w-full max-w-2xl">
+        <DataFlowDiagram />
       </div>
     </div>
   );
