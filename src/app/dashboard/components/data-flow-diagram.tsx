@@ -1,18 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import {
   Monitor, HardDrive, Cpu, Database, Landmark, TrendingUp, Shield,
-  Server, Globe, Cloud, Lock, Wifi, Zap, Layers, Box, type LucideIcon,
+  Server, Globe, Cloud, Lock, Wifi, Zap, Layers, Box, User, Building2,
+  type LucideIcon,
 } from "lucide-react";
 import type { DiagramData, DiagramEdge, DiagramNode, DiagramRegion } from "@/lib/archvisual/types";
-import { COLORS, DEFAULT_DIAGRAM } from "@/lib/archvisual/types";
+import { COLORS, HOSTED_DIAGRAM, BYOB_DIAGRAM } from "@/lib/archvisual/types";
 import { computeEdgePath, buildNodeMap } from "@/lib/archvisual/edge-paths";
 
 // ─── Icon registry ───────────────────────────────────────────────────────────
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Monitor, HardDrive, Cpu, Database, Landmark, TrendingUp, Shield,
-  Server, Globe, Cloud, Lock, Wifi, Zap, Layers, Box,
+  Server, Globe, Cloud, Lock, Wifi, Zap, Layers, Box, User, Building2,
 };
 
 function getIcon(name: string) {
@@ -139,18 +141,43 @@ function Markers({ colors }: { colors: string[] }) {
   );
 }
 
-// ─── Legend item ──────────────────────────────────────────────────────────────
+// ─── SVG renderer ────────────────────────────────────────────────────────────
 
-function LegendLine({ color, dash, sw }: { color: string; dash?: string; sw?: number }) {
-  const c = COLORS[color];
-  if (!c) return null;
+function DiagramSVG({ d }: { d: DiagramData }) {
+  const nodeMap = buildNodeMap(d.nodes);
+  const edgeColors = [...new Set(d.edges.map((e) => e.color))];
+
   return (
-    <svg width={20} height={3}>
-      <line x1={0} y1={1.5} x2={20} y2={1.5}
-            stroke={c.stroke} strokeWidth={sw ?? 2} strokeDasharray={dash} />
+    <svg viewBox="0 0 600 460" className="w-full" preserveAspectRatio="xMidYMid meet"
+         role="img" aria-label="System architecture diagram showing data flow paths">
+      <Markers colors={edgeColors} />
+      {d.regions.map((r, i) => <Region key={i} region={r} />)}
+      {d.edges.map((e, i) => <Edge key={i} edge={e} nodeMap={nodeMap} />)}
+      {d.nodes.map((n) => <Node key={n.id} node={n} />)}
     </svg>
   );
 }
+
+// ─── Tab definitions ─────────────────────────────────────────────────────────
+
+const TABS = [
+  {
+    id: "hosted" as const,
+    label: "Hosted Cloud",
+    sub: "Infrastructure controlled by Portsie",
+    icon: Building2,
+    diagram: HOSTED_DIAGRAM,
+    accent: "blue" as const,
+  },
+  {
+    id: "byob" as const,
+    label: "Self-Hosted (BYOB)",
+    sub: "Your servers, your keys, your data",
+    icon: User,
+    diagram: BYOB_DIAGRAM,
+    accent: "violet" as const,
+  },
+];
 
 // ─── Main diagram ────────────────────────────────────────────────────────────
 
@@ -161,66 +188,84 @@ interface Props {
 }
 
 export function DataFlowDiagram({ data, compact }: Props) {
-  const d = data ?? DEFAULT_DIAGRAM;
-  const nodeMap = buildNodeMap(d.nodes);
+  const [activeTab, setActiveTab] = useState<"hosted" | "byob">("hosted");
 
-  // Collect unique edge colors for markers
-  const edgeColors = [...new Set(d.edges.map((e) => e.color))];
+  // If data is explicitly provided (archvisual editor), render it directly — no tabs
+  if (data) {
+    return (
+      <div className="w-full space-y-2">
+        {!compact && (
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 text-center">
+            System Architecture
+          </h4>
+        )}
+        <DiagramSVG d={data} />
+      </div>
+    );
+  }
 
-  // Build legend entries from edges (unique by color)
-  const legendEntries = d.edges.reduce<{ color: string; label: string; dash?: string; sw?: number }[]>(
-    (acc, e) => {
-      if (!acc.some((l) => l.color === e.color)) {
-        const labels: Record<string, string> = {
-          blue: "Hosted Upload", violet: "BYOB (local parse)",
-          emerald: "Brokerage API", amber: "Market Prices",
-        };
-        acc.push({ color: e.color, label: labels[e.color] ?? e.color, dash: e.dash, sw: e.strokeWidth });
-      }
-      return acc;
-    }, [],
-  );
+  // Dashboard mode: show tabs to switch between HOSTED and BYOB
+  const current = TABS.find((t) => t.id === activeTab) ?? TABS[0];
+  const accentColors = COLORS[current.accent];
 
   return (
-    <div className="w-full space-y-2">
+    <div className="w-full space-y-3">
       {!compact && (
         <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 text-center">
           System Architecture
         </h4>
       )}
 
-      <svg viewBox="0 0 600 460" className="w-full" preserveAspectRatio="xMidYMid meet"
-           role="img" aria-label="System architecture diagram showing data flow paths">
-
-        <Markers colors={edgeColors} />
-
-        {/* Regions (background) */}
-        {d.regions.map((r, i) => <Region key={i} region={r} />)}
-
-        {/* Edges (paths + labels, behind nodes) */}
-        {d.edges.map((e, i) => <Edge key={i} edge={e} nodeMap={nodeMap} />)}
-
-        {/* Nodes (on top) */}
-        {d.nodes.map((n) => <Node key={n.id} node={n} />)}
-      </svg>
+      <DiagramSVG d={current.diagram} />
 
       {!compact && (
         <>
-          {/* Legend */}
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[10px]">
-            {legendEntries.map((l) => (
-              <span key={l.color} className="flex items-center gap-1.5">
-                <LegendLine color={l.color} dash={l.dash} sw={l.sw} />
-                <span className="font-medium" style={{ color: COLORS[l.color]?.text }}>{l.label}</span>
-              </span>
-            ))}
+          {/* Tab switcher */}
+          <div className="flex items-center justify-center gap-2">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const TabIcon = tab.icon;
+              const tc = COLORS[tab.accent];
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-left transition-all ${
+                    isActive
+                      ? "shadow-sm"
+                      : "bg-gray-50 hover:bg-gray-100 opacity-60 hover:opacity-90"
+                  }`}
+                  style={isActive ? {
+                    backgroundColor: tc?.fill,
+                    boxShadow: `0 0 0 2px ${tc?.stroke}40`,
+                  } : undefined}
+                >
+                  <div
+                    className="flex items-center justify-center rounded-md p-1.5"
+                    style={isActive ? { backgroundColor: `${tc?.stroke}18`, color: tc?.stroke } : { color: "#9ca3af" }}
+                  >
+                    <TabIcon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold" style={isActive ? { color: tc?.text } : { color: "#6b7280" }}>
+                      {tab.label}
+                    </div>
+                    <div className="text-[10px]" style={{ color: isActive ? tc?.text : "#9ca3af" }}>
+                      {tab.sub}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
-          {/* BYOB privacy note */}
-          <p className="text-center text-[10px] text-gray-400 flex items-center justify-center gap-1">
-            <Shield className="h-3 w-3 text-violet-400" />
-            In BYOB mode, raw files never leave your device — only parsed portfolio data is sent.
-          </p>
+          {/* Privacy note for BYOB */}
+          {activeTab === "byob" && (
+            <p className="text-center text-[10px] text-gray-400 flex items-center justify-center gap-1">
+              <Shield className="h-3 w-3 text-violet-400" />
+              In BYOB mode, raw files never leave your device — only parsed portfolio data is sent.
+            </p>
+          )}
         </>
       )}
     </div>

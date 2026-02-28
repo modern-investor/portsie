@@ -15,7 +15,7 @@ The JSON schema:
   "regions": [{ "label": string, "x": number, "y": number, "w": number, "h": number, "color": string }]
 }
 
-The SVG viewBox is 600x460. Node positions are (x, y) for top-left corner. Available colors: blue, violet, emerald, amber, gray, red, cyan, pink, orange, teal. Available icons: Monitor, HardDrive, Cpu, Database, Landmark, TrendingUp, Shield, Server, Globe, Cloud, Lock, Wifi, Zap, Layers, Box.
+The SVG viewBox is 600x460. Node positions are (x, y) for top-left corner. Available colors: blue, violet, emerald, amber, gray, red, cyan, pink, orange, teal. Available icons: Monitor, HardDrive, Cpu, Database, Landmark, TrendingUp, Shield, Server, Globe, Cloud, Lock, Wifi, Zap, Layers, Box, User, Building2.
 
 Edge "path" is an SVG path d attribute for precise routing. If you add a new edge, compute a reasonable path or omit it to let the system auto-compute from node positions. "labelX" and "labelY" position the edge label.
 
