@@ -1,12 +1,12 @@
 {
-  "version": "v260228.05 1:22a",
-  "release": 165,
-  "sha": "c1a4df75",
-  "fullSha": "c1a4df751098162628bb1858171b91184fb72e54",
+  "version": "v260228.06 1:37a",
+  "release": 166,
+  "sha": "016e8dab",
+  "fullSha": "016e8dab268742c14638e902a9a7fd15d99f88e4",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000532",
-  "pushedAt": "2026-02-28T07:22:29Z",
-  "commits": [{"sha": "c1a4df751098162628bb1858171b91184fb72e54", "short_sha": "c1a4df75", "author": "rahulio", "message": "feat: add live diagram editor chatbox to /archvisual"}]
+  "machine": "GitHub Actions 1000000537",
+  "pushedAt": "2026-02-28T07:37:16Z",
+  "commits": [{"sha": "016e8dab268742c14638e902a9a7fd15d99f88e4", "short_sha": "016e8dab", "author": "rahulio", "message": "Merge branch 'ecstatic-snyder'"}, {"sha": "3409aa263af7a900254496d0b5f89066d570df6d", "short_sha": "3409aa26", "author": "rahulio", "message": "fix: keep processing timer ticking while CLI runs server-side"}, {"sha": "30a6398091491f5e5ba24206b8c278563bd07404", "short_sha": "30a63980", "author": "rahulio", "message": "feat: flip extraction routing \u2014 Claude CLI primary, Gemini fallback"}]
 }
