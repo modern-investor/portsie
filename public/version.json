@@ -1,12 +1,12 @@
 {
-  "version": "v260228.03 1:09a",
-  "release": 163,
-  "sha": "b35455cf",
-  "fullSha": "b35455cf0d51549b7b69f244f776276e78e29f93",
+  "version": "v260228.04 1:19a",
+  "release": 164,
+  "sha": "0e789609",
+  "fullSha": "0e7896096780ddc4f4cb75fb6f10fab5c939987c",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000522",
-  "pushedAt": "2026-02-28T07:09:57Z",
-  "commits": [{"sha": "b35455cf0d51549b7b69f244f776276e78e29f93", "short_sha": "b35455cf", "author": "rahulio", "message": "feat: add public /archvisual page for architecture diagram"}]
+  "machine": "GitHub Actions 1000000527",
+  "pushedAt": "2026-02-28T07:19:39Z",
+  "commits": [{"sha": "0e7896096780ddc4f4cb75fb6f10fab5c939987c", "short_sha": "0e789609", "author": "rahulio", "message": "feat: flip extraction routing \u2014 Claude CLI primary, Gemini fallback"}]
 }
