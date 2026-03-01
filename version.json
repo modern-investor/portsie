@@ -1,12 +1,12 @@
 {
-  "version": "v260228.18 11:43p",
-  "release": 178,
-  "sha": "2c2c3b57",
-  "fullSha": "2c2c3b57ab96f99aa7de3bd446623ffc2b3a3ea7",
+  "version": "v260228.19 11:55p",
+  "release": 179,
+  "sha": "ff0838af",
+  "fullSha": "ff0838af72810dd16b8e9e47983b001d45dc155f",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000598",
-  "pushedAt": "2026-03-01T05:43:26Z",
-  "commits": [{"sha": "2c2c3b57ab96f99aa7de3bd446623ffc2b3a3ea7", "short_sha": "2c2c3b57", "author": "rahulio", "message": "fix: correct labelLine type error breaking Vercel build"}]
+  "machine": "GitHub Actions 1000000602",
+  "pushedAt": "2026-03-01T05:55:53Z",
+  "commits": [{"sha": "ff0838af72810dd16b8e9e47983b001d45dc155f", "short_sha": "ff0838af", "author": "rahulio", "message": "feat: open privacy, license, and terms links in new tab"}]
 }
