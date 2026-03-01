@@ -23,6 +23,7 @@ import {
 import { persistObservations, recordStructureSignature } from "@/lib/extraction/governance";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validateExtraction } from "@/lib/extraction/validate";
+import { checkExtractionIntegrity } from "@/lib/extraction/integrity-check";
 import type { PortsieExtraction } from "@/lib/extraction/schema";
 
 // LLM extraction can take several minutes for large PDF/CSV files
@@ -277,6 +278,23 @@ export async function POST(
     const totalBalances = metadata.total_balances_extracted;
     const hasData = totalPositions > 0 || totalTransactions > 0 || totalBalances > 0;
 
+    // Run integrity checks to catch obviously wrong extractions
+    const integrityReport = checkExtractionIntegrity(extraction);
+    if (!integrityReport.passed) {
+      // Inject integrity errors into extraction notes so they show in the review UI
+      const integrityNotes = integrityReport.discrepancies
+        .filter(d => d.severity === "error")
+        .map(d => `[INTEGRITY ERROR] ${d.check}`);
+      extraction = {
+        ...extraction,
+        notes: [...(extraction.notes || []), ...integrityNotes],
+      };
+      // Downgrade confidence when integrity check fails
+      if (extraction.confidence === "high") {
+        extraction = { ...extraction, confidence: "low" };
+      }
+    }
+
     // Privacy: sanitize extraction and build debug context
     const sanitizedExtraction = sanitizeExtractionForStorage(extraction, privacyConfig);
     const debugContext = buildDebugContext({
@@ -314,6 +332,7 @@ export async function POST(
         verification_error: null,
         processing_step: null,
         processing_log: log.toJSON(),
+        integrity_report: integrityReport,
         // ── Searchable metadata ──
         ...metadata,
         processing_backend: processingSettings.backend,
@@ -363,6 +382,7 @@ export async function POST(
         unallocatedPositions: extraction.unallocated_positions.length,
         confidence: extraction.confidence,
       },
+      integrityReport,
       processingLog: log.toJSON(),
     });
   } catch (err) {

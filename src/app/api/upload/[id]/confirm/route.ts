@@ -51,9 +51,11 @@ export async function POST(
 
   // Parse optional overrides from request body
   let accountMapOverrides: Partial<AccountMapResult> | undefined;
+  let forceConfirm = false;
   try {
     const body = await request.json();
     accountMapOverrides = body?.accountMapOverrides;
+    forceConfirm = body?.forceConfirm === true;
   } catch {
     // Empty body is fine
   }
@@ -135,6 +137,45 @@ export async function POST(
     log.startStep("validating", "Checking data integrity");
     const integrityReport = checkExtractionIntegrity(extraction);
     log.completeStep("validating");
+
+    // Block writes when integrity check finds errors (e.g., positions sum
+    // far exceeding document total). The user can override with forceConfirm.
+    if (!integrityReport.passed && !forceConfirm) {
+      const errorDiscrepancies = integrityReport.discrepancies
+        .filter(d => d.severity === "error");
+      const errorSummary = errorDiscrepancies
+        .map(d => d.check)
+        .join("; ");
+
+      log.failStep("validating", `Integrity check failed: ${errorSummary}`);
+      log.finalize("failed", "integrity_failed", errorSummary);
+
+      // Store the integrity report so the UI can display it
+      await supabase
+        .from("uploaded_statements")
+        .update({ integrity_report: integrityReport })
+        .eq("id", id);
+
+      if (runId) {
+        await failIngestionRun(supabase, {
+          runId,
+          errorCategory: "integrity_failed",
+          errorMessage: `Integrity check failed: ${errorSummary}`,
+        });
+      }
+
+      sendDiagnostics(log, { userId: user.id, stage: "confirm" });
+
+      return NextResponse.json(
+        {
+          error: "Data integrity check failed. The extracted values appear incorrect.",
+          integrityReport,
+          errorDetails: errorDiscrepancies,
+          hint: "Re-extract the document or pass forceConfirm: true to override.",
+        },
+        { status: 422 }
+      );
+    }
 
     // ── Stage 3: DB writes ──
     log.startStep("writing", "Saving to portfolio");

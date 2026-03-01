@@ -195,7 +195,106 @@ export function checkExtractionIntegrity(
     }
   }
 
-  // ── 3. Day change consistency ──
+  // ── 3. Position values vs document total ──
+  // This is the CRITICAL check that catches obviously wrong extractions
+  // (e.g., LLM hallucinating 16,000 shares of TSLA worth $6.5M when doc total is $1.2M).
+  if (docTotal != null && totalPositionValues > 0) {
+    // Use absolute doc total to handle portfolios with liabilities
+    const absDocTotal = Math.abs(docTotal);
+    // Only check if doc total is meaningful (> $100)
+    if (absDocTotal > 100) {
+      const positionOvershoot = totalPositionValues / absDocTotal;
+      if (positionOvershoot > 2) {
+        // Sum of positions is more than 2x the document total — almost certainly wrong
+        const diff = totalPositionValues - absDocTotal;
+        discrepancies.push({
+          check: `Sum of all position values ($${totalPositionValues.toLocaleString()}) is ${positionOvershoot.toFixed(1)}x the document total ($${absDocTotal.toLocaleString()})`,
+          expected: absDocTotal,
+          computed: totalPositionValues,
+          difference: diff,
+          differencePct: ((diff / absDocTotal) * 100),
+          severity: "error",
+        });
+      } else if (positionOvershoot > 1.5) {
+        const diff = totalPositionValues - absDocTotal;
+        discrepancies.push({
+          check: `Sum of all position values ($${totalPositionValues.toLocaleString()}) exceeds document total ($${absDocTotal.toLocaleString()}) by ${((positionOvershoot - 1) * 100).toFixed(0)}%`,
+          expected: absDocTotal,
+          computed: totalPositionValues,
+          difference: diff,
+          differencePct: ((diff / absDocTotal) * 100),
+          severity: "warning",
+        });
+      }
+    }
+  }
+
+  // ── 4. Individual position sanity check ──
+  // Flag single positions whose market_value exceeds the document total.
+  if (docTotal != null && Math.abs(docTotal) > 100) {
+    const absDocTotal = Math.abs(docTotal);
+    const allPositions = [
+      ...extraction.accounts.flatMap(a => a.positions),
+      ...extraction.unallocated_positions,
+    ];
+    for (const pos of allPositions) {
+      const mv = pos.market_value ?? 0;
+      if (mv > absDocTotal * 1.5) {
+        discrepancies.push({
+          check: `Position ${pos.symbol}: market value $${mv.toLocaleString()} exceeds document total $${absDocTotal.toLocaleString()}`,
+          expected: absDocTotal,
+          computed: mv,
+          difference: mv - absDocTotal,
+          differencePct: ((mv - absDocTotal) / absDocTotal) * 100,
+          severity: "error",
+        });
+      }
+    }
+  }
+
+  // ── 5. Unallocated positions vs account balances ──
+  // If there are unallocated (aggregate) positions, their total should roughly match
+  // the sum of investment account balances (excluding liabilities and cash-only accounts).
+  if (unallocatedSum > 0 && totalAccountBalances !== 0) {
+    // Compute sum of non-liability, non-cash account balances (investment accounts only)
+    let investmentBalanceSum = 0;
+    for (const account of extraction.accounts) {
+      const info = account.account_info;
+      if (LIABILITY_ACCOUNT_TYPES.has(info.account_type ?? "")) continue;
+      // Skip cash-only accounts (checking, savings)
+      const isCashAccount = ["checking", "savings"].includes(info.account_type ?? "");
+      if (isCashAccount) continue;
+      const bal = account.balances.length > 0
+        ? account.balances[account.balances.length - 1].liquidation_value ?? 0
+        : 0;
+      investmentBalanceSum += bal;
+    }
+
+    if (investmentBalanceSum > 0) {
+      const ratio = unallocatedSum / investmentBalanceSum;
+      if (ratio > 3) {
+        discrepancies.push({
+          check: `Aggregate positions total ($${unallocatedSum.toLocaleString()}) is ${ratio.toFixed(1)}x the investment account balances ($${investmentBalanceSum.toLocaleString()})`,
+          expected: investmentBalanceSum,
+          computed: unallocatedSum,
+          difference: unallocatedSum - investmentBalanceSum,
+          differencePct: ((unallocatedSum - investmentBalanceSum) / investmentBalanceSum) * 100,
+          severity: "error",
+        });
+      } else if (ratio > 2) {
+        discrepancies.push({
+          check: `Aggregate positions total ($${unallocatedSum.toLocaleString()}) is ${ratio.toFixed(1)}x the investment account balances ($${investmentBalanceSum.toLocaleString()})`,
+          expected: investmentBalanceSum,
+          computed: unallocatedSum,
+          difference: unallocatedSum - investmentBalanceSum,
+          differencePct: ((unallocatedSum - investmentBalanceSum) / investmentBalanceSum) * 100,
+          severity: "warning",
+        });
+      }
+    }
+  }
+
+  // ── 7. Day change consistency ──
   const docDayChange = extraction.document_totals?.total_day_change ?? null;
   if (docDayChange != null) {
     let computedDayChange = 0;

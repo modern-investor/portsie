@@ -314,16 +314,23 @@ export function UploadSection({
         return false;
       }
 
+      // Skip auto-confirm if integrity check failed (errors are in extraction notes)
+      const hasIntegrityErrors = extractBody?.integrityReport?.passed === false;
+
       // ── Stage 2: Confirm (account matching + DB writes) ──
-      try {
-        const confirmRes = await fetch(`/api/upload/${uploadId}/confirm`, {
-          method: "POST",
-        });
-        if (confirmRes.ok) {
-          confirmed = true;
+      if (!hasIntegrityErrors) {
+        try {
+          const confirmRes = await fetch(`/api/upload/${uploadId}/confirm`, {
+            method: "POST",
+          });
+          if (confirmRes.ok) {
+            confirmed = true;
+          } else if (confirmRes.status === 422) {
+            // Integrity check blocked the write — extraction is saved, user sees errors in review
+          }
+        } catch {
+          // Confirm network error — extraction is still saved, user can confirm manually
         }
-      } catch {
-        // Confirm network error — extraction is still saved, user can confirm manually
       }
 
       // Refresh upload record after confirm

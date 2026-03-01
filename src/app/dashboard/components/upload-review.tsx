@@ -440,6 +440,9 @@ export function UploadReview({
       });
       if (!res.ok) {
         const data = await res.json();
+        if (res.status === 422) {
+          throw new Error("Integrity check failed — extracted values appear incorrect. Re-extract the document.");
+        }
         throw new Error(data.error || "Failed to save");
       }
       // Refresh the upload record to get confirmed_at
@@ -460,6 +463,7 @@ export function UploadReview({
 
   const confidence = CONFIDENCE_STYLES[extraction.confidence];
   const isMultiAccount = extraction.accounts.length > 1;
+  const hasIntegrityErrors = extraction.notes.some(n => n.startsWith("[INTEGRITY ERROR]"));
 
   // Aggregate stats from per-account data
   const allTransactions = extraction.accounts.flatMap((a) => a.transactions);
@@ -529,14 +533,38 @@ export function UploadReview({
         </div>
       )}
 
+      {/* Integrity errors — shown prominently in red */}
+      {extraction.notes.some(n => n.startsWith("[INTEGRITY ERROR]")) && (
+        <div className="rounded-md border-2 border-red-300 bg-red-50 p-3 text-sm text-red-800">
+          <p className="font-semibold flex items-center gap-1.5">
+            <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            Data Integrity Errors — extracted values appear incorrect
+          </p>
+          <ul className="mt-1.5 list-inside list-disc space-y-0.5">
+            {extraction.notes
+              .filter(n => n.startsWith("[INTEGRITY ERROR]"))
+              .map((note, i) => (
+                <li key={i}>{note.replace("[INTEGRITY ERROR] ", "")}</li>
+              ))}
+          </ul>
+          <p className="mt-2 text-xs text-red-600">
+            Try re-extracting the document. Saving is blocked until these issues are resolved.
+          </p>
+        </div>
+      )}
+
       {/* Notes / warnings from LLM */}
-      {extraction.notes.length > 0 && (
+      {extraction.notes.filter(n => !n.startsWith("[INTEGRITY ERROR]")).length > 0 && (
         <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
           <p className="font-medium">Notes:</p>
           <ul className="mt-1 list-inside list-disc space-y-0.5">
-            {extraction.notes.map((note, i) => (
-              <li key={i}>{note}</li>
-            ))}
+            {extraction.notes
+              .filter(n => !n.startsWith("[INTEGRITY ERROR]"))
+              .map((note, i) => (
+                <li key={i}>{note}</li>
+              ))}
           </ul>
         </div>
       )}
@@ -633,10 +661,11 @@ export function UploadReview({
         ) : (
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || hasIntegrityErrors}
             className="rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+            title={hasIntegrityErrors ? "Cannot save — integrity errors detected. Re-extract the document." : undefined}
           >
-            {saving ? "Saving..." : "Confirm & Save"}
+            {saving ? "Saving..." : hasIntegrityErrors ? "Save Blocked" : "Confirm & Save"}
           </button>
         )}
         {saveError && (
