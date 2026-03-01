@@ -1,12 +1,12 @@
 {
-  "version": "v260301.04 1:55a",
-  "release": 183,
-  "sha": "00f9c233",
-  "fullSha": "00f9c2332d0c4a6ae4c0698f655d88ad487cff92",
+  "version": "v260301.05 1:56a",
+  "release": 184,
+  "sha": "30ca8122",
+  "fullSha": "30ca81220bdaa6aa991b6bd23cca12cebea21c8c",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000622",
-  "pushedAt": "2026-03-01T07:55:16Z",
-  "commits": [{"sha": "00f9c2332d0c4a6ae4c0698f655d88ad487cff92", "short_sha": "00f9c233", "author": "rahulio", "message": "fix: add timeouts to all Schwab API fetch calls"}]
+  "machine": "GitHub Actions 1000000627",
+  "pushedAt": "2026-03-01T07:56:45Z",
+  "commits": [{"sha": "30ca81220bdaa6aa991b6bd23cca12cebea21c8c", "short_sha": "30ca8122", "author": "rahulio", "message": "fix: deduplicate rows before bulk upsert to prevent ON CONFLICT error"}]
 }
