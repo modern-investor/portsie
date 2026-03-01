@@ -92,7 +92,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Upload to Supabase Storage under user's folder
-  const filePath = `${user.id}/${Date.now()}_${file.name}`;
+  // Sanitize filename: replace spaces, pipes, and other invalid chars with underscores
+  const safeFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const filePath = `${user.id}/${Date.now()}_${safeFilename}`;
   const { error: storageError } = await supabase.storage
     .from("statements")
     .upload(filePath, buffer, { contentType: file.type });
