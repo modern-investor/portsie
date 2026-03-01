@@ -1,12 +1,12 @@
 {
-  "version": "v260301.05 1:56a",
-  "release": 184,
-  "sha": "30ca8122",
-  "fullSha": "30ca81220bdaa6aa991b6bd23cca12cebea21c8c",
+  "version": "v260301.06 2:11a",
+  "release": 185,
+  "sha": "dee361bd",
+  "fullSha": "dee361bd85038c9325f8b8e391af817727c37799",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000627",
-  "pushedAt": "2026-03-01T07:56:45Z",
-  "commits": [{"sha": "30ca81220bdaa6aa991b6bd23cca12cebea21c8c", "short_sha": "30ca8122", "author": "rahulio", "message": "fix: deduplicate rows before bulk upsert to prevent ON CONFLICT error"}]
+  "machine": "GitHub Actions 1000000632",
+  "pushedAt": "2026-03-01T08:11:50Z",
+  "commits": [{"sha": "dee361bd85038c9325f8b8e391af817727c37799", "short_sha": "dee361bd", "author": "rahulio", "message": "fix: block obviously wrong extractions with integrity checks"}]
 }
