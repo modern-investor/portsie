@@ -1,12 +1,12 @@
 {
-  "version": "v260228.14 10:28p",
-  "release": 174,
-  "sha": "051a8caa",
-  "fullSha": "051a8caa2aee20fde2920ea2e7d46d1c959e75cc",
+  "version": "v260228.15 11:03p",
+  "release": 175,
+  "sha": "50ca2ab5",
+  "fullSha": "50ca2ab5881d42b5f5edeb9b1b4ea9680b0eddb5",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000577",
-  "pushedAt": "2026-03-01T04:28:40Z",
-  "commits": [{"sha": "051a8caa2aee20fde2920ea2e7d46d1c959e75cc", "short_sha": "051a8caa", "author": "rahulio", "message": "feat: default verification model to Gemini 2.5 Flash"}]
+  "machine": "GitHub Actions 1000000582",
+  "pushedAt": "2026-03-01T05:03:19Z",
+  "commits": [{"sha": "50ca2ab5881d42b5f5edeb9b1b4ea9680b0eddb5", "short_sha": "50ca2ab5", "author": "rahulio", "message": "feat: improve asset allocation bar contrast and add category labels"}]
 }
