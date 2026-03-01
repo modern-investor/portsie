@@ -111,7 +111,7 @@ export function AssetCompositionDonut({ classifiedPortfolio, hideValues }: Props
                 const shortName = (name ?? "").replace("and Equivalents", "").trim();
                 return `${shortName} ${pctVal.toFixed(0)}%`;
               }}
-              labelLine={({ percent }: { percent?: number }) => (percent ?? 0) * 100 >= 2}
+              labelLine={false}
               onClick={(entry) => {
                 setActiveClass(
                   activeClass === entry.id ? null : (entry.id as string)
