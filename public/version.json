@@ -1,12 +1,12 @@
 {
-  "version": "v260228.16 11:22p",
-  "release": 176,
-  "sha": "39fb7c2f",
-  "fullSha": "39fb7c2f42d302e5842e719f7ceac1206a8aaae2",
+  "version": "v260228.17 11:25p",
+  "release": 177,
+  "sha": "11713e9c",
+  "fullSha": "11713e9c07eb319ef5601335585a862f1a348528",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000587",
-  "pushedAt": "2026-03-01T05:22:26Z",
-  "commits": [{"sha": "39fb7c2f42d302e5842e719f7ceac1206a8aaae2", "short_sha": "39fb7c2f", "author": "rahulio", "message": "fix: hide overlapping labels on composition donut for small slices"}]
+  "machine": "GitHub Actions 1000000592",
+  "pushedAt": "2026-03-01T05:25:45Z",
+  "commits": [{"sha": "11713e9c07eb319ef5601335585a862f1a348528", "short_sha": "11713e9c", "author": "rahulio", "message": "fix: sanitize filename before using as Supabase Storage key"}]
 }
