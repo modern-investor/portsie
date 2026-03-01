@@ -59,6 +59,7 @@ export class SchwabAuth {
         code,
         redirect_uri: this.callbackUrl,
       }),
+      signal: AbortSignal.timeout(10_000), // 10s timeout for code exchange
     });
 
     if (!response.ok) {
@@ -86,6 +87,7 @@ export class SchwabAuth {
         grant_type: "refresh_token",
         refresh_token: refreshToken,
       }),
+      signal: AbortSignal.timeout(10_000), // 10s timeout for token refresh
     });
 
     if (!response.ok) {
@@ -155,6 +157,7 @@ export class SchwabApiClient {
         Accept: "application/json",
         ...options?.headers,
       },
+      signal: options?.signal ?? AbortSignal.timeout(15_000), // 15s timeout
     });
 
     if (!response.ok) {
