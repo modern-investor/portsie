@@ -1,12 +1,12 @@
 {
-  "version": "v260301.06 2:11a",
-  "release": 185,
-  "sha": "dee361bd",
-  "fullSha": "dee361bd85038c9325f8b8e391af817727c37799",
+  "version": "v260301.07 2:32a",
+  "release": 186,
+  "sha": "94cfcde7",
+  "fullSha": "94cfcde77515e3c073d89c5faed5b8fc7cecfd9b",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000632",
-  "pushedAt": "2026-03-01T08:11:50Z",
-  "commits": [{"sha": "dee361bd85038c9325f8b8e391af817727c37799", "short_sha": "dee361bd", "author": "rahulio", "message": "fix: block obviously wrong extractions with integrity checks"}]
+  "machine": "GitHub Actions 1000000638",
+  "pushedAt": "2026-03-01T08:32:02Z",
+  "commits": [{"sha": "94cfcde77515e3c073d89c5faed5b8fc7cecfd9b", "short_sha": "94cfcde7", "author": "rahulio", "message": "Merge branch 'zen-nobel'"}, {"sha": "327fa19534808ed65a866977856fc98162cd0fc7", "short_sha": "327fa195", "author": "rahulio", "message": "fix: log integrity failures to extraction_failures for Settings visibility"}, {"sha": "79ef0de43a05c9962d4c9bb95b2570d6c9827c9e", "short_sha": "79ef0de4", "author": "rahulio", "message": "fix: block obviously wrong extractions with integrity checks"}]
 }
