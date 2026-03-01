@@ -75,8 +75,8 @@ export async function getLLMSettings(
     hasApiKey: !!record.api_key_encrypted,
     cliEndpoint: record.cli_endpoint,
     verificationEnabled: record.verification_enabled ?? true,
-    verificationBackend: (record.verification_backend ?? "cli") as "gemini" | "cli",
-    verificationModel: record.verification_model ?? "claude-sonnet-4-6",
+    verificationBackend: (record.verification_backend ?? "gemini") as "gemini" | "cli",
+    verificationModel: record.verification_model ?? "gemini-2.5-flash",
   };
 }
 

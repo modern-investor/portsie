@@ -2,10 +2,27 @@
 
 import { useEffect, useState } from "react";
 
-type VerificationOption = "cli" | "gemini" | "off";
+type VerificationOption = "cli" | "gemini" | "gemini25" | "off";
+
+/** Map dropdown value → backend + model for the API */
+const VERIFICATION_OPTIONS: Record<
+  Exclude<VerificationOption, "off">,
+  { backend: "cli" | "gemini"; model: string; label: string }
+> = {
+  cli: { backend: "cli", model: "claude-sonnet-4-6", label: "Claude Sonnet 4.6" },
+  gemini: { backend: "gemini", model: "gemini-3-flash-preview", label: "Gemini Flash 3" },
+  gemini25: { backend: "gemini", model: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+};
+
+/** Reverse-map stored backend+model → dropdown value */
+function settingsToOption(backend: string, model: string): VerificationOption {
+  if (backend === "gemini" && model === "gemini-2.5-flash") return "gemini25";
+  if (backend === "gemini") return "gemini";
+  return "cli";
+}
 
 export function VerificationSelect({ disabled, hideLabel }: { disabled?: boolean; hideLabel?: boolean }) {
-  const [value, setValue] = useState<VerificationOption>("cli");
+  const [value, setValue] = useState<VerificationOption>("gemini25");
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -17,7 +34,7 @@ export function VerificationSelect({ disabled, hideLabel }: { disabled?: boolean
         if (!data.verificationEnabled) {
           setValue("off");
         } else {
-          setValue(data.verificationBackend ?? "cli");
+          setValue(settingsToOption(data.verificationBackend ?? "gemini", data.verificationModel ?? "gemini-2.5-flash"));
         }
       })
       .catch(() => {})
@@ -29,16 +46,14 @@ export function VerificationSelect({ disabled, hideLabel }: { disabled?: boolean
     setSaving(true);
     try {
       const enabled = next !== "off";
-      const backend = next === "off" ? "cli" : next;
-      const model =
-        backend === "cli" ? "claude-sonnet-4-6" : "gemini-3-flash-preview";
+      const opt = VERIFICATION_OPTIONS[next === "off" ? "gemini25" : next];
       await fetch("/api/settings/llm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           verificationEnabled: enabled,
-          verificationBackend: backend,
-          verificationModel: model,
+          verificationBackend: opt.backend,
+          verificationModel: opt.model,
         }),
       });
     } catch {
@@ -67,6 +82,7 @@ export function VerificationSelect({ disabled, hideLabel }: { disabled?: boolean
         disabled={disabled || saving}
         className="rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
       >
+        <option value="gemini25">Gemini 2.5 Flash</option>
         <option value="cli">Claude Sonnet 4.6</option>
         <option value="gemini">Gemini Flash 3</option>
         <option value="off">Off</option>

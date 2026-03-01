@@ -66,8 +66,8 @@ export async function POST(
   // Check user's verification settings
   const userSettings = await getLLMSettings(supabase, user.id);
   const verificationEnabled = userSettings?.verificationEnabled ?? true;
-  const verBackend = userSettings?.verificationBackend ?? "cli";
-  const verModel = userSettings?.verificationModel ?? "claude-sonnet-4-6";
+  const verBackend = userSettings?.verificationBackend ?? "gemini";
+  const verModel = userSettings?.verificationModel ?? "gemini-2.5-flash";
   const runId = await startIngestionRun(supabase, {
     userId: user.id,
     sourceKey: "upload_document",
