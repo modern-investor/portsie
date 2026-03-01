@@ -7,6 +7,7 @@ export type ErrorCategory =
   | "timeout"
   | "llm_error"
   | "validation_error"
+  | "integrity_failed"
   | "download_error"
   | "db_error"
   | "network_error"

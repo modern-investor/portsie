@@ -156,6 +156,30 @@ export async function POST(
         .update({ integrity_report: integrityReport })
         .eq("id", id);
 
+      // Log to extraction_failures so it shows on Settings → Failures tab
+      try {
+        await supabase.from("extraction_failures").insert({
+          user_id: user.id,
+          upload_id: id,
+          filename: statement.filename,
+          file_type: statement.file_type,
+          file_path: statement.file_path,
+          attempt_number: statement.process_count ?? 1,
+          error_message: `Integrity check failed: ${errorSummary}`,
+          llm_mode: statement.processing_settings?.backend ?? "unknown",
+          file_size_bytes: statement.file_size_bytes,
+          error_category: "integrity_failed",
+          processing_step: "confirm_integrity",
+          backend_used: statement.processing_settings?.backend ?? null,
+          model_used: statement.processing_settings?.model ?? null,
+          duration_ms: log.elapsedMs(),
+          processing_log: log.toJSON(),
+          processing_settings: statement.processing_settings,
+        });
+      } catch {
+        // Non-critical — don't block the response
+      }
+
       if (runId) {
         await failIngestionRun(supabase, {
           runId,
