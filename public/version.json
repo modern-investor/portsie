@@ -1,12 +1,12 @@
 {
-  "version": "v260301.03 1:45a",
-  "release": 182,
-  "sha": "a8ecb7c1",
-  "fullSha": "a8ecb7c194085a569bf8129ef125e09d3e2d1ee0",
+  "version": "v260301.04 1:55a",
+  "release": 183,
+  "sha": "00f9c233",
+  "fullSha": "00f9c2332d0c4a6ae4c0698f655d88ad487cff92",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000618",
-  "pushedAt": "2026-03-01T07:45:27Z",
-  "commits": [{"sha": "a8ecb7c194085a569bf8129ef125e09d3e2d1ee0", "short_sha": "a8ecb7c1", "author": "rahulio", "message": "feat: add 16 searchable metadata columns to uploaded_statements"}]
+  "machine": "GitHub Actions 1000000622",
+  "pushedAt": "2026-03-01T07:55:16Z",
+  "commits": [{"sha": "00f9c2332d0c4a6ae4c0698f655d88ad487cff92", "short_sha": "00f9c233", "author": "rahulio", "message": "fix: add timeouts to all Schwab API fetch calls"}]
 }
