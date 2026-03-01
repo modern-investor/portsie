@@ -108,7 +108,11 @@ export async function extractViaGemini(
       // Gemini 3 docs warn temperature:0 causes looping; omit for 3.x
       ...(isGemini3 ? {} : { temperature: 0 }),
       maxOutputTokens: 65536,
-      mediaResolution: mediaResolutionOverride ?? "MEDIA_RESOLUTION_HIGH",
+      // "MEDIA_RESOLUTION_DEFAULT" is not a valid Gemini API value — filter it out
+      mediaResolution:
+        mediaResolutionOverride && mediaResolutionOverride !== "MEDIA_RESOLUTION_DEFAULT"
+          ? mediaResolutionOverride
+          : "MEDIA_RESOLUTION_HIGH",
       thinkingConfig,
     },
   };
