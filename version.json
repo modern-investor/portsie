@@ -1,12 +1,12 @@
 {
-  "version": "v260228.17 11:25p",
-  "release": 177,
-  "sha": "11713e9c",
-  "fullSha": "11713e9c07eb319ef5601335585a862f1a348528",
+  "version": "v260228.18 11:43p",
+  "release": 178,
+  "sha": "2c2c3b57",
+  "fullSha": "2c2c3b57ab96f99aa7de3bd446623ffc2b3a3ea7",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000592",
-  "pushedAt": "2026-03-01T05:25:45Z",
-  "commits": [{"sha": "11713e9c07eb319ef5601335585a862f1a348528", "short_sha": "11713e9c", "author": "rahulio", "message": "fix: sanitize filename before using as Supabase Storage key"}]
+  "machine": "GitHub Actions 1000000598",
+  "pushedAt": "2026-03-01T05:43:26Z",
+  "commits": [{"sha": "2c2c3b57ab96f99aa7de3bd446623ffc2b3a3ea7", "short_sha": "2c2c3b57", "author": "rahulio", "message": "fix: correct labelLine type error breaking Vercel build"}]
 }
