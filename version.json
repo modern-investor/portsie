@@ -1,12 +1,12 @@
 {
-  "version": "v260301.02 1:28a",
-  "release": 181,
-  "sha": "1fdaa4b7",
-  "fullSha": "1fdaa4b7daec7e4faa963341a6159794916bf834",
+  "version": "v260301.03 1:45a",
+  "release": 182,
+  "sha": "a8ecb7c1",
+  "fullSha": "a8ecb7c194085a569bf8129ef125e09d3e2d1ee0",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000613",
-  "pushedAt": "2026-03-01T07:28:17Z",
-  "commits": [{"sha": "1fdaa4b7daec7e4faa963341a6159794916bf834", "short_sha": "1fdaa4b7", "author": "rahulio", "message": "fix: reject MEDIA_RESOLUTION_DEFAULT in Gemini backend"}]
+  "machine": "GitHub Actions 1000000618",
+  "pushedAt": "2026-03-01T07:45:27Z",
+  "commits": [{"sha": "a8ecb7c194085a569bf8129ef125e09d3e2d1ee0", "short_sha": "a8ecb7c1", "author": "rahulio", "message": "feat: add 16 searchable metadata columns to uploaded_statements"}]
 }
