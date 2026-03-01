@@ -47,11 +47,13 @@ export function AssetAllocationTable({ assetClasses, totalMarketValue, hideValue
   return (
     <div className="space-y-4">
       {/* 100% Stacked Horizontal Bar */}
-      <div className="rounded-lg overflow-hidden h-[68px] flex" role="img" aria-label="Asset allocation bar chart">
+      <div className="rounded-lg overflow-hidden h-[68px] flex gap-[2px] bg-gray-200" role="img" aria-label="Asset allocation bar chart">
         {data.map((entry, idx) => (
           <div
             key={entry.label}
-            className="relative flex items-center justify-center transition-opacity duration-200 cursor-default"
+            className={`relative flex items-center justify-center transition-opacity duration-200 cursor-default ${
+              idx === 0 ? "rounded-l-lg" : ""
+            } ${idx === data.length - 1 ? "rounded-r-lg" : ""}`}
             style={{
               width: `${entry.pct}%`,
               backgroundColor: entry.color,
@@ -60,11 +62,16 @@ export function AssetAllocationTable({ assetClasses, totalMarketValue, hideValue
             onMouseEnter={() => setHoveredIndex(idx)}
             onMouseLeave={() => setHoveredIndex(null)}
           >
-            {entry.pct >= 8 && (
-              <span className="text-xl font-semibold text-white truncate px-1">
+            {entry.pct >= 12 ? (
+              <span className="text-white truncate px-2 text-center leading-tight">
+                <span className="block text-base font-semibold">{(entry.pct ?? 0).toFixed(1)}%</span>
+                <span className="block text-xs opacity-90">{entry.label}</span>
+              </span>
+            ) : entry.pct >= 5 ? (
+              <span className="text-sm font-semibold text-white truncate px-1">
                 {(entry.pct ?? 0).toFixed(1)}%
               </span>
-            )}
+            ) : null}
           </div>
         ))}
       </div>

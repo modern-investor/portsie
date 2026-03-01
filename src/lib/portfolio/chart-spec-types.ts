@@ -102,14 +102,14 @@ export interface ChartConfig {
 
 /** Default color palette for charts. */
 export const CHART_COLORS = [
-  "#6366f1", // indigo
-  "#8b5cf6", // violet
-  "#06b6d4", // cyan
-  "#f59e0b", // amber
-  "#10b981", // emerald
-  "#ef4444", // red
-  "#ec4899", // pink
-  "#3b82f6", // blue
-  "#64748b", // slate
-  "#eab308", // yellow
+  "#3B82F6", // blue (tech equities)
+  "#A855F7", // purple (tech options)
+  "#06B6D4", // cyan (non-tech equities)
+  "#F97316", // orange (crypto)
+  "#10B981", // emerald (real estate)
+  "#F43F5E", // rose (debt)
+  "#EAB308", // yellow (gold & metals)
+  "#EC4899", // pink
+  "#94A3B8", // slate (cash)
+  "#14B8A6", // teal
 ];

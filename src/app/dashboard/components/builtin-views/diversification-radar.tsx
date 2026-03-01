@@ -72,8 +72,8 @@ export function DiversificationRadar({ classifiedPortfolio, hideValues }: Props)
             <PolarRadiusAxis tick={{ fontSize: 10 }} domain={[0, 100]} />
             <Radar
               dataKey="value"
-              stroke="#8b5cf6"
-              fill="#8b5cf6"
+              stroke="#A855F7"
+              fill="#A855F7"
               fillOpacity={0.25}
               name="Score"
             />

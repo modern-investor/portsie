@@ -6,57 +6,57 @@ export const ASSET_CLASSES: Record<AssetClassId, AssetClassDef> = {
   tech_equities: {
     id: "tech_equities",
     label: "Tech Equities",
-    color: "indigo",
-    chartColor: "#6366f1",
+    color: "blue",
+    chartColor: "#3B82F6",
     order: 1,
   },
   tech_options: {
     id: "tech_options",
     label: "Tech Options",
-    color: "violet",
-    chartColor: "#8b5cf6",
+    color: "purple",
+    chartColor: "#A855F7",
     order: 2,
   },
   non_tech_equities: {
     id: "non_tech_equities",
     label: "Non-Tech Equities",
     color: "cyan",
-    chartColor: "#06b6d4",
+    chartColor: "#06B6D4",
     order: 3,
   },
   crypto: {
     id: "crypto",
     label: "Crypto",
-    color: "amber",
-    chartColor: "#f59e0b",
+    color: "orange",
+    chartColor: "#F97316",
     order: 4,
   },
   gold_metals: {
     id: "gold_metals",
     label: "Gold & Metals",
     color: "yellow",
-    chartColor: "#eab308",
+    chartColor: "#EAB308",
     order: 5,
   },
   real_estate: {
     id: "real_estate",
     label: "Real Estate",
     color: "emerald",
-    chartColor: "#10b981",
+    chartColor: "#10B981",
     order: 6,
   },
   debt: {
     id: "debt",
     label: "Debt",
-    color: "red",
-    chartColor: "#ef4444",
+    color: "rose",
+    chartColor: "#F43F5E",
     order: 7,
   },
   cash: {
     id: "cash",
     label: "Cash and Equivalents",
     color: "slate",
-    chartColor: "#64748b",
+    chartColor: "#94A3B8",
     order: 8,
   },
 };
@@ -69,13 +69,13 @@ export const ASSET_CLASS_LIST: AssetClassDef[] = Object.values(ASSET_CLASSES).so
 // ─── Sub-asset class definitions ─────────────────────────────────────────────
 
 export const SUB_ASSET_CLASSES: Record<SubAssetClassId, SubAssetClassDef> = {
-  // Tech Equities
-  tech_individual:    { id: "tech_individual",    parentId: "tech_equities",     label: "Individual Stocks", chartColor: "#4f46e5", order: 1 },
-  tech_etfs:          { id: "tech_etfs",          parentId: "tech_equities",     label: "Tech ETFs",         chartColor: "#818cf8", order: 2 },
-  tech_funds:         { id: "tech_funds",         parentId: "tech_equities",     label: "Tech Funds",        chartColor: "#a5b4fc", order: 3 },
-  // Tech Options
-  tech_options_calls: { id: "tech_options_calls", parentId: "tech_options",      label: "Calls",             chartColor: "#7c3aed", order: 1 },
-  tech_options_puts:  { id: "tech_options_puts",  parentId: "tech_options",      label: "Puts",              chartColor: "#a78bfa", order: 2 },
+  // Tech Equities (blue family)
+  tech_individual:    { id: "tech_individual",    parentId: "tech_equities",     label: "Individual Stocks", chartColor: "#2563EB", order: 1 },
+  tech_etfs:          { id: "tech_etfs",          parentId: "tech_equities",     label: "Tech ETFs",         chartColor: "#60A5FA", order: 2 },
+  tech_funds:         { id: "tech_funds",         parentId: "tech_equities",     label: "Tech Funds",        chartColor: "#93C5FD", order: 3 },
+  // Tech Options (purple family)
+  tech_options_calls: { id: "tech_options_calls", parentId: "tech_options",      label: "Calls",             chartColor: "#9333EA", order: 1 },
+  tech_options_puts:  { id: "tech_options_puts",  parentId: "tech_options",      label: "Puts",              chartColor: "#C084FC", order: 2 },
   // Non-Tech Equities
   broad_market_etfs:  { id: "broad_market_etfs",  parentId: "non_tech_equities", label: "Broad Market ETFs", chartColor: "#0891b2", order: 1 },
   large_cap:          { id: "large_cap",          parentId: "non_tech_equities", label: "Large Cap",         chartColor: "#06b6d4", order: 2 },
@@ -83,11 +83,11 @@ export const SUB_ASSET_CLASSES: Record<SubAssetClassId, SubAssetClassDef> = {
   financials:         { id: "financials",         parentId: "non_tech_equities", label: "Financials",        chartColor: "#67e8f9", order: 4 },
   healthcare:         { id: "healthcare",         parentId: "non_tech_equities", label: "Healthcare",        chartColor: "#a5f3fc", order: 5 },
   non_tech_other:     { id: "non_tech_other",     parentId: "non_tech_equities", label: "Other Equities",    chartColor: "#cffafe", order: 6 },
-  // Crypto
-  bitcoin_etf:        { id: "bitcoin_etf",        parentId: "crypto",            label: "Bitcoin ETFs",      chartColor: "#d97706", order: 1 },
-  ethereum_etf:       { id: "ethereum_etf",       parentId: "crypto",            label: "Ethereum ETFs",     chartColor: "#f59e0b", order: 2 },
-  crypto_stocks:      { id: "crypto_stocks",      parentId: "crypto",            label: "Crypto Stocks",     chartColor: "#fbbf24", order: 3 },
-  crypto_other:       { id: "crypto_other",       parentId: "crypto",            label: "Other Crypto",      chartColor: "#fcd34d", order: 4 },
+  // Crypto (orange family)
+  bitcoin_etf:        { id: "bitcoin_etf",        parentId: "crypto",            label: "Bitcoin ETFs",      chartColor: "#EA580C", order: 1 },
+  ethereum_etf:       { id: "ethereum_etf",       parentId: "crypto",            label: "Ethereum ETFs",     chartColor: "#F97316", order: 2 },
+  crypto_stocks:      { id: "crypto_stocks",      parentId: "crypto",            label: "Crypto Stocks",     chartColor: "#FB923C", order: 3 },
+  crypto_other:       { id: "crypto_other",       parentId: "crypto",            label: "Other Crypto",      chartColor: "#FDBA74", order: 4 },
   // Gold & Metals
   gold_etfs:          { id: "gold_etfs",          parentId: "gold_metals",       label: "Gold ETFs",         chartColor: "#ca8a04", order: 1 },
   gold_miners:        { id: "gold_miners",        parentId: "gold_metals",       label: "Gold Miners",       chartColor: "#eab308", order: 2 },
@@ -97,13 +97,13 @@ export const SUB_ASSET_CLASSES: Record<SubAssetClassId, SubAssetClassDef> = {
   reit_etfs:          { id: "reit_etfs",          parentId: "real_estate",       label: "REIT ETFs",         chartColor: "#059669", order: 2 },
   individual_reits:   { id: "individual_reits",   parentId: "real_estate",       label: "Individual REITs",  chartColor: "#10b981", order: 3 },
   re_funds:           { id: "re_funds",           parentId: "real_estate",       label: "RE Funds",          chartColor: "#34d399", order: 4 },
-  // Debt
-  mortgage:           { id: "mortgage",           parentId: "debt",              label: "Mortgage",          chartColor: "#dc2626", order: 1 },
-  credit_card:        { id: "credit_card",        parentId: "debt",              label: "Credit Card",       chartColor: "#ef4444", order: 2 },
-  other_loans:        { id: "other_loans",        parentId: "debt",              label: "Other Loans",       chartColor: "#f87171", order: 3 },
-  // Cash
-  money_market:       { id: "money_market",       parentId: "cash",              label: "Money Market",      chartColor: "#475569", order: 1 },
-  cash_balance:       { id: "cash_balance",       parentId: "cash",              label: "Cash Balance",      chartColor: "#94a3b8", order: 2 },
+  // Debt (rose family)
+  mortgage:           { id: "mortgage",           parentId: "debt",              label: "Mortgage",          chartColor: "#E11D48", order: 1 },
+  credit_card:        { id: "credit_card",        parentId: "debt",              label: "Credit Card",       chartColor: "#F43F5E", order: 2 },
+  other_loans:        { id: "other_loans",        parentId: "debt",              label: "Other Loans",       chartColor: "#FB7185", order: 3 },
+  // Cash (slate family)
+  money_market:       { id: "money_market",       parentId: "cash",              label: "Money Market",      chartColor: "#64748B", order: 1 },
+  cash_balance:       { id: "cash_balance",       parentId: "cash",              label: "Cash Balance",      chartColor: "#94A3B8", order: 2 },
 };
 
 /** Sub-asset classes for a given parent, sorted by order. */
