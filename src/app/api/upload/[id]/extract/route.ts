@@ -23,6 +23,7 @@ import {
 import { persistObservations, recordStructureSignature } from "@/lib/extraction/governance";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validateExtraction } from "@/lib/extraction/validate";
+import type { PortsieExtraction } from "@/lib/extraction/schema";
 
 // LLM extraction can take several minutes for large PDF/CSV files
 export const maxDuration = 300; // 5 minutes
@@ -270,17 +271,10 @@ export async function POST(
     log.startStep("validating", "Checking extracted data");
     await flushLog(supabase, id, log);
 
-    const totalPositions =
-      extraction.accounts.reduce((sum, a) => sum + a.positions.length, 0) +
-      extraction.unallocated_positions.length;
-    const totalTransactions = extraction.accounts.reduce(
-      (sum, a) => sum + a.transactions.length,
-      0
-    );
-    const totalBalances = extraction.accounts.reduce(
-      (sum, a) => sum + a.balances.length,
-      0
-    );
+    const metadata = computeSearchableMetadata(extraction);
+    const totalPositions = metadata.total_positions_extracted;
+    const totalTransactions = metadata.total_transactions_extracted;
+    const totalBalances = metadata.total_balances_extracted;
     const hasData = totalPositions > 0 || totalTransactions > 0 || totalBalances > 0;
 
     // Privacy: sanitize extraction and build debug context
@@ -320,6 +314,12 @@ export async function POST(
         verification_error: null,
         processing_step: null,
         processing_log: log.toJSON(),
+        // ── Searchable metadata ──
+        ...metadata,
+        processing_backend: processingSettings.backend,
+        processing_model: processingSettings.model,
+        processing_duration_ms: log.elapsedMs(),
+        error_category: null, // clear any previous error
       })
       .eq("id", id);
 
@@ -392,6 +392,11 @@ export async function POST(
         parse_error: classified.userMessage,
         processing_step: null,
         processing_log: log.toJSON(),
+        // ── Searchable metadata (failure) ──
+        error_category: classified.category,
+        processing_backend: processingSettings.backend,
+        processing_model: processingSettings.model,
+        processing_duration_ms: log.elapsedMs(),
       })
       .eq("id", id);
 
@@ -449,6 +454,57 @@ export async function POST(
 }
 
 // ── Helpers ──
+
+/** Compute searchable metadata columns from a validated PortsieExtraction. */
+function computeSearchableMetadata(extraction: PortsieExtraction) {
+  const totalPositions =
+    extraction.accounts.reduce((sum, a) => sum + a.positions.length, 0) +
+    extraction.unallocated_positions.length;
+  const totalTransactions = extraction.accounts.reduce(
+    (sum, a) => sum + a.transactions.length,
+    0
+  );
+  const totalBalances = extraction.accounts.reduce(
+    (sum, a) => sum + a.balances.length,
+    0
+  );
+
+  // Collect unique asset types across all positions
+  const assetTypeSet = new Set<string>();
+  for (const acct of extraction.accounts) {
+    for (const pos of acct.positions) {
+      if (pos.asset_type) assetTypeSet.add(pos.asset_type);
+    }
+  }
+  for (const pos of extraction.unallocated_positions) {
+    if (pos.asset_type) assetTypeSet.add(pos.asset_type);
+  }
+
+  // Collect unique account types
+  const accountTypeSet = new Set<string>();
+  for (const acct of extraction.accounts) {
+    if (acct.account_info.account_type) {
+      accountTypeSet.add(acct.account_info.account_type);
+    }
+  }
+
+  return {
+    document_institution: extraction.document.institution_name ?? null,
+    document_type: extraction.document.document_type ?? null,
+    extraction_confidence: extraction.confidence,
+    detected_account_count: extraction.accounts.length,
+    primary_account_group:
+      extraction.accounts[0]?.account_info.account_group ?? null,
+    total_positions_extracted: totalPositions,
+    total_transactions_extracted: totalTransactions,
+    total_balances_extracted: totalBalances,
+    has_unallocated_positions: extraction.unallocated_positions.length > 0,
+    detected_asset_types:
+      assetTypeSet.size > 0 ? [...assetTypeSet].sort() : null,
+    account_types_detected:
+      accountTypeSet.size > 0 ? [...accountTypeSet].sort() : null,
+  };
+}
 
 /** Flush processing log to DB so polling clients can see current step. */
 async function flushLog(

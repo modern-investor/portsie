@@ -180,6 +180,23 @@ export interface UploadedStatement {
   processing_log: import("@/lib/extraction/processing-log").ProcessingLogData | null;
   source_file_expires_at: string | null;
   source_file_purged_at: string | null;
+  // ── Searchable metadata (promoted from JSONB for indexed queries) ──
+  document_institution: string | null;
+  document_type: string | null;
+  extraction_confidence: string | null;
+  detected_source_kind: string | null;
+  detected_account_count: number;
+  primary_account_group: string | null;
+  total_positions_extracted: number;
+  total_transactions_extracted: number;
+  total_balances_extracted: number;
+  has_unallocated_positions: boolean;
+  processing_backend: string | null;
+  processing_model: string | null;
+  processing_duration_ms: number | null;
+  error_category: string | null;
+  detected_asset_types: string[] | null;
+  account_types_detected: string[] | null;
   created_at: string;
   updated_at: string;
 }

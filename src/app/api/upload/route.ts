@@ -123,6 +123,7 @@ export async function POST(request: NextRequest) {
     file_size_bytes: file.size,
     file_hash: fileHash,
     parse_status: "pending",
+    detected_source_kind: detection.kind,
   };
 
   // Create metadata record in uploaded_statements
