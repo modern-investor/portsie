@@ -1,12 +1,12 @@
 {
-  "version": "v260228.19 11:55p",
-  "release": 179,
-  "sha": "ff0838af",
-  "fullSha": "ff0838af72810dd16b8e9e47983b001d45dc155f",
+  "version": "v260301.01 1:15a",
+  "release": 180,
+  "sha": "b38b4263",
+  "fullSha": "b38b42633d1805e90e441f409fb098ba72ca84bc",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000602",
-  "pushedAt": "2026-03-01T05:55:53Z",
-  "commits": [{"sha": "ff0838af72810dd16b8e9e47983b001d45dc155f", "short_sha": "ff0838af", "author": "rahulio", "message": "feat: open privacy, license, and terms links in new tab"}]
+  "machine": "GitHub Actions 1000000607",
+  "pushedAt": "2026-03-01T07:15:23Z",
+  "commits": [{"sha": "b38b42633d1805e90e441f409fb098ba72ca84bc", "short_sha": "b38b4263", "author": "rahulio", "message": "fix: reserve fallback budget so Gemini runs when CLI times out"}]
 }
