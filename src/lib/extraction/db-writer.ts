@@ -482,6 +482,11 @@ export async function writeExtraction(
   const allBalanceRows: Record<string, unknown>[] = [];
   const allTransactionRows: Record<string, unknown>[] = [];
 
+  // Dedup sets keyed by each table's unique constraint columns
+  const seenPositions = new Set<string>();
+  const seenBalances = new Set<string>();
+  const seenTransactions = new Set<string>();
+
   // Track per-account stats for the report
   const accountsWithPositions: { accountId: string; account: ExtractionAccount; mapping: AccountMapping }[] = [];
 
@@ -492,26 +497,38 @@ export async function writeExtraction(
     const accountId = accountIdByIndex.get(mapping.extraction_index);
     if (!accountId) continue;
 
-    // Collect position snapshot rows
+    // Collect position snapshot rows (dedup by unique constraint)
     if (account.positions.length > 0) {
-      allPositionRows.push(
-        ...buildPositionRows(userId, accountId, statementId, account.positions)
-      );
+      for (const row of buildPositionRows(userId, accountId, statementId, account.positions)) {
+        const key = `${row.account_id}|${row.snapshot_date}|${row.symbol}|${row.snapshot_type}`;
+        if (!seenPositions.has(key)) {
+          seenPositions.add(key);
+          allPositionRows.push(row);
+        }
+      }
       accountsWithPositions.push({ accountId, account, mapping });
     }
 
-    // Collect balance snapshot rows
+    // Collect balance snapshot rows (dedup by unique constraint)
     if (account.balances.length > 0) {
-      allBalanceRows.push(
-        ...buildBalanceRows(userId, accountId, statementId, account.balances)
-      );
+      for (const row of buildBalanceRows(userId, accountId, statementId, account.balances)) {
+        const key = `${row.account_id}|${row.snapshot_date}|${row.snapshot_type}`;
+        if (!seenBalances.has(key)) {
+          seenBalances.add(key);
+          allBalanceRows.push(row);
+        }
+      }
     }
 
-    // Collect transaction rows
+    // Collect transaction rows (dedup by unique constraint)
     if (account.transactions.length > 0) {
-      allTransactionRows.push(
-        ...buildTransactionRows(userId, accountId, statementId, account.transactions)
-      );
+      for (const row of buildTransactionRows(userId, accountId, statementId, account.transactions)) {
+        const key = `${row.account_id}|${row.external_transaction_id}`;
+        if (!seenTransactions.has(key)) {
+          seenTransactions.add(key);
+          allTransactionRows.push(row);
+        }
+      }
     }
   }
 
