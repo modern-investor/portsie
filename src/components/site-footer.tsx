@@ -8,11 +8,11 @@ export function SiteFooter() {
       <div className="mx-auto max-w-5xl px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
         <p>&copy; {year} Portsie LLC. All rights reserved.</p>
         <nav className="flex items-center gap-4">
-          <Link href="/legal/privacy" className="hover:text-foreground transition-colors">
+          <Link href="/legal/privacy" className="hover:text-foreground transition-colors" target="_blank" rel="noopener noreferrer">
             Privacy Position and Policy
           </Link>
           <span className="text-border">|</span>
-          <Link href="/legal/terms" className="hover:text-foreground transition-colors">
+          <Link href="/legal/terms" className="hover:text-foreground transition-colors" target="_blank" rel="noopener noreferrer">
             Terms of Service
           </Link>
         </nav>

@@ -169,11 +169,11 @@ export function ConnectionsView({
             />
           )}
           <p className="text-sm text-muted-foreground">
-            <Link href="/legal/privacy" className="underline hover:text-foreground">
+            <Link href="/legal/privacy" className="underline hover:text-foreground" target="_blank" rel="noopener noreferrer">
               Privacy policy
             </Link>
             {" · "}
-            <Link href="/legal/license" className="underline hover:text-foreground">
+            <Link href="/legal/license" className="underline hover:text-foreground" target="_blank" rel="noopener noreferrer">
               License (AGPL-3.0)
             </Link>
           </p>
@@ -185,11 +185,11 @@ export function ConnectionsView({
         <div className="space-y-6">
           <UploadSection />
           <p className="text-sm text-muted-foreground">
-            <Link href="/legal/privacy" className="underline hover:text-foreground">
+            <Link href="/legal/privacy" className="underline hover:text-foreground" target="_blank" rel="noopener noreferrer">
               Privacy policy
             </Link>
             {" · "}
-            <Link href="/legal/license" className="underline hover:text-foreground">
+            <Link href="/legal/license" className="underline hover:text-foreground" target="_blank" rel="noopener noreferrer">
               License (AGPL-3.0)
             </Link>
           </p>

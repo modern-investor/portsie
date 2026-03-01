@@ -97,7 +97,7 @@ export default async function Home() {
         {/* Open source — bottom of page, smaller bold */}
         <p className="text-center text-sm font-bold text-muted-foreground">
           Open source and free.{" "}
-          <Link href="/legal/license" className="underline hover:text-foreground">
+          <Link href="/legal/license" className="underline hover:text-foreground" target="_blank" rel="noopener noreferrer">
             License (AGPL-3.0)
           </Link>
         </p>
