@@ -59,11 +59,16 @@ export async function extractFinancialData(
 
     // Default: CLI (Claude Sonnet 4.6) with Gemini fallback
     const cliEndpoint = process.env.PORTSIE_CLI_ENDPOINT ?? null;
+    // Give CLI a tighter deadline that reserves time for Gemini fallback.
+    // Without this, CLI consumes the entire budget and Gemini never runs.
+    const cliDeadlineMs = deadlineMs
+      ? deadlineMs - MIN_FALLBACK_BUDGET_MS - 15_000
+      : undefined;
     try {
       return await extractViaCLI(
         processedFile, fileType, filename, cliEndpoint,
         processingSettings.model || "claude-sonnet-4-6",
-        deadlineMs,
+        cliDeadlineMs,
         uploadId
       );
     } catch (cliError) {
@@ -135,6 +140,11 @@ export async function extractFinancialData(
   const cliEndpoint =
     settings?.cliEndpoint ?? process.env.PORTSIE_CLI_ENDPOINT ?? null;
 
+  // Give CLI a tighter deadline that reserves time for Gemini fallback.
+  const legacyCliDeadlineMs = deadlineMs
+    ? deadlineMs - MIN_FALLBACK_BUDGET_MS - 15_000
+    : undefined;
+
   try {
     return await extractViaCLI(
       processedFile,
@@ -142,7 +152,7 @@ export async function extractFinancialData(
       filename,
       cliEndpoint,
       "claude-sonnet-4-6",
-      deadlineMs,
+      legacyCliDeadlineMs,
       uploadId
     );
   } catch (cliError) {
