@@ -105,10 +105,13 @@ export function AssetCompositionDonut({ classifiedPortfolio, hideValues }: Props
               cy="50%"
               outerRadius="80%"
               innerRadius="55%"
-              label={({ name, percent }: { name?: string; percent?: number }) =>
-                `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`
-              }
-              labelLine
+              label={({ name, percent }: { name?: string; percent?: number }) => {
+                const pctVal = (percent ?? 0) * 100;
+                if (pctVal < 2) return "";
+                const shortName = (name ?? "").replace("and Equivalents", "").trim();
+                return `${shortName} ${pctVal.toFixed(0)}%`;
+              }}
+              labelLine={({ percent }: { percent?: number }) => (percent ?? 0) * 100 >= 2}
               onClick={(entry) => {
                 setActiveClass(
                   activeClass === entry.id ? null : (entry.id as string)
