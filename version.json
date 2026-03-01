@@ -1,12 +1,12 @@
 {
-  "version": "v260301.01 1:15a",
-  "release": 180,
-  "sha": "b38b4263",
-  "fullSha": "b38b42633d1805e90e441f409fb098ba72ca84bc",
+  "version": "v260301.02 1:28a",
+  "release": 181,
+  "sha": "1fdaa4b7",
+  "fullSha": "1fdaa4b7daec7e4faa963341a6159794916bf834",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000607",
-  "pushedAt": "2026-03-01T07:15:23Z",
-  "commits": [{"sha": "b38b42633d1805e90e441f409fb098ba72ca84bc", "short_sha": "b38b4263", "author": "rahulio", "message": "fix: reserve fallback budget so Gemini runs when CLI times out"}]
+  "machine": "GitHub Actions 1000000613",
+  "pushedAt": "2026-03-01T07:28:17Z",
+  "commits": [{"sha": "1fdaa4b7daec7e4faa963341a6159794916bf834", "short_sha": "1fdaa4b7", "author": "rahulio", "message": "fix: reject MEDIA_RESOLUTION_DEFAULT in Gemini backend"}]
 }
