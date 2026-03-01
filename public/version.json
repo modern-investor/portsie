@@ -1,12 +1,12 @@
 {
-  "version": "v260228.13 6:27a",
-  "release": 173,
-  "sha": "8c0725ec",
-  "fullSha": "8c0725ecdfdd7df229015aed205dcc3b56cde24d",
+  "version": "v260228.14 10:28p",
+  "release": 174,
+  "sha": "051a8caa",
+  "fullSha": "051a8caa2aee20fde2920ea2e7d46d1c959e75cc",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000572",
-  "pushedAt": "2026-02-28T12:27:23Z",
-  "commits": [{"sha": "8c0725ecdfdd7df229015aed205dcc3b56cde24d", "short_sha": "8c0725ec", "author": "rahulio", "message": "Add BYOB/SaaS waitlist choice, move open source to page bottom"}]
+  "machine": "GitHub Actions 1000000577",
+  "pushedAt": "2026-03-01T04:28:40Z",
+  "commits": [{"sha": "051a8caa2aee20fde2920ea2e7d46d1c959e75cc", "short_sha": "051a8caa", "author": "rahulio", "message": "feat: default verification model to Gemini 2.5 Flash"}]
 }
