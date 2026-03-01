@@ -1,12 +1,12 @@
 {
-  "version": "v260228.15 11:03p",
-  "release": 175,
-  "sha": "50ca2ab5",
-  "fullSha": "50ca2ab5881d42b5f5edeb9b1b4ea9680b0eddb5",
+  "version": "v260228.16 11:22p",
+  "release": 176,
+  "sha": "39fb7c2f",
+  "fullSha": "39fb7c2f42d302e5842e719f7ceac1206a8aaae2",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000582",
-  "pushedAt": "2026-03-01T05:03:19Z",
-  "commits": [{"sha": "50ca2ab5881d42b5f5edeb9b1b4ea9680b0eddb5", "short_sha": "50ca2ab5", "author": "rahulio", "message": "feat: improve asset allocation bar contrast and add category labels"}]
+  "machine": "GitHub Actions 1000000587",
+  "pushedAt": "2026-03-01T05:22:26Z",
+  "commits": [{"sha": "39fb7c2f42d302e5842e719f7ceac1206a8aaae2", "short_sha": "39fb7c2f", "author": "rahulio", "message": "fix: hide overlapping labels on composition donut for small slices"}]
 }
