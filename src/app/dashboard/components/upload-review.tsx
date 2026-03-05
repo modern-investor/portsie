@@ -121,7 +121,7 @@ function PositionsTable({ positions, title }: { positions: ExtractionPosition[];
   return (
     <div className="space-y-2">
       <h4 className="text-sm font-semibold text-gray-700">{title}</h4>
-      <div className="max-h-48 overflow-auto rounded-md border">
+      <div className="max-h-96 overflow-auto rounded-md border">
         <table className="w-full text-xs">
           <thead>
             <tr className="sticky top-0 border-b bg-gray-50 text-left text-gray-500">
@@ -591,14 +591,8 @@ export function UploadReview({
           {allTransactions.length} transaction{allTransactions.length !== 1 ? "s" : ""}
         </span>
         <span className="rounded-md bg-purple-50 px-3 py-1 text-purple-700">
-          {allPositions.length} position{allPositions.length !== 1 ? "s" : ""}
+          {allPositions.length + extraction.unallocated_positions.length} position{allPositions.length + extraction.unallocated_positions.length !== 1 ? "s" : ""}
         </span>
-        {extraction.unallocated_positions.length > 0 && (
-          <span className="rounded-md bg-orange-50 px-3 py-1 text-orange-700">
-            {extraction.unallocated_positions.length} aggregate position
-            {extraction.unallocated_positions.length !== 1 ? "s" : ""}
-          </span>
-        )}
         <span className="rounded-md bg-teal-50 px-3 py-1 text-teal-700">
           {totalBalances} balance snapshot{totalBalances !== 1 ? "s" : ""}
         </span>
