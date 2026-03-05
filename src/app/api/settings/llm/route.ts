@@ -24,8 +24,8 @@ export async function GET() {
     hasApiKey: settings?.hasApiKey ?? false,
     cliEndpoint: settings?.cliEndpoint ?? null,
     verificationEnabled: settings?.verificationEnabled ?? true,
-    verificationBackend: settings?.verificationBackend ?? "cli",
-    verificationModel: settings?.verificationModel ?? "claude-sonnet-4-6",
+    verificationBackend: settings?.verificationBackend ?? "gemini",
+    verificationModel: settings?.verificationModel ?? "gemini-2.5-flash",
   });
 }
 
