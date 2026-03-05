@@ -293,17 +293,15 @@ export async function assemblePortfolio(
     // Market price enrichment is best-effort
   }
 
-  // ── 4. Merge aggregate positions when individual accounts are empty ──
-  if (aggregatePositions.length > 0 && positions.length === 0) {
+  // ── 4. Always merge aggregate positions into the main array ──
+  // Aggregate positions represent holdings extracted at the document level
+  // (not per-account). They must always be included in the portfolio view,
+  // regardless of whether per-account positions also exist.
+  // Cash is NOT zeroed — individual accounts' cashBalance correctly represents
+  // only cash (not positions), so there's no double-counting.
+  if (aggregatePositions.length > 0) {
     positions.push(...aggregatePositions);
     aggregatePositions.length = 0;
-
-    const BROKERAGE_CATEGORIES = new Set(["brokerage"]);
-    for (const acct of accounts) {
-      if (BROKERAGE_CATEGORIES.has(acct.accountCategory)) {
-        acct.cashBalance = 0;
-      }
-    }
     aggregateAccounts.length = 0;
   }
 

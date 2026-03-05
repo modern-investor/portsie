@@ -877,6 +877,11 @@ export async function writeExtraction(
     summaryUpdates.push({ accountId, balance: latestBalance });
   }
 
+  // When positions are stored in the aggregate account, individual accounts
+  // legitimately have value but no holdings rows. Tell updateAccountSummary
+  // to trust the document-reported liquidation_value for those accounts.
+  const hasAggregatePositions = extraction.unallocated_positions.length > 0;
+
   // Run account summary updates in parallel batches
   for (let i = 0; i < summaryUpdates.length; i += CONCURRENCY) {
     const batch = summaryUpdates.slice(i, i + CONCURRENCY);
@@ -886,7 +891,8 @@ export async function writeExtraction(
           await updateAccountSummary(
             supabase,
             accountId,
-            balance as unknown as import("@/lib/upload/types").ExtractedBalance | undefined
+            balance as unknown as import("@/lib/upload/types").ExtractedBalance | undefined,
+            { trustLiquidationValue: hasAggregatePositions }
           );
 
           // Store document-reported total for integrity validation
