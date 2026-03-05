@@ -1,12 +1,12 @@
 {
-  "version": "v260305.02 1:53p",
-  "release": 188,
-  "sha": "239d962f",
-  "fullSha": "239d962fc06994709c70759e6adbaffd21cbf02e",
+  "version": "v260305.03 2:31p",
+  "release": 189,
+  "sha": "58aaa074",
+  "fullSha": "58aaa074afaa0864165841d6953524b1a003966b",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000649",
-  "pushedAt": "2026-03-05T19:53:55Z",
-  "commits": [{"sha": "239d962fc06994709c70759e6adbaffd21cbf02e", "short_sha": "239d962f", "author": "rahulio", "message": "fix: default verification model to Gemini 2.5 Flash instead of Claude Sonnet"}]
+  "machine": "GitHub Actions 1000000654",
+  "pushedAt": "2026-03-05T20:31:25Z",
+  "commits": [{"sha": "58aaa074afaa0864165841d6953524b1a003966b", "short_sha": "58aaa074", "author": "rahulio", "message": "fix: always show aggregate positions on dashboard"}]
 }
