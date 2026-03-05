@@ -14,6 +14,12 @@ const LIABILITY_ACCOUNT_TYPES = new Set([
   "auto_loan",
 ]);
 
+/** Account types that legitimately hold cash balances without investment positions */
+const CASH_ONLY_ACCOUNT_TYPES = new Set([
+  "checking",
+  "savings",
+]);
+
 // ── Types ──
 
 export interface IntegrityDiscrepancy {
@@ -110,19 +116,25 @@ export function checkExtractionIntegrity(
     }
 
     // Check: account has large balance but zero positions (likely extraction error)
+    // Skip for liability accounts (mortgage, etc.) and cash-only accounts (checking, savings)
     if (
       balanceLiquidation != null &&
       Math.abs(balanceLiquidation) > 1000 &&
       account.positions.length === 0 &&
-      !LIABILITY_ACCOUNT_TYPES.has(info.account_type ?? "")
+      !LIABILITY_ACCOUNT_TYPES.has(info.account_type ?? "") &&
+      !CASH_ONLY_ACCOUNT_TYPES.has(info.account_type ?? "")
     ) {
+      // If unallocated_positions exist, this is expected — positions are in the
+      // aggregate section (e.g. Schwab portfolio summary with †† combined table).
+      // Downgrade to "info" instead of blocking the save.
+      const hasAggregatePositions = extraction.unallocated_positions.length > 0;
       discrepancies.push({
         check: `Account "${label}": claims ${balanceLiquidation >= 0 ? "$" : "-$"}${Math.abs(balanceLiquidation).toLocaleString()} but has 0 positions`,
         expected: 0,
         computed: balanceLiquidation,
         difference: balanceLiquidation,
         differencePct: 100,
-        severity: "error",
+        severity: hasAggregatePositions ? "info" : "error",
       });
     }
 
