@@ -1,12 +1,12 @@
 {
-  "version": "v260305.03 2:31p",
-  "release": 189,
-  "sha": "58aaa074",
-  "fullSha": "58aaa074afaa0864165841d6953524b1a003966b",
+  "version": "v260305.04 2:59p",
+  "release": 190,
+  "sha": "4c1c5864",
+  "fullSha": "4c1c5864170a16d6de71a469983446bf8a7b9608",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000654",
-  "pushedAt": "2026-03-05T20:31:25Z",
-  "commits": [{"sha": "58aaa074afaa0864165841d6953524b1a003966b", "short_sha": "58aaa074", "author": "rahulio", "message": "fix: always show aggregate positions on dashboard"}]
+  "machine": "GitHub Actions 1000000659",
+  "pushedAt": "2026-03-05T20:59:11Z",
+  "commits": [{"sha": "4c1c5864170a16d6de71a469983446bf8a7b9608", "short_sha": "4c1c5864", "author": "rahulio", "message": "fix: show total position count in upload review badge"}]
 }
