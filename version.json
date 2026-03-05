@@ -1,12 +1,12 @@
 {
-  "version": "v260305.01 1:20p",
-  "release": 187,
-  "sha": "d827b6ac",
-  "fullSha": "d827b6acd2e9b186283764740a2a479d9a293796",
+  "version": "v260305.02 1:53p",
+  "release": 188,
+  "sha": "239d962f",
+  "fullSha": "239d962fc06994709c70759e6adbaffd21cbf02e",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000643",
-  "pushedAt": "2026-03-05T19:20:56Z",
-  "commits": [{"sha": "d827b6acd2e9b186283764740a2a479d9a293796", "short_sha": "d827b6ac", "author": "rahulio", "message": "fix: don't block saves when positions are in aggregate section"}]
+  "machine": "GitHub Actions 1000000649",
+  "pushedAt": "2026-03-05T19:53:55Z",
+  "commits": [{"sha": "239d962fc06994709c70759e6adbaffd21cbf02e", "short_sha": "239d962f", "author": "rahulio", "message": "fix: default verification model to Gemini 2.5 Flash instead of Claude Sonnet"}]
 }
