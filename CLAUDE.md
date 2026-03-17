@@ -85,7 +85,7 @@ ln -s /Users/rahulio/Documents/CodingProjects/portsie/.env.local .env.local
 
 ## Secret Management (Bitwarden CLI)
 
-All dev secrets are managed via Bitwarden CLI (`bw`). This replaces 1Password for dev workflows — no repeated Touch ID prompts.
+All dev secrets are managed via Bitwarden CLI (`bw`). Session caching means no repeated unlock prompts.
 
 ### Quick start
 ```bash

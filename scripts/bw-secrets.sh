@@ -143,7 +143,7 @@ print(fields.get('${field_name}', ''), end='')
   echo "${value}"
 }
 
-# bw-read — drop-in replacement for `op read`
+# bw-read — Bitwarden CLI secret retrieval
 # Usage: bw-read "ItemName"                  → returns password field
 #        bw-read "ItemName" "FieldName"       → returns custom field value
 #        bw-read "ItemName" "username"        → returns username field
