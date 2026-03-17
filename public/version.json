@@ -1,12 +1,12 @@
 {
-  "version": "v260317.04 4:55a",
-  "release": 194,
-  "sha": "c5698bd1",
-  "fullSha": "c5698bd1a243e0eb8a1db6f1b179abb9fa16664d",
+  "version": "v260317.05 5:37a",
+  "release": 195,
+  "sha": "40c5692e",
+  "fullSha": "40c5692e53bdf7cf54537b5bce55ae6dd2e9f3a3",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000679",
-  "pushedAt": "2026-03-17T09:55:41Z",
-  "commits": [{"sha": "c5698bd1a243e0eb8a1db6f1b179abb9fa16664d", "short_sha": "c5698bd1", "author": "rahulio", "message": "feat: redirect Schwab OAuth callback to finleg worker"}]
+  "machine": "GitHub Actions 1000000685",
+  "pushedAt": "2026-03-17T10:37:06Z",
+  "commits": [{"sha": "40c5692e53bdf7cf54537b5bce55ae6dd2e9f3a3", "short_sha": "40c5692e", "author": "rahulio", "message": "Remove legacy 1Password references \u2014 Bitwarden is sole secret manager"}]
 }
