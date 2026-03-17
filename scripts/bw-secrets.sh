@@ -143,6 +143,57 @@ print(fields.get('${field_name}', ''), end='')
   echo "${value}"
 }
 
+# bw-read — drop-in replacement for `op read`
+# Usage: bw-read "ItemName"                  → returns password field
+#        bw-read "ItemName" "FieldName"       → returns custom field value
+#        bw-read "ItemName" "username"        → returns username field
+# Works across all projects (not Portsie-specific)
+bw-read() {
+  local item_name="$1"
+  local field_name="${2:-password}"
+
+  if [ -z "${BW_SESSION:-}" ] && [ -f "${BW_SESSION_FILE}" ]; then
+    export BW_SESSION
+    BW_SESSION="$(cat "${BW_SESSION_FILE}")"
+  fi
+
+  if [ -z "${BW_SESSION:-}" ]; then
+    echo "✗ Vault is locked. Run 'bw-unlock' first." >&2
+    return 1
+  fi
+
+  local value
+  if [ "${field_name}" = "password" ]; then
+    value="$(bw get password "${item_name}" --session "${BW_SESSION}" 2>/dev/null)"
+  elif [ "${field_name}" = "username" ]; then
+    value="$(bw get username "${item_name}" --session "${BW_SESSION}" 2>/dev/null)"
+  else
+    # Custom field lookup
+    value="$(bw get item "${item_name}" --session "${BW_SESSION}" 2>/dev/null \
+      | python3 -c "
+import json, sys
+item = json.load(sys.stdin)
+for f in item.get('fields', []):
+    if f['name'] == '${field_name}':
+        print(f['value'], end='')
+        sys.exit(0)
+# Check login fields too
+login = item.get('login', {})
+if '${field_name}' in login:
+    print(login['${field_name}'], end='')
+    sys.exit(0)
+sys.exit(1)
+")" || {
+      echo "✗ Field '${field_name}' not found in '${item_name}'" >&2
+      _bw_log "READ_MISS" "${item_name}/${field_name}"
+      return 1
+    }
+  fi
+
+  _bw_log "READ" "${item_name}/${field_name}"
+  echo "${value}"
+}
+
 # --- .env.local generation ----------------------------------------------------
 bw-env() {
   if [ -z "${BW_SESSION:-}" ] && [ -f "${BW_SESSION_FILE}" ]; then
