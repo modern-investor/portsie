@@ -1,12 +1,12 @@
 {
-  "version": "v260317.03 3:00a",
-  "release": 193,
-  "sha": "142bf776",
-  "fullSha": "142bf7760245045ac0f6bf2e253485b62b93cc1c",
+  "version": "v260317.04 4:55a",
+  "release": 194,
+  "sha": "c5698bd1",
+  "fullSha": "c5698bd1a243e0eb8a1db6f1b179abb9fa16664d",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000675",
-  "pushedAt": "2026-03-17T08:00:04Z",
-  "commits": [{"sha": "142bf7760245045ac0f6bf2e253485b62b93cc1c", "short_sha": "142bf776", "author": "rahulio", "message": "feat: add bw-read helper for cross-project secret access"}]
+  "machine": "GitHub Actions 1000000679",
+  "pushedAt": "2026-03-17T09:55:41Z",
+  "commits": [{"sha": "c5698bd1a243e0eb8a1db6f1b179abb9fa16664d", "short_sha": "c5698bd1", "author": "rahulio", "message": "feat: redirect Schwab OAuth callback to finleg worker"}]
 }
