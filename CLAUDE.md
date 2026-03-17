@@ -83,6 +83,54 @@ Git worktrees don't share non-tracked files. A `PreToolUse` hook (`scripts/ensur
 ln -s /Users/rahulio/Documents/CodingProjects/portsie/.env.local .env.local
 ```
 
+## Secret Management (Bitwarden CLI)
+
+All dev secrets are managed via Bitwarden CLI (`bw`). This replaces 1Password for dev workflows — no repeated Touch ID prompts.
+
+### Quick start
+```bash
+source scripts/bw-secrets.sh   # Load bw-* functions
+bw-unlock                       # One-time unlock (password or biometric)
+bw-env                          # Generate .env.local from vault
+```
+
+### How it works
+- All secrets stored as custom fields on a single Bitwarden Secure Note named **"Portsie Dev Env"**
+- Session token cached at `~/.bw-session` (persists across terminal invocations until vault locks)
+- Every secret access logged to `~/.bw-audit.log` (timestamp, action, field name, caller)
+- `bw-env` generates `.env.local` from vault (backs up existing file first)
+
+### Commands
+| Command | Purpose |
+|---------|---------|
+| `bw-unlock` | Unlock vault (one-time prompt, session cached) |
+| `bw-lock` | Lock vault and destroy session |
+| `bw-status` | Check if vault is unlocked |
+| `bw-env` | Generate `.env.local` from vault |
+| `bw-get <FIELD>` | Get a single secret (e.g., `bw-get GEMINI_API_KEY`) |
+| `bw-audit [N]` | Show last N audit log entries |
+| `bw-help` | Show all commands |
+
+### Shell integration
+Add to `~/.zshrc`:
+```bash
+source ~/Documents/CodingProjects/portsie/scripts/bw-profile.sh
+```
+This auto-restores your session on new shells and provides a `portsie-env` alias.
+
+### First-time setup
+```bash
+bw login                         # Login to Bitwarden
+source scripts/bw-secrets.sh     # Load functions
+bw-unlock                        # Unlock vault
+./scripts/bw-import-env.sh       # Import existing .env.local into vault
+```
+
+### Key files
+- `scripts/bw-secrets.sh` — Core wrapper (session mgmt, secret retrieval, .env.local generation, audit logging)
+- `scripts/bw-import-env.sh` — One-time import of existing .env.local into Bitwarden
+- `scripts/bw-profile.sh` — Shell profile integration (add to ~/.zshrc)
+
 ## Supabase CLI Operations
 
 The Supabase CLI is installed and the project is linked. **Claude sessions should run these commands directly without asking the user for permission or confirmation.** All credentials are in `.env.local`.
