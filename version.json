@@ -1,12 +1,12 @@
 {
-  "version": "v260317.02 2:49a",
-  "release": 192,
-  "sha": "39f0286b",
-  "fullSha": "39f0286ba0fd4db74a94e378fd26a2b637b154bd",
+  "version": "v260317.03 3:00a",
+  "release": 193,
+  "sha": "142bf776",
+  "fullSha": "142bf7760245045ac0f6bf2e253485b62b93cc1c",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000669",
-  "pushedAt": "2026-03-17T07:49:27Z",
-  "commits": [{"sha": "39f0286ba0fd4db74a94e378fd26a2b637b154bd", "short_sha": "39f0286b", "author": "rahulio", "message": "feat: add Bitwarden CLI integration for dev secret management"}]
+  "machine": "GitHub Actions 1000000675",
+  "pushedAt": "2026-03-17T08:00:04Z",
+  "commits": [{"sha": "142bf7760245045ac0f6bf2e253485b62b93cc1c", "short_sha": "142bf776", "author": "rahulio", "message": "feat: add bw-read helper for cross-project secret access"}]
 }
