@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/schwab/callback",
+      "destination": "https://schwab-oauth.finleg.workers.dev/schwab/callback"
+    }
+  ]
+}

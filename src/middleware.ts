@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.searchParams.forEach((value, key) => {
       target.searchParams.set(key, value);
     });
-    return NextResponse.redirect(target);
+    return NextResponse.rewrite(target);
   }
 
   return await updateSession(request);
