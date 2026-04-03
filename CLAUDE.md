@@ -1,3 +1,8 @@
+## Project Identity Check
+
+This is **portsie**. If the user mentions **finleg**, **alpacapps**, **alpaca**, or **sponic** and the request doesn't match this project, **STOP** and warn:
+> "You mentioned **{keyword}** but this session is in **portsie**. Did you mean to run this in the other project?"
+
 # Portsie — Claude Project Context
 
 ## What is Portsie?
@@ -85,13 +90,15 @@ ln -s /Users/rahulio/Documents/CodingProjects/portsie/.env.local .env.local
 
 ## Secret Management (Bitwarden CLI)
 
-All dev secrets are managed via Bitwarden CLI (`bw`). Session caching means no repeated unlock prompts.
+All dev secrets are managed via Bitwarden CLI (`bw`). Auto-unlock via macOS Keychain — no manual password entry.
+
+See `docs/SECRETS-BITWARDEN.md` for full vault organization, collection structure, and sharing docs.
 
 ### Quick start
 ```bash
-source scripts/bw-secrets.sh   # Load bw-* functions
-bw-unlock                       # One-time unlock (password or biometric)
-bw-env                          # Generate .env.local from vault
+export BW_SESSION=$(~/bin/bw-unlock)  # Auto-unlock via Keychain (no prompt)
+source scripts/bw-secrets.sh          # Load bw-* functions
+bw-env                                # Generate .env.local from vault
 ```
 
 ### How it works
