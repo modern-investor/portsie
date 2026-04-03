@@ -1,12 +1,12 @@
 {
-  "version": "v260318.01 1:20a",
-  "release": 196,
-  "sha": "63fb61df",
-  "fullSha": "63fb61dfe2f72ba3a6360725e61dc79cef2143c2",
+  "version": "v260403.01 1:48p",
+  "release": 197,
+  "sha": "b0ffc7aa",
+  "fullSha": "b0ffc7aa6c1b5b8bc8566255cc2ee711410518aa",
   "actor": "rsonnad",
   "source": "github-main-push",
   "model": "ci",
-  "machine": "GitHub Actions 1000000689",
-  "pushedAt": "2026-03-18T06:20:06Z",
-  "commits": [{"sha": "63fb61dfe2f72ba3a6360725e61dc79cef2143c2", "short_sha": "63fb61df", "author": "rahulio", "message": "feat: rewrite (not redirect) Schwab OAuth callback to finleg worker"}]
+  "machine": "GitHub Actions 1000000694",
+  "pushedAt": "2026-04-03T18:48:44Z",
+  "commits": [{"sha": "b0ffc7aa6c1b5b8bc8566255cc2ee711410518aa", "short_sha": "b0ffc7aa", "author": "rahulio", "message": "chore: add project identity check to CLAUDE.md"}]
 }
